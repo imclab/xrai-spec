@@ -8,7 +8,7 @@ authors:
     orcid: "https://orcid.org/0000-0000-0000-0000"  # replace with real ORCID when available
 type: software
 license: MIT
-repository-code: "https://github.com/imclab/xrai-spec"
+repository-code: "https://github.com/imclab/xra1"
 url: "https://xrai.dev"
 version: "1.0.0"
 date-released: "2026-04-29"

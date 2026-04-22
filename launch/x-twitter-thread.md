@@ -84,7 +84,7 @@ Reference runtime adapters (Three.js, PlayCanvas, Unreal, visionOS) land weeks 2
 
 ## 10 / repo + spec
 
-Repo: github.com/imclab/xrai-spec
+Repo: github.com/imclab/xra1
 Spec: xrai.dev/SPEC.md
 Manifesto: xrai.dev/MANIFESTO.md
 

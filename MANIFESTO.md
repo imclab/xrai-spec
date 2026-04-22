@@ -135,7 +135,7 @@ This is the Git → GitHub, HTML → Chrome, Markdown → Notion pattern. The fo
 ## How to contribute
 
 Today:
-- Star + watch the repo at `github.com/imclab/xrai-spec`
+- Star + watch the repo at `github.com/imclab/xra1`
 - Read `SPEC.md` v1.0 draft, file issues for missing primitives
 - Try the LLM prompt library (`/prompts/`) — emit XRAI from any model
 - Share what you build

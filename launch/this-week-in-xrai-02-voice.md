@@ -37,7 +37,7 @@ Four facts that matter:
 
 ## What we'd like feedback on
 
-- **Have you tried an LLM authoring XRAI?** Any model (Claude, GPT, Gemini, Llama) — where did it hallucinate? File the failure case as a gist + link in `github.com/imclab/xrai-spec/discussions`.
+- **Have you tried an LLM authoring XRAI?** Any model (Claude, GPT, Gemini, Llama) — where did it hallucinate? File the failure case as a gist + link in `github.com/imclab/xra1/discussions`.
 - **Local intent parsing.** Is 95% a realistic number for your domain? The Portals vocabulary leans AR-composition heavy; medical / civic / scientific domains have different priors. Happy to share the parser pattern.
 
 ## Metric of the week

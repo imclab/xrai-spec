@@ -2,7 +2,7 @@
 
 **Submit window:** Tue–Thu, 8–10am Pacific (highest HN traffic).
 **Title character limit:** 80. Do not editorialize. No emoji. No buzzwords.
-**URL:** `https://xrai.dev` (or `https://github.com/imclab/xrai-spec` if xrai.dev not live).
+**URL:** `https://xrai.dev` (or `https://github.com/imclab/xra1` if xrai.dev not live).
 
 ---
 
@@ -50,7 +50,7 @@ I'd like feedback on three things specifically:
 2. What breaks when you try to author a non-trivial scene with an LLM?
 3. What about the governance plan worries you?
 
-Repo: https://github.com/imclab/xrai-spec
+Repo: https://github.com/imclab/xra1
 Spec: https://xrai.dev/SPEC.md
 Manifesto: https://xrai.dev/MANIFESTO.md
 
@@ -74,7 +74,7 @@ Manifesto: https://xrai.dev/MANIFESTO.md
 
 ## Pre-submit checklist
 
-- [ ] Repo public at `github.com/imclab/xrai-spec`
+- [ ] Repo public at `github.com/imclab/xra1`
 - [ ] README.md + MANIFESTO.md + SPEC.md + LICENSE + CONTRIBUTING.md + CODE_OF_CONDUCT.md + CHANGELOG.md present
 - [ ] `xrai.dev` resolves (placeholder OK)
 - [ ] At least 1 working example in `examples/`

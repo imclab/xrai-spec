@@ -12,7 +12,7 @@ Specs that drift without a paper trail rot. An RFC is a commitment: here's the i
 
 ## Process
 
-1. **Open a [Discussion](https://github.com/imclab/xrai-spec/discussions) first.** If the room shrugs, file an issue. If the idea has traction, proceed to RFC.
+1. **Open a [Discussion](https://github.com/imclab/xra1/discussions) first.** If the room shrugs, file an issue. If the idea has traction, proceed to RFC.
 2. **Copy [`0000-template.md`](./0000-template.md) to `NNNN-<slug>.md`.** `NNNN` is the next available 4-digit number (check latest merged RFC + 1).
 3. **Fill in every section honestly.** "Alternatives considered" and "Backwards compatibility" are the ones most RFCs get wrong — no hand-waving.
 4. **Open a PR** with the RFC markdown only. No implementation. The RFC itself is the thing under review.

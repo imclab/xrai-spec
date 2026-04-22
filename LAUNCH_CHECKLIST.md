@@ -26,15 +26,15 @@ This checklist matches the 6-step playbook in [`specs/XXX-zero-to-one/spec.md §
 
 ## Step 1 — GitHub repo (DONE 2026-04-22)
 
-- [x] **DONE:** `imclab/xrai-spec` created as public repo (exists at https://github.com/imclab/xrai-spec)
-- [x] **DONE:** content pushed via `scripts/xrai_repo_bootstrap.sh --repo imclab/xrai-spec --no-dry-run`
+- [x] **DONE:** `imclab/xra1` created as public repo (exists at https://github.com/imclab/xra1)
+- [x] **DONE:** content pushed via `scripts/xrai_repo_bootstrap.sh --repo imclab/xra1 --no-dry-run`
 - [x] **DONE:** 20+ files at repo root (README, SPEC, MANIFESTO, VISION, FAQ, CITATION.cff, LICENSE, CHANGELOG, CONTRIBUTING, CODE_OF_CONDUCT, LAUNCH_CHECKLIST, RUNTIMES, RUNTIMES_EVALUATION, USE_CASES, index.html, demos/, examples/, launch/, mcp-server/, rfcs/, runtimes/)
 - [x] **DONE:** GitHub Pages enabled (source: main/root, CNAME: xrai.dev)
 - [x] **DONE:** 7 labels seeded (rfc, v1.0, v1.1, conformance, runtime, governance, parity)
 
-**Remaining:** enable Discussions (`gh repo edit imclab/xrai-spec --enable-discussions`), optionally add branch protection.
+**Remaining:** enable Discussions (`gh repo edit imclab/xra1 --enable-discussions`), optionally add branch protection.
 
-**Acceptance:** ✅ repo live at github.com/imclab/xrai-spec. Pages URL `imclab.github.io/xrai-spec` + CNAME to `xrai.dev` set (resolves after DNS propagation).
+**Acceptance:** ✅ repo live at github.com/imclab/xra1. Pages URL `imclab.github.io/xra1` + CNAME to `xrai.dev` set (resolves after DNS propagation).
 
 ---
 
@@ -124,7 +124,7 @@ This checklist matches the 6-step playbook in [`specs/XXX-zero-to-one/spec.md §
 
 ## Content copy mapping (staged → repo)
 
-When copying from `specs/XXX-zero-to-one/xrai-website/` to `github.com/imclab/xrai-spec`:
+When copying from `specs/XXX-zero-to-one/xrai-website/` to `github.com/imclab/xra1`:
 
 | Staged path | Repo path | Notes |
 |---|---|---|
@@ -159,11 +159,11 @@ When copying from `specs/XXX-zero-to-one/xrai-website/` to `github.com/imclab/xr
 - Wait 72h, try a different angle (e.g., "Show HN: A 5-line XRAI scene compiled from voice in under 2 seconds" — lead with demo, not spec).
 
 **If domain registration fails or DNS takes >24h:**
-- Launch with `github.com/imclab/xrai-spec` as canonical URL
+- Launch with `github.com/imclab/xra1` as canonical URL
 - Update all launch posts to point to repo
 - Add `xrai.dev redirect → github repo` once DNS lands
 
-**If repo rename needed** (e.g. `imclab/xrai-spec` → different name):
+**If repo rename needed** (e.g. `imclab/xra1` → different name):
 - Fallback: `xrai-dev`, `open-xrai`, `portals-format`
 - Update launch posts + README before submitting
 
