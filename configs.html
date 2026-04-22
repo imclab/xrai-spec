@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>XRAI — configs · pipelines · modules</title>
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,700,900&display=swap" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" />
+<link rel="stylesheet" href="styles/brand.css" />
+<style>
+  :root {
+    --bg: #000; --fg: #FFF; --muted: #888; --border: rgba(255,255,255,0.08);
+    --accent: #F7FFA8; --secondary: #A8A8FF;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--fg);
+    font-family: 'Satoshi', sans-serif; font-size: 14px; line-height: 1.5;
+    min-height: 100vh; padding: 40px;
+  }
+  .back { font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.16em; color: var(--muted);
+    text-decoration: none; margin-bottom: 32px; display: inline-block; }
+  .back:hover { color: var(--accent); }
+  h1 { font-size: clamp(40px, 6vw, 72px); font-weight: 900;
+    letter-spacing: -0.04em; line-height: 0.9; margin-bottom: 16px; }
+  h1 .accent { color: var(--accent); font-style: italic; }
+  .lede { color: var(--muted); max-width: 640px; margin-bottom: 40px; font-size: 16px; }
+  h2 { font-size: 24px; font-weight: 700; margin: 48px 0 16px;
+    border-top: 1px solid var(--border); padding-top: 24px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .card {
+    border: 1px solid var(--border); padding: 16px 18px;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .card .kind { font-family: 'JetBrains Mono', monospace; font-size: 9.5px;
+    text-transform: uppercase; letter-spacing: 0.16em; color: var(--accent); margin-bottom: 8px; }
+  .card .name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .card .hint { color: var(--muted); font-size: 12px; }
+  .pipe {
+    border: 1px solid var(--border); margin-top: 16px;
+    background: rgba(255,255,255,0.01);
+  }
+  .pipe-toolbar {
+    display: flex; gap: 8px; align-items: center; padding: 12px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  }
+  .pipe-toolbar select, .pipe-toolbar button {
+    background: transparent; color: var(--fg);
+    border: 1px solid var(--border); padding: 6px 10px;
+    font-family: inherit; font-size: inherit; cursor: pointer;
+  }
+  .pipe-toolbar button:hover { border-color: var(--accent); color: var(--accent); }
+  .pipe-toolbar #pipe-status { margin-left: auto; color: var(--muted); font-size: 10px; }
+  #pipe-svg { background: rgba(0,0,0,0.6); display: block; }
+  #pipe-nodes text { pointer-events: none; user-select: none; }
+</style>
+</head>
+<body>
+  <a href="index.html" class="back">← xrai.dev</a>
+  <h1><span class="accent">configs</span> · pipelines · modules</h1>
+  <p class="lede">Hot-swappable modules. Any data → XRAI → any surface. The same adapters power this page, the Unity editor hub, and the Portals iOS app.</p>
+
+  <h2>mini pipeline editor</h2>
+  <p class="lede">Drag nodes, wire outputs to inputs, double-click to edit input. Run to encode → render in the live graph on <a href="index.html">xrai.dev</a>.</p>
+  <div class="pipe" id="pipeline-root"></div>
+
+  <h2>adapters · encode anything into XRAI</h2>
+  <div class="grid" id="adapters-grid"></div>
+
+  <h2>renderers · decode XRAI anywhere</h2>
+  <div class="grid" id="renderers-grid"></div>
+
+  <h2>transforms · compose graphs</h2>
+  <div class="grid" id="transforms-grid"></div>
+
+  <h2>sinks · send XRAI somewhere</h2>
+  <div class="grid" id="sinks-grid"></div>
+
+<script type="module">
+import { PipelineEditor, Pipeline, MODULES } from './js/pipelines-web.js';
+
+const card = (kind, m) => `
+  <div class="card">
+    <div class="kind">${kind}</div>
+    <div class="name">${m.label}</div>
+    <div class="hint"><code>${m.name}</code>${m.inputHint ? ` · ${m.inputHint}` : ''}</div>
+  </div>`;
+
+document.getElementById('adapters-grid').innerHTML  = MODULES.adapters.map(m => card('adapter', m)).join('');
+document.getElementById('renderers-grid').innerHTML = MODULES.renderers.map(m => card('renderer', m)).join('');
+document.getElementById('transforms-grid').innerHTML= MODULES.transforms.map(m => card('transform', m)).join('');
+document.getElementById('sinks-grid').innerHTML     = MODULES.sinks.map(m => card('sink', m)).join('');
+
+const p = new Pipeline({ title: 'demo' });
+p.addNode({ id: 'a', kind: 'adapter', op: 'wikipedia', input: 'Claude Shannon', x: 40, y: 40 });
+p.addNode({ id: 'b', kind: 'renderer', op: 'force-graph', x: 260, y: 40 });
+p.addWire('a', 'b');
+new PipelineEditor(document.getElementById('pipeline-root'), p);
+</script>
+</body>
+</html>

@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>XRAI — explorable 3D spec graph</title>
-<meta name="description" content="Open spatial graph format. Browse the spec as it describes itself — an interactive 3D hypergraph of docs, concepts, RFCs, examples, and runtimes." />
-<meta property="og:title" content="XRAI — God's-eye view. Infinite zoom." />
-<meta property="og:description" content="Spec that renders itself. Click any node to drill in." />
+<title>XRAI — open format for spatial intelligence</title>
+<meta name="description" content="Encode any semantic or structured data as XRAI, render it on any surface — phone, glasses, browser, Unity, iOS. CVPR 2026 paper · USPTO provisional 2026-04-08 · MIT-licensed." />
+<meta property="og:title" content="XRAI — open format for spatial intelligence" />
+<meta property="og:description" content="Wikipedia, GitHub, arXiv, Twitter, calendars, codebases, specs — encode into XRAI, view anywhere. The spec renders itself." />
 <link rel="preconnect" href="https://api.fontshare.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900&display=swap" />
@@ -40,7 +40,7 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
   html, body {
-    height: 100%;
+    min-height: 100%;
     background: var(--bg);
     color: var(--fg);
     font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -49,9 +49,83 @@
     line-height: 1.5;
     letter-spacing: -0.005em;
     font-feature-settings: 'ss01' 1, 'ss02' 1;
-    overflow: hidden;
+    overflow: hidden; /* multi-axis scroll handled by #parallax-surface */
   }
-  #graph { position: fixed; inset: 0; }
+  #graph { position: fixed; inset: 0; z-index: 1; }
+
+  /* ─── Multi-axis parallax surface ───────────────────────────────────
+     Sits over the graph. Pan via wheel (y), shift+wheel (x), arrow keys,
+     or drag. Reveals layered content panels at different rates. */
+  #parallax-surface {
+    position: fixed; inset: 0; z-index: 6;
+    overflow: hidden; pointer-events: none;
+    /* container bigger than viewport so content lives in every direction */
+  }
+  .parallax-layer {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+  }
+  /* A "card" lives at a canvas position (vw/vh from the center).
+     data-px / data-py = canvas offset; data-rate = parallax multiplier. */
+  .pcard {
+    position: absolute; pointer-events: auto;
+    max-width: 460px; padding: 22px 24px;
+    background: rgba(0,0,0,0.72); backdrop-filter: blur(16px);
+    border: 1px solid var(--border-strong);
+    transition: opacity 0.3s, transform 0.3s;
+    opacity: 0.92;
+  }
+  .pcard:hover { opacity: 1; border-color: var(--accent); }
+  .pcard::before, .pcard::after {
+    content: ''; position: absolute; width: 10px; height: 10px;
+    border: 1px solid var(--accent); opacity: 0.7; pointer-events: none;
+  }
+  .pcard::before { top: -4px; left: -4px; border-right: 0; border-bottom: 0; }
+  .pcard::after { bottom: -4px; right: -4px; border-left: 0; border-top: 0; }
+  .pcard .pill {
+    font-family: 'JetBrains Mono', monospace; font-size: 9.5px;
+    color: var(--accent); text-transform: uppercase; letter-spacing: 0.18em;
+    margin-bottom: 10px; display: inline-block;
+    border: 1px solid var(--accent); padding: 2px 8px;
+  }
+  .pcard h3 {
+    font-family: 'Satoshi', sans-serif; font-weight: 900;
+    font-size: 22px; letter-spacing: -0.03em; line-height: 1.05;
+    color: var(--fg); margin-bottom: 10px;
+  }
+  .pcard h3 .mono { font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 18px; color: var(--accent); }
+  .pcard p {
+    font-size: 13.5px; line-height: 1.5; color: var(--fg-dim);
+    letter-spacing: -0.005em; margin-bottom: 10px;
+  }
+  .pcard p:last-child { margin-bottom: 0; }
+  .pcard code {
+    font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--accent);
+    background: rgba(247,255,168,0.08); padding: 1px 5px; border-radius: 2px;
+  }
+  .pcard a {
+    color: var(--fg); border-bottom: 1px solid var(--accent);
+    transition: color 0.15s;
+  }
+  .pcard a:hover { color: var(--accent); }
+  /* Scroll compass — shows user they can pan in 4 directions */
+  #scroll-compass {
+    position: fixed; bottom: 40px; right: 40px; z-index: 11;
+    width: 72px; height: 72px;
+    display: grid; place-items: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.14em;
+    opacity: 0.5; transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  #scroll-compass.active { opacity: 1; color: var(--accent); }
+  #scroll-compass svg { width: 100%; height: 100%; }
+  @media (max-width: 700px) {
+    #scroll-compass { bottom: 20px; right: 20px; width: 56px; height: 56px; }
+    .pcard { max-width: calc(100vw - 48px); padding: 18px 20px; }
+  }
   a { color: var(--fg); text-decoration: none; transition: color 0.15s; }
   a:hover { color: var(--accent); }
 
@@ -319,6 +393,65 @@
   .prompt-bar { animation: rise 0.9s cubic-bezier(0.2,0.8,0.2,1) 0.6s both; }
   .concepts-rail { animation: rise 0.9s cubic-bezier(0.2,0.8,0.2,1) 1.1s both; }
 
+  /* ───── jARvis compact HUD pullout — semi-transparent, auto-dismiss ───── */
+  .hud-pullout {
+    position: fixed; top: 92px; right: 40px; z-index: 14;
+    width: 380px; max-width: calc(100vw - 80px);
+    background: rgba(0,0,0,0.62); backdrop-filter: blur(18px);
+    border: 1px solid var(--border-strong);
+    padding: 16px 44px 16px 20px;
+    opacity: 0; transform: translateY(-8px); pointer-events: none;
+    transition: opacity var(--t-med), transform var(--t-med);
+    font-family: 'Satoshi', sans-serif;
+  }
+  .hud-pullout.open { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  .hud-pullout::before, .hud-pullout::after {
+    content: ''; position: absolute; width: 10px; height: 10px;
+    border: 1px solid var(--accent); opacity: 0.65; pointer-events: none;
+  }
+  .hud-pullout::before { top: -4px; left: -4px; border-right: 0; border-bottom: 0; }
+  .hud-pullout::after  { bottom: -4px; right: -4px; border-left: 0; border-top: 0; }
+  .hud-title {
+    font-family: 'Satoshi', sans-serif; font-weight: 700;
+    font-size: 16px; letter-spacing: -0.02em; line-height: 1.2;
+    color: var(--fg); margin-bottom: 4px;
+  }
+  .hud-meta {
+    font-family: 'JetBrains Mono', monospace; font-size: 9.5px;
+    color: var(--accent); text-transform: uppercase; letter-spacing: 0.16em;
+    margin-bottom: 10px;
+  }
+  .hud-body {
+    font-family: 'Satoshi', sans-serif; font-size: 13px; font-weight: 400;
+    line-height: 1.55; color: var(--fg-dim); letter-spacing: -0.005em;
+    max-height: 160px; overflow: hidden; position: relative;
+  }
+  .hud-body::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 28px;
+    background: linear-gradient(to top, rgba(0,0,0,0.62), transparent);
+    pointer-events: none;
+  }
+  .hud-actions {
+    display: flex; gap: 10px; margin-top: 12px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.14em;
+  }
+  .hud-actions a {
+    color: var(--muted-soft); border-bottom: 1px solid var(--border);
+    padding-bottom: 1px; transition: color var(--t-fast), border-color var(--t-fast);
+  }
+  .hud-actions a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  .hud-close {
+    position: absolute; top: 10px; right: 12px;
+    background: transparent; border: 0;
+    color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer;
+    font-family: 'JetBrains Mono', monospace; padding: 2px 4px;
+  }
+  .hud-close:hover { color: var(--accent); }
+  @media (max-width: 700px) {
+    .hud-pullout { top: auto; bottom: 110px; right: 20px; left: 20px; width: auto; }
+  }
+
   /* ───── jARvis voice status dot (topnav) ───── */
   .jarvis-dot {
     display: inline-block; width: 7px; height: 7px; border-radius: 50%;
@@ -460,10 +593,10 @@
 <div id="graph"></div>
 
 <div class="hero">
-  <div class="tag">v1.0<span class="sep">/</span>mit<span class="sep">/</span>shipping&nbsp;2026.04.29</div>
+  <div class="tag">v1.0<span class="sep">/</span>mit<span class="sep">/</span>cvpr&nbsp;2026<span class="sep">/</span>uspto&nbsp;provisional&nbsp;2026.04.08</div>
   <h1><span class="hero-brackets"><span class="accent">x</span>rai<span class="dot">.</span></span></h1>
-  <p class="lede">X-ray vision. God's-eye view. Infinite zoom.</p>
-  <p class="lede-sub">Open spatial graph format. The spec renders itself — click a node, or ask jARvis below.</p>
+  <p class="lede">Encode anything. Render anywhere.</p>
+  <p class="lede-sub">An open format for spatial intelligence. Wikipedia, GitHub repos, arXiv citations, calendars, codebases, constitutions — all encodable as XRAI, all viewable on phones, glasses, browsers, visionOS, Unity, or inside the Portals iOS app.</p>
 </div>
 
 <div class="prompt-bar">
@@ -522,6 +655,12 @@
     jarvis<span class="jarvis-dot" id="jarvis-dot"></span>
   </button>
   <span class="topnav-sep"></span>
+  <button id="hands-toggle" title="Hand-tracking nav (webcam / WebXR) — pinch to click">hands</button>
+  <span class="topnav-sep"></span>
+  <button id="live-toggle" title="Live hologram room via LiveKit — share with Portals iOS app + any browser">live</button>
+  <span class="topnav-sep"></span>
+  <a href="configs.html" title="Pipelines · modules · hot-swap">pipelines</a>
+  <span class="topnav-sep"></span>
   <a href="VIEWER_ARCHITECTURE.md" title="Hybrid viewer architecture">arch</a>
   <span class="topnav-sep"></span>
   <a href="classic.html" title="Static text-only landing page">read</a>
@@ -544,8 +683,9 @@
   <div class="legend-row"><span class="legend-glyph" style="color:#4ecdc4">⬡</span> place</div>
   <div class="legend-row"><span class="legend-glyph" style="color:#f39c12">⬢</span> xrai entity</div>
   <div class="legend-row"><span class="legend-glyph" style="color:#666666">▤</span> structure</div>
+  <div class="legend-row"><span class="legend-glyph" style="color:#ff6b6b">▶</span> video · feed</div>
   <div class="legend-hint">
-    <strong>drag</strong> orbit · <strong>scroll</strong> zoom · <strong>click</strong> to read · type <code>/</code> to ask jarvis
+    <strong>drag</strong> orbit · <strong>scroll</strong> zoom · <strong>click</strong> to read · type <code>/</code> to ask jarvis · hold <strong>pinch</strong> (hand nav) to click
   </div>
 </div>
 
@@ -554,6 +694,33 @@
   <div id="panel-content">
     <div class="loader">Pick a node.</div>
   </div>
+</aside>
+
+<!-- Parallax surface — pan in any direction to reveal layered context.
+     Cards sit at canvas positions (px/py) with parallax rate multipliers. -->
+<div id="parallax-surface" aria-label="Scroll in any direction for more">
+  <div class="parallax-layer" id="plx-far"  data-rate="0.35"></div>
+  <div class="parallax-layer" id="plx-mid"  data-rate="0.65"></div>
+  <div class="parallax-layer" id="plx-near" data-rate="1.0"></div>
+</div>
+
+<div id="scroll-compass" aria-hidden="true">
+  <svg viewBox="0 0 72 72">
+    <circle cx="36" cy="36" r="28" fill="none" stroke="currentColor" stroke-opacity="0.3" />
+    <path d="M36 12 L40 22 L32 22 Z" fill="currentColor" />
+    <path d="M36 60 L40 50 L32 50 Z" fill="currentColor" />
+    <path d="M12 36 L22 32 L22 40 Z" fill="currentColor" />
+    <path d="M60 36 L50 32 L50 40 Z" fill="currentColor" />
+    <text x="36" y="40" text-anchor="middle" fill="currentColor" font-family="JetBrains Mono" font-size="9" letter-spacing="0.1em">PAN</text>
+  </svg>
+</div>
+
+<aside class="hud-pullout" id="hud-pullout" aria-hidden="true" aria-live="polite">
+  <button class="hud-close" id="hud-close" aria-label="Close">×</button>
+  <div class="hud-meta" id="hud-meta"></div>
+  <div class="hud-title" id="hud-title"></div>
+  <div class="hud-body" id="hud-body"></div>
+  <div class="hud-actions" id="hud-actions"></div>
 </aside>
 
 <script type="importmap">
@@ -643,6 +810,11 @@ const nodes = [
   { id: 'XRAI_ENT',           type: 'xrai',     group: 'xrai',    glyph: '⬢', label: 'entity',             file: '__inline__:xrai-entity',              size: 8 },
   { id: 'XRAI_REL',           type: 'xrai',     group: 'xrai',    glyph: '⬢', label: 'relation',           file: '__inline__:xrai-relation',            size: 8 },
   { id: 'XRAI_EVT',           type: 'xrai',     group: 'xrai',    glyph: '⬢', label: 'event',              file: '__inline__:xrai-event',               size: 8 },
+
+  // Example feed clips — seed nodes so the video type is visible pre-feed-wire.
+  // Hydrate from /api/portals-feed.json when live. Glyph ▶ signals playable.
+  { id: 'FEED_DEMO_1',        type: 'video',    group: 'video',   glyph: '▶', label: 'Portals demo 60s',   file: '__inline__:feed-demo-1',              size: 8, cluster: 'demos' },
+  { id: 'FEED_DEMO_2',        type: 'video',    group: 'video',   glyph: '▶', label: 'voice→scene clip',   file: '__inline__:feed-demo-2',              size: 7, cluster: 'demos' },
 ];
 
 const links = [
@@ -738,6 +910,10 @@ const links = [
   { source: 'SPEC', target: 'XRAI_EVT' },
   { source: 'XRAI_EVT', target: 'RFC_0001' },
   { source: 'XRAI_REL', target: 'RFC_0002' },
+
+  // Feed clips anchor to proof + use cases
+  { source: 'FEED_DEMO_1', target: 'PORTALS_PROOF' },
+  { source: 'FEED_DEMO_2', target: 'EX_VOICE' },
 ];
 
 // ------- Portals live feed ingestion stub (non-blocking) -------
@@ -909,6 +1085,33 @@ The edge primitive. v1.0 is binary (\`from\` + \`to\`); [RFC 0002](rfcs/0002-nar
 
 Relations anchor provenance. Authorship, causal chains, and federated-graph links all compose from relations.`,
 
+  'feed-demo-1': `# Portals demo · 60s
+
+Portals in action on iPhone 14 Pro — voice-to-AR scene, hologram placement,
+persistent world re-load across sessions. The video reference for the CVPR
+2026 paper's 60 FPS claim.
+
+<video controls preload="metadata" style="width:100%;max-width:100%;border:1px solid rgba(255,255,255,0.1)" poster="">
+  <source src="https://xrai.dev/media/demo-60s.mp4" type="video/mp4">
+  <em>Video file not yet wired — placeholder node. Will hydrate from /api/portals-feed.json when the Portals backend serves media manifests.</em>
+</video>
+
+**Cluster:** demos
+**Source:** Portals app feed (stub) — live wire pending`,
+
+  'feed-demo-2': `# Voice → scene · clip
+
+Short demo showing the voice-to-XRAI authoring path from example 02.
+Placeholder while we wire \`/api/portals-feed.json\` to the real feed.
+
+<video controls preload="metadata" style="width:100%;max-width:100%;border:1px solid rgba(255,255,255,0.1)" poster="">
+  <source src="https://xrai.dev/media/voice-scene.mp4" type="video/mp4">
+  <em>Media placeholder. Live video hydrates from the Portals app feed once the backend endpoint is published.</em>
+</video>
+
+**Cluster:** demos
+**Related:** [examples/02-voice-prompt](examples/02-voice-prompt.xrai.json)`,
+
   'xrai-event': `# \`event\` — the temporal primitive
 
 v1.0 ships a stub (\`id\`, \`t\`, \`type\`, \`entity\`). [RFC 0001](rfcs/0001-event-primitives.md) proposes the full schema for v1.1:
@@ -949,6 +1152,8 @@ const PALETTE = {
   place:      '#4ecdc4',   // teal — locations / gateways
   structure:  '#666666',   // dim gray — directories
   xrai:       '#f39c12',   // format orange — xrai primitives
+  video:      '#ff6b6b',   // coral — video / feed clips
+  scene:      '#ffe66d',   // bright yellow — imported XRAI scenes
 };
 const colorFor = (group) => PALETTE[group] || '#ffffff';
 
@@ -1250,19 +1455,74 @@ document.getElementById('engine-select').addEventListener('change', (e) => {
   setTimeout(() => location.href = target, 800);
 });
 
-// ------- Multiplayer stub (LiveKit — spec 010) -------
-document.getElementById('mp-btn').addEventListener('click', () => {
-  const roomId = 'xrai-' + Math.random().toString(36).slice(2, 8);
-  const inviteUrl = `${location.origin}${location.pathname}?room=${roomId}`;
-  navigator.clipboard?.writeText(inviteUrl).catch(() => {});
-  showToast(`Room ${roomId} — invite URL copied. LiveKit transport lands with spec 010 / RFC (TBD).`, 5000);
+// ------- Invite / live — both flow through js/live-web.js now -------
+// The 'invite' button auto-creates a room + shares URL; 'live' connects via LiveKit.
+// See VIEWER_ARCHITECTURE.md § Multiplayer for the full room model.
+document.getElementById('mp-btn').addEventListener('click', async () => {
+  if (!window.__live) {
+    showToast('live module still loading — retry in a second', 2800);
+    return;
+  }
+  const roomId = await window.__live.invite();
+  showToast(`room ${roomId} — tap "live" to connect`, 4200);
 });
 const roomParam = new URLSearchParams(location.search).get('room');
 if (roomParam) {
-  showToast(`Joined room ${roomParam} (multiplayer stub — live transport pending)`, 4000);
+  showToast(`Room ${roomParam} pending — tap "live" to join`, 4000);
 }
 
-// ------- jARvis voice module wiring (always-listening wake word) -------
+// ------- Compact HUD pullout — used by jARvis for voice responses -------
+const hud = {
+  el: document.getElementById('hud-pullout'),
+  title: document.getElementById('hud-title'),
+  meta: document.getElementById('hud-meta'),
+  body: document.getElementById('hud-body'),
+  actions: document.getElementById('hud-actions'),
+  dismissTimer: null,
+};
+function hudShow(data) {
+  if (!data) { hudHide(); return; }
+  hud.title.textContent = data.title || '';
+  hud.meta.textContent = data.meta || data.source || '';
+  hud.body.textContent = (data.body || '').slice(0, 520);
+  hud.actions.innerHTML = '';
+  if (data.url) {
+    const a = document.createElement('a');
+    a.href = data.url; a.target = '_blank'; a.rel = 'noopener';
+    a.textContent = 'open source →';
+    hud.actions.appendChild(a);
+  }
+  const expand = document.createElement('a');
+  expand.href = '#'; expand.textContent = 'full page';
+  expand.addEventListener('click', (e) => {
+    e.preventDefault();
+    // Open in the big side panel (fall back if no node ref)
+    hudHide();
+  });
+  hud.actions.appendChild(expand);
+  hud.el.classList.add('open');
+  hud.el.setAttribute('aria-hidden', 'false');
+  clearTimeout(hud.dismissTimer);
+  hud.dismissTimer = setTimeout(() => hudHide(), 22000);
+}
+function hudHide() {
+  hud.el.classList.remove('open');
+  hud.el.setAttribute('aria-hidden', 'true');
+  clearTimeout(hud.dismissTimer);
+}
+document.getElementById('hud-close').addEventListener('click', hudHide);
+document.addEventListener('jarvis:close-panel', () => { closePanel(); hudHide(); });
+document.addEventListener('jarvis:zoom', (e) => {
+  const dir = e.detail?.dir === 'in' ? 0.7 : 1.4;
+  try {
+    const cp = Graph.cameraPosition();
+    Graph.cameraPosition({ x: cp.x * dir, y: cp.y * dir, z: cp.z * dir }, undefined, 800);
+    userInteracted = true;
+  } catch {}
+});
+document.addEventListener('jarvis:rotate', () => { userInteracted = false; });
+
+// ------- jARvis voice module wiring (always-listening + conversational) -------
 import('./js/jarvis-web.js').then(({ Jarvis }) => {
   window.__jarvis = new Jarvis({
     resolveQuery,
@@ -1270,12 +1530,73 @@ import('./js/jarvis-web.js').then(({ Jarvis }) => {
     showToast,
     Graph,
     nodes,
+    onHudShow: hudShow,
   });
   window.__jarvis.wireToDOM();
 }).catch((e) => {
   console.warn('[jarvis-web] module load failed:', e);
   const btn = document.getElementById('jarvis-toggle');
   if (btn) { btn.textContent = 'jarvis n/a'; btn.disabled = true; btn.title = 'Module load failed'; }
+});
+
+// ------- Live hologram room (LiveKit — same server + room model as Portals iOS app) -------
+import('./js/live-web.js').then(({ Live }) => {
+  window.__live = new Live({ showToast });
+  window.__live.wireToDOM();
+  // XRAI delta pass-through: scene edits from other participants load as nodes
+  document.addEventListener('live:data', (e) => {
+    const { msg } = e.detail || {};
+    if (msg?.type === 'xrai-delta' && msg?.nodes) {
+      const cur = Graph.graphData();
+      Graph.graphData({ nodes: [...cur.nodes, ...msg.nodes], links: [...cur.links, ...(msg.links || [])] });
+      showToast(`+${msg.nodes.length} from live`, 2000);
+    }
+  });
+}).catch((e) => {
+  console.warn('[live-web] module load failed:', e);
+  const btn = document.getElementById('live-toggle');
+  if (btn) { btn.textContent = 'live n/a'; btn.disabled = true; btn.title = 'Module load failed'; }
+});
+
+// ------- Hand navigation (optional — webcam / WebXR) -------
+import('./js/hands-web.js').then(({ Hands }) => {
+  window.__hands = new Hands({ Graph, showToast });
+  window.__hands.wireToDOM();
+  // Hand click → raycast into nearest node by normalized screen coords
+  document.addEventListener('hands:click', (e) => {
+    const { x, y } = e.detail;
+    // Convert normalized hand-space (0..1) to pixel coords
+    const px = x * window.innerWidth, py = y * window.innerHeight;
+    // Simple approach: find nearest node projected on screen
+    const data = Graph.graphData();
+    const camera = Graph.camera();
+    let best = null, bestDist = Infinity;
+    data.nodes.forEach(n => {
+      if (n.x == null) return;
+      const v = new THREE.Vector3(n.x, n.y, n.z).project(camera);
+      const nx = (v.x + 1) / 2 * window.innerWidth;
+      const ny = (-v.y + 1) / 2 * window.innerHeight;
+      const d = Math.hypot(nx - px, ny - py);
+      if (d < bestDist && v.z < 1) { bestDist = d; best = n; }
+    });
+    if (best && bestDist < 140) {
+      openNode(best);
+      userInteracted = true;
+      showToast(`hand → ${best.label}`, 1800);
+    }
+  });
+  document.addEventListener('hands:zoom', (e) => {
+    const dir = e.detail?.dir === 'in' ? 0.85 : 1.2;
+    try {
+      const cp = Graph.cameraPosition();
+      Graph.cameraPosition({ x: cp.x * dir, y: cp.y * dir, z: cp.z * dir }, undefined, 400);
+      userInteracted = true;
+    } catch {}
+  });
+}).catch((e) => {
+  console.warn('[hands-web] module load failed:', e);
+  const btn = document.getElementById('hands-toggle');
+  if (btn) { btn.textContent = 'hands n/a'; btn.disabled = true; btn.title = 'Module load failed'; }
 });
 
 // ------- jARvis prompt — talk-to-me CTA -------
@@ -1364,6 +1685,235 @@ setInterval(() => {
   angle += 0.002;
   Graph.cameraPosition({ x: Math.cos(angle) * 420, y: 80, z: Math.sin(angle) * 420 });
 }, 30);
+
+// ------- Parallax surface — content revealed by panning in any direction ----
+// Cards live at canvas positions (px/py in vw/vh). Pan via wheel / shift+wheel
+// / drag / arrow keys. Rate multipliers create depth.
+const PARALLAX_CARDS = [
+  // Patent / paper / constitution framing — top-right of canvas
+  {
+    layer: 'near', px: 85, py: -30, rate: 1.0,
+    html: `<span class="pill">utility · utility · utility</span>
+      <h3>Portals <span class="mono">· CVPR 2026</span></h3>
+      <p><em>Persistent, Editable 4D Spatial World Models on Edge Devices</em> — submitted to the CVPR 2026 Workshop on 4D World Models on 2026-04-10. 360+ VFX at 60 FPS on iPhone 14 Pro. 2.7–4.1× speedup vs baseline. <a href="#PORTALS_PROOF" onclick="document.dispatchEvent(new CustomEvent('jump:node',{detail:'PORTALS_PROOF'}))">see the paper node →</a></p>`,
+  },
+  {
+    layer: 'near', px: 85, py: 60, rate: 1.0,
+    html: `<span class="pill">uspto provisional</span>
+      <h3>Patent filed <span class="mono">2026-04-08</span></h3>
+      <p>Provisional application covering the XRAI format, the persistent 4D scene-state architecture, and the voice-to-spatial authoring pipeline. XRAI v1.0 public schema is MIT-licensed; commercial platform is patent-protected. <a href="SPEC.md">spec →</a></p>`,
+  },
+  {
+    layer: 'near', px: -90, py: 55, rate: 1.0,
+    html: `<span class="pill">constitution</span>
+      <h3>The <span class="mono">Sight Triad</span></h3>
+      <p><strong>X-ray vision</strong> (see through AI black boxes, provenance, cost) · <strong>God's-eye view</strong> (see over field topology) · <strong>Infinite zoom</strong> (across time, possibilities, minds, scales). A feature advancing only one pillar is incomplete. <a href="VISION.md">read the vision →</a></p>`,
+  },
+
+  // Utility row — USE_CASES.md highlights, curated (not reinvented)
+  {
+    layer: 'mid', px: -90, py: -55, rate: 0.65,
+    html: `<span class="pill">use case · 01</span>
+      <h3>"Make a game where cubes fall from the sky"</h3>
+      <p>Voice → XRAI payload → Portals runtime spawns an emitter + 6 collidable cubes anchored above your hand. <strong>0 new code</strong> — just the XRAI wrapper over the existing voice → Gemini → batch_execute pipeline. <a href="USE_CASES.md#🎮-1-mini-games---make-a-game-where-cubes-fall-from-the-sky-and-i-catch-them">mini games →</a></p>`,
+  },
+  {
+    layer: 'mid', px: 110, py: -55, rate: 0.65,
+    html: `<span class="pill">use case · 14</span>
+      <h3>"Where did I leave my keys?"</h3>
+      <p>Glasses camera passively logs object detections into your personal XRAI graph anchored to real-world positions. jARvis queries the graph; AR waypoint drops where you last glanced. Mundane = viral. <a href="USE_CASES.md#🔑-14-mundane-where-did-i-leave-my-keys">memex →</a></p>`,
+  },
+  {
+    layer: 'mid', px: -90, py: 130, rate: 0.65,
+    html: `<span class="pill">use case · 16</span>
+      <h3>"Make my website 3D"</h3>
+      <p>DOM → XRAI extractor emits <code>object.web-subtree</code> entities + layout hints. Any XRAI runtime renders a walkable 3D version. Add a single <code>&lt;meta name="xrai"&gt;</code> tag — adoption propagates like RSS. <a href="USE_CASES.md#🌐-16-make-my-website-3d---lens-on-any-existing-web-page">web lens →</a></p>`,
+  },
+  {
+    layer: 'mid', px: 110, py: 130, rate: 0.65,
+    html: `<span class="pill">use case · 15</span>
+      <h3>"Sample this tree / chair / room / song"</h3>
+      <p>Multimodal LLM + vision encoder extract features → XRAI seed entity. <code>generator.foliage</code> emits 20 variants. Works across modalities (3D, audio, texture, motion). <strong>Kills 99% of 3D-asset marketplaces.</strong> <a href="USE_CASES.md#🌱-15-sample-the-real-world---make-trees-that-look-like-this-one--music-like-this-room--chairs-like-this-one">seeds →</a></p>`,
+  },
+
+  // Adapter gallery — every data source that encodes into XRAI
+  {
+    layer: 'far', px: -150, py: -140, rate: 0.35,
+    html: `<span class="pill">adapters · 12 shipped</span>
+      <h3>Encode <span class="mono">anything</span></h3>
+      <p>Wikipedia articles · GitHub repos · arXiv citations · Twitter networks · LinkedIn connections · calendars · commit histories · code dependencies · tech specs · test workflows · concept graphs · any webpage.</p>
+      <p>One adapter = one <code>async (input) → xrai doc</code>. Register once, consume on any surface. <a href="configs.html">open the module hub →</a></p>`,
+  },
+  {
+    layer: 'far', px: 170, py: -140, rate: 0.35,
+    html: `<span class="pill">renderers · everywhere</span>
+      <h3>Decode <span class="mono">on anything</span></h3>
+      <p>3d-force-graph · ECharts GL (WebGPU) · PlayCanvas · Needle · Icosa · Three.js · <strong>Portals iOS (app)</strong> · <strong>Unity Editor hub (WebView)</strong> · visionOS.</p>
+      <p>Every renderer implements the same parse contract. Same XRAI file plays everywhere. <a href="RUNTIMES.md">runtimes →</a></p>`,
+  },
+  {
+    layer: 'far', px: -140, py: 220, rate: 0.35,
+    html: `<span class="pill">mini pipeline editor</span>
+      <h3>Swap modules <span class="mono">live</span></h3>
+      <p>Drag → wire → run. 2D node editor built into the site; also embedded in the Unity editor hub's WebView tab. Pipelines save as <code>.pipeline.json</code>. <a href="configs.html">open the editor →</a></p>`,
+  },
+  {
+    layer: 'far', px: 180, py: 220, rate: 0.35,
+    html: `<span class="pill">governance</span>
+      <h3>MIT · CC0 · no CLA</h3>
+      <p>Reference code MIT. Normative schema CC0. Year-1 BDFL is <a href="https://github.com/imclab">@jamestunick</a>; transfers to Apache SF / W3C Community Group at 1000+ external adopters. <a href="MANIFESTO.md">manifesto →</a></p>`,
+  },
+];
+
+(function initParallax() {
+  const surf = document.getElementById('parallax-surface');
+  if (!surf) return;
+  const layers = {
+    near: document.getElementById('plx-near'),
+    mid:  document.getElementById('plx-mid'),
+    far:  document.getElementById('plx-far'),
+  };
+  PARALLAX_CARDS.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'pcard';
+    el.innerHTML = c.html;
+    // Canvas position in vw/vh, relative to viewport center
+    el.style.left = `calc(50% + ${c.px}vw)`;
+    el.style.top  = `calc(50% + ${c.py}vh)`;
+    el.dataset.px = c.px; el.dataset.py = c.py; el.dataset.rate = c.rate;
+    layers[c.layer].appendChild(el);
+  });
+
+  // Pan state
+  let px = 0, py = 0;
+  let target = { x: 0, y: 0 };
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  // Canvas extent (vw/vh) — how far you can pan.
+  const EXT_X = 220, EXT_Y = 260;
+
+  const compass = document.getElementById('scroll-compass');
+  let hideCompassT;
+  const onMoved = () => {
+    compass?.classList.add('active');
+    clearTimeout(hideCompassT);
+    hideCompassT = setTimeout(() => compass?.classList.remove('active'), 1200);
+  };
+
+  function apply() {
+    // Interpolate for smooth feel
+    px += (target.x - px) * 0.14;
+    py += (target.y - py) * 0.14;
+    for (const [name, el] of Object.entries(layers)) {
+      const rate = name === 'near' ? 1.0 : (name === 'mid' ? 0.65 : 0.35);
+      el.style.transform = `translate3d(${-px * rate}px, ${-py * rate}px, 0)`;
+    }
+    requestAnimationFrame(apply);
+  }
+  apply();
+
+  // Wheel — y = vertical, shift+wheel or deltaX = horizontal
+  window.addEventListener('wheel', (e) => {
+    // Let scroll work over panels (they trap events)
+    if (e.target.closest('.panel') || e.target.closest('.pcard')) return;
+    target.y = clamp(target.y + e.deltaY, -EXT_Y * window.innerHeight / 100, EXT_Y * window.innerHeight / 100);
+    const dx = e.shiftKey ? e.deltaY : e.deltaX;
+    target.x = clamp(target.x + dx, -EXT_X * window.innerWidth / 100, EXT_X * window.innerWidth / 100);
+    onMoved();
+    e.preventDefault();
+  }, { passive: false });
+
+  // Arrow keys — pan by 120px
+  window.addEventListener('keydown', (e) => {
+    if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+    const step = 120;
+    if (e.key === 'ArrowRight') { target.x = clamp(target.x + step, -EXT_X * window.innerWidth / 100, EXT_X * window.innerWidth / 100); onMoved(); }
+    else if (e.key === 'ArrowLeft')  { target.x = clamp(target.x - step, -EXT_X * window.innerWidth / 100, EXT_X * window.innerWidth / 100); onMoved(); }
+    else if (e.key === 'ArrowDown')  { target.y = clamp(target.y + step, -EXT_Y * window.innerHeight / 100, EXT_Y * window.innerHeight / 100); onMoved(); }
+    else if (e.key === 'ArrowUp')    { target.y = clamp(target.y - step, -EXT_Y * window.innerHeight / 100, EXT_Y * window.innerHeight / 100); onMoved(); }
+  });
+
+  // Touch / drag — middle-mouse or empty-space pointer drag
+  let down = null;
+  surf.addEventListener('pointerdown', (e) => {
+    if (e.target !== surf && !e.target.classList.contains('parallax-layer')) return;
+    down = { x: e.clientX, y: e.clientY, startX: target.x, startY: target.y };
+    surf.setPointerCapture(e.pointerId);
+  });
+  surf.addEventListener('pointermove', (e) => {
+    if (!down) return;
+    target.x = clamp(down.startX - (e.clientX - down.x), -EXT_X * window.innerWidth / 100, EXT_X * window.innerWidth / 100);
+    target.y = clamp(down.startY - (e.clientY - down.y), -EXT_Y * window.innerHeight / 100, EXT_Y * window.innerHeight / 100);
+    onMoved();
+  });
+  surf.addEventListener('pointerup', () => { down = null; });
+
+  // Make the surface intercept only over empty canvas (not over interactive UI)
+  surf.style.pointerEvents = 'auto';
+  layers.near.style.pointerEvents = 'none';
+  layers.mid.style.pointerEvents = 'none';
+  layers.far.style.pointerEvents = 'none';
+  // Re-enable pointer on cards so they stay clickable
+  surf.addEventListener('click', (e) => {
+    // Clicks on empty surface pass through to graph
+    if (e.target === surf || e.target.classList.contains('parallax-layer')) {
+      const ev = new MouseEvent('click', { clientX: e.clientX, clientY: e.clientY, bubbles: true });
+      document.getElementById('graph').dispatchEvent(ev);
+    }
+  });
+})();
+
+// Hook for parallax → graph node jumps
+document.addEventListener('jump:node', (e) => {
+  const n = nodes.find(x => x.id === e.detail);
+  if (n) openNode(n);
+});
+
+// ------- WebXR immersive-ar: reposition graph in front of user -------
+(function wireXR() {
+  const btn = document.getElementById('xr-btn');
+  if (!btn) return;
+  let session = null;
+  btn.addEventListener('click', async () => {
+    if (session) { try { await session.end(); } catch {} return; }
+    const mode = btn.dataset.mode || 'immersive-ar';
+    if (!navigator.xr) { showToast('WebXR not available', 3000); return; }
+    try {
+      const renderer = Graph.renderer();
+      if (!renderer || !renderer.xr) { showToast('three.js renderer has no XR manager', 3500); return; }
+      renderer.xr.enabled = true;
+      session = await navigator.xr.requestSession(mode, {
+        optionalFeatures: ['local-floor', 'hand-tracking', 'bounded-floor', 'layers'],
+      });
+      await renderer.xr.setSession(session);
+      document.body.classList.add('in-xr');
+      showToast(`${mode} active — graph anchored 1.5m ahead`, 3600);
+      // Reposition graph center in front of viewer
+      try {
+        const scene = Graph.scene();
+        if (scene) scene.position.set(0, 1.4, -1.5);
+      } catch {}
+      session.addEventListener('end', () => {
+        session = null;
+        document.body.classList.remove('in-xr');
+        try { Graph.scene()?.position.set(0, 0, 0); } catch {}
+      });
+    } catch (e) {
+      showToast(`XR session failed: ${e.message}`, 4200);
+    }
+  });
+})();
+
+// ------- Pipeline result → graph ingestion -------
+document.addEventListener('pipeline:render', (e) => {
+  const { doc } = e.detail || {};
+  if (!doc?.scene) return;
+  import('./js/xrai-core.js').then(({ toGraphView }) => {
+    const { nodes: gn, links: gl } = toGraphView(doc);
+    const cur = Graph.graphData();
+    Graph.graphData({ nodes: [...cur.nodes, ...gn], links: [...cur.links, ...gl] });
+    showToast(`+${gn.length} from pipeline`, 2400);
+  });
+});
 
 // ------- Deep-link support: #node=SPEC loads + opens SPEC -------
 function handleHash() {

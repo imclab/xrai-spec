@@ -31,6 +31,44 @@
 
 Each layer swaps independently. Changing the renderer doesn't change the data. Changing the transport doesn't change the layout.
 
+## Universal encode / decode (new)
+
+Ships at `js/xrai-core.js` + `js/adapters/`. 12 adapters today — every one is a single `async (input) → xrai doc`:
+
+| adapter | input | produces |
+|---|---|---|
+| `webpage` | URL or HTML | `object.web-container` + headings as subtree |
+| `wikipedia` | article title | concept root + 24 linked concepts |
+| `arxiv` | paper ID | concept + author people + abstract |
+| `twitter` | `@handle` (+ bearer) | person root + up to 50 follows |
+| `linkedin` | profile slug | person stub (OAuth required for full) |
+| `calendar` | .ics text | event entities + temporal events |
+| `github-repo` | `owner/repo` | code-repo + 80 file modules |
+| `github-commits` | `owner/repo` | commits + history events |
+| `code-deps` | package text | package + dependency nodes |
+| `markdown-spec` | markdown | file root + section concepts |
+| `test-workflow` | `{name,steps[]}` | suite + pass/fail events |
+| `concept-graph` | free-form | concepts + edges |
+
+Registered via `registerAdapter(name, fn)` — add your own by dropping a file in `js/adapters/` and importing it. Every adapter produces a valid v1.0 XRAI doc (round-trip-stable).
+
+## Mini pipeline editor (new)
+
+Lives at [`configs.html`](./configs.html). 2D SVG node editor, no deps. Nodes are **adapters · transforms · renderers · sinks**; wires carry XRAI docs between them. Pipelines save as `.pipeline.json`.
+
+Surfaced in three places:
+- **Web:** `configs.html` directly
+- **Portals iOS app:** via `src/services/xrai/XraiWebBridge.ts` → embeds the configs URL in a `<WebView>` with postMessage bridge for docs
+- **Unity editor:** Pipelines tab in `PortalsTestHub` (`Window > Portals > Test Hub`) → XRAI Modules foldout → watches `Temp/xrai-inbox/*.xrai.json` for pipeline output
+
+## Portals iOS / Unity consumption
+
+Same modules, three transports:
+
+1. **ESM inline (iOS)** — `src/services/xrai/XraiWebBridge.ts` re-exports the core types and `newScene`/`validate`. RN screens can build XRAI docs without a WebView.
+2. **WebView (iOS)** — `XraiWebBridge.webBridgeInject()` + `injectXraiDoc(doc)` let the RN app post docs into the live xrai.dev graph and receive pipeline results back.
+3. **Unity Editor** — `XraiHubTab.cs` renders the Pipelines foldout with a URL bar + inbox watcher. Pipeline "sink" `download` files dropped in `Temp/xrai-inbox/` auto-load.
+
 ---
 
 ## Engine-per-target matrix
@@ -104,20 +142,125 @@ This matches **spec 006 KB Visualizer § Platform renderers:** R3F (mobile), 3d-
 
 ---
 
+## Input modalities — voice, hands, head, touch
+
+Every viewer surface supports a layered input stack. Users opt in per modality.
+
+| Modality | How | Where | Status |
+|---|---|---|---|
+| **Touch / mouse** | OrbitControls via 3d-force-graph | every browser | ✅ always on |
+| **Voice** (`hey jarvis`) | Web Speech API `SpeechRecognition` + `speechSynthesis` → `resolveQuery` → camera fly + HUD | Chrome/Edge/Safari desktop + iOS Safari 14.5+ | ✅ `js/jarvis-web.js` |
+| **Hand nav (webcam)** | MediaPipe HandLandmarker via CDN (dynamic import) → pinch → raycast + click; two-hand spread → zoom | desktop webcam only (fine-pointer check) | ✅ `js/hands-web.js` (opt-in) |
+| **Hand nav (WebXR)** | WebXR hand-input API during immersive-ar/vr session | Quest browser, visionOS Safari once Apple unlocks WebXR-AR | 🚧 stub — activates inside immersive session |
+| **Head pose** | WebXR `viewerSpace` transforms; drives LiveKit presence (avatar head) | Quest / visionOS native / AR Foundation on iOS | 🚧 multiplayer integration only |
+| **Gaze** | Quest / visionOS eye-tracking (`'eye-gaze'` feature) | Quest Pro, Vision Pro | 🚧 experimental |
+
+**Design principles:**
+
+1. **Voice first, touch never removed.** Every voice command has a touch equivalent. Users on quiet trains or with disabilities are not second-class.
+2. **Hand nav is additive.** Enabling hands never disables touch or voice. Pinch = click; touch-tap still works.
+3. **Privacy signals are mandatory.** Mic on = visible dot. Camera on = live preview thumbnail. Never hide them.
+4. **Latency budget:** wake-word detect < 100ms, pinch detect < 50ms, touch-tap < 16ms. All local; no server round-trip in the input path.
+
+### Hand gestures (v0)
+
+| Gesture | Effect |
+|---|---|
+| Pinch (thumb-tip to index-tip, one hand) | Click — raycasts to nearest node on screen |
+| Two-hand spread → wider | Zoom out |
+| Two-hand spread → narrower | Zoom in |
+| Open-palm swipe horizontal | Orbit (future) |
+| Point + hold | Hover preview (future) |
+
+Inspired by Google AI Studio hand-tracking prototypes + Portals spec 007 (HoloKit iOS native + Sentis editor webcam). v1 adds per-fingertip particle trails per Keijiro WebGPU demos — lands with the WebGPU ECharts hypergraph renderer (RFC 0008).
+
+---
+
 ## Multiplayer transport — LiveKit (spec 010)
 
 Per **spec 010 Multiplayer Normcore → LiveKit decision (2026-03-05)** + **spec 003 Hologram Telepresence Phase 2**. LiveKit is the unified transport for cross-platform.
 
-**How it plugs in:**
-1. User clicks 👥 Invite — URL encodes `?room=<id>`
-2. Second user visits URL → same room
-3. LiveKit WebRTC DataChannel carries XRAI deltas (add_entity / update_transform / etc. — same bridge message types as spec 001)
-4. Each client's renderer applies the delta locally
-5. Renderer-agnostic — PlayCanvas client + Three.js client see the same scene
+Cross-surface interop: the **same room ID works from the Portals iOS app AND xrai.dev browsers**. LiveKit server is `wss://portals-dev.livekit.cloud` (shared between `src/services/livekit/LiveKitService.ts` on iOS + `js/live-web.js` on web).
 
-**Current state:** stub. Invite button + URL routing work; LiveKit transport lands with RFC (to be filed — v1.2 target).
+**Flow (automated room creation + sharing):**
+
+1. User clicks **invite** — `js/live-web.js` generates a room ID if none in URL, mirrors to `?room=<id>`, copies the URL via `navigator.share` (mobile) or `navigator.clipboard` (desktop).
+2. Second user visits the URL → room ID already in URL params.
+3. Either user clicks **live** — module:
+   - tries `/api/livekit-token?room=<id>&identity=<uuid>` for automatic token (Cloudflare Worker stub)
+   - on miss, prompts for server URL + paste-token (same pattern as `web/rgbd-viewer`)
+4. LiveKit WebRTC:
+   - **Video tracks** — published when user toggles local camera; subscribed from remotes, rendered in bottom-left corner tile (240×160)
+   - **DataChannel topics**:
+     - `xrai-delta` — scene edits (same message shape as spec 001 bridge types: `add_object`, `update_transform`, `modify_objects`, `save_scene`)
+     - `presence` — head pose + hand landmarks (MediaPipe or WebXR)
+     - `voice` — push-to-talk audio (LiveKit handles natively)
+5. Each client's renderer applies the delta locally → renderer-agnostic: PlayCanvas client + Three.js client see the same scene.
+
+**Reference patterns:**
+
+- **Record3D → Portals** — [`MetavidoLiveARKit/LiveARKitFeeder.cs`](../../../../unity/Assets/Imported/MetavidoLiveARKit/Runtime/LiveARKitFeeder.cs) streams RGBD + `cameraParams` over LiveKit DataChannel, decoded via `HueDepthCodec` in `web/rgbd-viewer/src/` — proven end-to-end on CVPR paper
+- **Needle multiplayer** — WebRTC + sample rooms pattern (share transport API shape)
+- **PlayCanvas collaboration** — session-based multi-user sync with URL room IDs
+
+**Live hologram mode (v1 upgrade — RFC 0005 scope):**
+
+Reuse the existing `web/rgbd-viewer/src/RGBDPointCloud.ts` + `HueDepthCodec.ts`. When a participant publishes an RGBD video track (iOS ARKit on Portals app, or browser webcam + ONNX depth), other participants' `js/live-web.js` switches the corner tile to a full-scene hologram reconstruction. Backed by the Portals compute substrate (CVPR paper § 2).
+
+**Scene import / edit / save / share — the shared editor loop:**
+
+Any participant can:
+- **Import** — drag an `.xrai.json` file onto the graph → hydrates nodes → `xrai-delta` broadcasts to all participants
+- **Edit** — drag a node, type a voice command, pinch a hand-tracked node → local change → delta broadcast
+- **Save** — `save` button in topnav exports current graph as `.xrai.json` (already implemented)
+- **Share** — `invite` button generates `?room=<id>` URL → new participants join immediately
+
+**Current state (this release):**
+
+- ✅ `js/live-web.js` shipped — LiveKit browser client with auto-room, paste-token fallback, corner video tile, DataChannel pass-through
+- ✅ Invite button auto-creates room + copies URL via `navigator.share` or clipboard
+- ✅ Live button opens connect flow; on connect, shows remote video tiles
+- 🚧 Token-signing endpoint (`/api/livekit-token`) — Cloudflare Worker TBD
+- 🚧 RGBD hologram reconstruction in the corner tile — port from `web/rgbd-viewer/`
+- 🚧 Head + hand pose broadcast — MediaPipe / WebXR landmarks over DataChannel
+- 🚧 Record3D iOS client interop — match `cameraParams` topic shape exactly
 
 **Security note:** all multiplayer deltas are validated against XRAI schema before apply. No arbitrary code execution path. See [SECURITY.md § Threat model](./SECURITY.md).
+
+---
+
+## Multiplayer presence — heads + hands + scenes
+
+**When LiveKit ships** (per spec 010 + spec 003 Phase 2), every connected participant broadcasts:
+
+- **Head pose** (3D position + quaternion) — rendered as a typed `person` node with photo or avatar glyph; participant appears in the shared graph
+- **Hand poses** (both hands, 21 joints each if WebXR; wrist + fingertip if MediaPipe) — visible in-scene to other participants
+- **Voice audio** — spatial-audio panned per head position
+- **Cursor / gaze** — where the participant is looking in the graph
+- **Authored entities** — any XRAI edits they make stream as delta messages
+
+**Shared scene editing:**
+
+Each participant can:
+1. **Import an XRAI scene** — drag-drop / file-picker loads a `.xrai.json` into the shared graph; other participants see it appear in real time
+2. **Edit** — move a node (drag), add an entity (voice command or click toolbar), delete (select + Del), link (drag from one node to another)
+3. **Save** — current scene state → download + optionally publish to a shared URL
+4. **Share** — copy invite URL with `?room=<id>` → new participants join the same scene
+
+**Live hologram mode:**
+
+Participants with AR-capable devices (Portals app iOS / visionOS Safari WebXR / Quest) can toggle "hologram" mode:
+- Their head + hands render as volumetric VFX in other participants' views
+- Backed by Portals' hologram pipeline (per CVPR paper § 2, 360+ VFX on shared compute substrate)
+- LiveKit carries the depth + stencil + audio channels
+
+**Privacy:**
+
+- Head/hand broadcasting is **opt-in per session**. Default: local only.
+- Voice broadcasting is **opt-in per turn** (push-to-talk by default inside rooms).
+- Guests (no account) broadcast as anonymous head-pose only; full participation requires identity.
+
+This layer is stubbed today — the `invite` button in the topnav generates `?room=<id>` URLs, and the `hydratePortalsFeed()` loop fetches `/api/portals-feed.json` for pre-populated participants. Full transport lands with RFC 0005 (multiplayer delta protocol).
 
 ---
 
