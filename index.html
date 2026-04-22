@@ -15,24 +15,28 @@
   /* H3M-aligned refined minimalism — monochrome with one amber accent.
      Typography: Satoshi (display+body) + JetBrains Mono (technical).
      Zero chrome, zero card-shapes, text-only nav. Graph dominates. */
+  /* Canonical tokens live in styles/brand.css (Portals RN palette).
+     These locally-scoped aliases map old names → canonical for compat. */
   :root {
-    --bg: #09090b;
-    --bg-deeper: #000;
-    --fg: #fafafa;
-    --fg-dim: #e5e5e5;
-    --muted: #737373;
-    --muted-soft: #a3a3a3;
+    --bg: #000000;
+    --bg-deeper: #000000;
+    --fg: #FFFFFF;
+    --fg-dim: #CCCCCC;
+    --muted: #666666;
+    --muted-soft: #888888;
     --border: rgba(255,255,255,0.08);
-    --border-strong: rgba(255,255,255,0.16);
-    --accent: #ff9f45;
-    --accent-soft: rgba(255,159,69,0.12);
-    /* Node palette — monochrome neutrals + single accent. Same palette as light-mode marginalia */
-    --doc: #a3a3a3;
-    --concept: #ff9f45;
-    --demo: #86b979;
-    --rfc: #b39ddb;
-    --runtime: #e08989;
-    --brand: #fafafa;
+    --border-strong: rgba(255,255,255,0.18);
+    --accent: #F7FFA8;            /* Iris glow (pale yellow) */
+    --accent-hover: #FDFFCC;
+    --accent-soft: rgba(247,255,168,0.14);
+    --accent-glow: rgba(247,255,168,0.35);
+    --secondary: #A8A8FF;         /* Periwinkle */
+    --doc: #888888;
+    --concept: #F7FFA8;
+    --demo: #2ecc71;
+    --rfc: #9b59b6;
+    --runtime: #3498db;
+    --brand: #FFFFFF;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
   html, body {
@@ -79,7 +83,7 @@
     color: var(--fg); margin-bottom: 24px; pointer-events: auto;
     font-feature-settings: 'ss01' 1;
   }
-  .hero h1 .accent { color: var(--accent); font-style: italic; font-weight: 700; }
+  .hero h1 .accent { color: var(--accent); font-style: italic; font-weight: 700; text-shadow: 0 0 20px var(--accent-glow); }
   .hero h1 .dot { color: var(--accent); font-weight: 400; letter-spacing: -0.1em; margin-left: -0.08em; }
   .hero .lede {
     font-family: 'Satoshi', sans-serif;
@@ -306,6 +310,97 @@
   .legend { animation: rise 0.7s cubic-bezier(0.2,0.8,0.2,1) 0.7s both; }
   .topnav { animation: rise 0.7s cubic-bezier(0.2,0.8,0.2,1) 0.3s both; }
   .folio { animation: rise 0.7s cubic-bezier(0.2,0.8,0.2,1) 0.9s both; }
+  .prompt-bar { animation: rise 0.9s cubic-bezier(0.2,0.8,0.2,1) 0.6s both; }
+
+  /* ───── jARvis-HUD prompt bar (talk-to-me CTA) — bottom-center ───── */
+  .prompt-bar {
+    position: fixed; left: 50%; bottom: 40px; z-index: 12;
+    transform: translateX(-50%);
+    width: min(640px, calc(100vw - 80px));
+  }
+  .prompt-frame {
+    position: relative;
+    background: rgba(0,0,0,0.72); backdrop-filter: blur(14px);
+    border: 1px solid var(--border-strong);
+    padding: 16px 56px 16px 20px;
+    display: flex; align-items: center; gap: 14px;
+    transition: border-color var(--t-med), box-shadow var(--t-med);
+  }
+  .prompt-frame:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent), 0 0 40px var(--accent-glow);
+  }
+  .prompt-frame::before, .prompt-frame::after {
+    content: ''; position: absolute;
+    width: 12px; height: 12px;
+    border: 1px solid var(--accent); opacity: 0.75;
+    pointer-events: none;
+  }
+  .prompt-frame::before { top: -4px; left: -4px; border-right: 0; border-bottom: 0; }
+  .prompt-frame::after { bottom: -4px; right: -4px; border-left: 0; border-top: 0; }
+
+  .prompt-glyph {
+    flex-shrink: 0; width: 22px; height: 22px;
+    color: var(--accent);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 500;
+    letter-spacing: -0.05em;
+  }
+  .prompt-frame.active .prompt-glyph {
+    animation: pulse-glow 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 2px var(--accent-glow)); }
+    50% { filter: drop-shadow(0 0 14px var(--accent)); }
+  }
+  .prompt-input {
+    flex: 1; background: transparent; border: 0; outline: 0;
+    color: var(--fg);
+    font-family: 'Satoshi', sans-serif; font-size: 16px; font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+  .prompt-input::placeholder { color: var(--muted-soft); font-style: italic; }
+  .prompt-hint {
+    position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.16em;
+    border: 1px solid var(--border-strong); padding: 2px 7px;
+    pointer-events: none;
+  }
+  .prompt-frame:focus-within .prompt-hint { color: var(--accent); border-color: var(--accent); }
+
+  /* Subtle scan-line ambient — below everything except graph */
+  body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 3; pointer-events: none;
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 3px,
+        rgba(247,255,168,0.018) 3px,
+        rgba(247,255,168,0.018) 4px
+      );
+  }
+
+  /* HUD bracket decoration on hero wordmark */
+  .hero-brackets {
+    position: relative; display: inline-block;
+  }
+  .hero-brackets::before, .hero-brackets::after {
+    content: ''; position: absolute;
+    width: 18px; height: 18px;
+    border: 1px solid var(--accent); opacity: 0.55;
+    pointer-events: none;
+  }
+  .hero-brackets::before { top: -8px; left: -10px; border-right: 0; border-bottom: 0; }
+  .hero-brackets::after { bottom: -4px; right: -14px; border-left: 0; border-top: 0; }
+
+  @media (max-width: 700px) {
+    .prompt-bar { bottom: 20px; width: calc(100vw - 40px); }
+    .prompt-frame { padding: 14px 44px 14px 16px; }
+    .prompt-input { font-size: 15px; }
+  }
 </style>
 </head>
 <body>
@@ -314,9 +409,19 @@
 
 <div class="hero">
   <div class="tag">v1.0<span class="sep">/</span>mit<span class="sep">/</span>shipping&nbsp;2026.04.29</div>
-  <h1><span class="accent">x</span>rai<span class="dot">.</span></h1>
+  <h1><span class="hero-brackets"><span class="accent">x</span>rai<span class="dot">.</span></span></h1>
   <p class="lede">X-ray vision. God's-eye view. Infinite zoom.</p>
-  <p class="lede-sub">Open spatial graph format. The spec renders itself — click any node to read it.</p>
+  <p class="lede-sub">Open spatial graph format. The spec renders itself — click a node, or ask jARvis below.</p>
+</div>
+
+<div class="prompt-bar">
+  <form class="prompt-frame" id="prompt-form" autocomplete="off">
+    <span class="prompt-glyph" aria-hidden="true">&gt;</span>
+    <input class="prompt-input" id="prompt-input" type="text"
+           placeholder="ask jarvis to show you something…"
+           aria-label="Ask jARvis to show you something" />
+    <span class="prompt-hint" id="prompt-hint">enter</span>
+  </form>
 </div>
 
 <div class="folio tl">xrai.dev · plate i</div>
@@ -771,6 +876,82 @@ const roomParam = new URLSearchParams(location.search).get('room');
 if (roomParam) {
   showToast(`Joined room ${roomParam} (multiplayer stub — live transport pending)`, 4000);
 }
+
+// ------- jARvis prompt — talk-to-me CTA -------
+const promptForm = document.getElementById('prompt-form');
+const promptInput = document.getElementById('prompt-input');
+const promptFrame = promptForm;
+
+function resolveQuery(q) {
+  const qLow = q.trim().toLowerCase();
+  if (!qLow) return null;
+  // Exact id match
+  let hit = nodes.find(n => n.id.toLowerCase() === qLow);
+  if (hit) return hit;
+  // Label substring
+  hit = nodes.find(n => n.label.toLowerCase().includes(qLow));
+  if (hit) return hit;
+  // Synonyms / common asks
+  const synonyms = {
+    'vision': 'VISION', 'mission': 'JARVIS', 'jarvis': 'JARVIS',
+    'triad': 'SIGHT_TRIAD', 'sight': 'SIGHT_TRIAD',
+    'xray': 'SIGHT_TRIAD', 'x-ray': 'SIGHT_TRIAD',
+    "god's-eye": 'SIGHT_TRIAD', 'godseye': 'SIGHT_TRIAD',
+    'zoom': 'SIGHT_TRIAD',
+    'spec': 'SPEC', 'schema': 'SPEC',
+    'faq': 'FAQ', 'versions': 'VERSIONS', 'changelog': 'CHANGELOG',
+    'manifesto': 'MANIFESTO',
+    'portals': 'PORTALS_PROOF', 'proof': 'PORTALS_PROOF', 'cvpr': 'PORTALS_PROOF',
+    'threejs': 'RT_THREEJS', 'three.js': 'RT_THREEJS', 'adapter': 'RT_THREEJS',
+    'mcp': 'MCP', 'spatial mcp': 'MCP',
+    'runtimes': 'RUNTIMES', 'engines': 'RUNTIMES',
+    'rfc': 'RFC_0001', 'rfc 1': 'RFC_0001', 'rfc 2': 'RFC_0002', 'rfc 3': 'RFC_0003',
+    'events': 'RFC_0001', 'hyperedges': 'RFC_0002', 'conformance': 'RFC_0003',
+    'paint': 'EX_WIRED', 'hologram': 'EX_HOLO', 'voice': 'EX_VOICE', 'minimal': 'EX_MINIMAL',
+    'llms': 'LLMS_TXT', 'llm': 'LLMS_TXT',
+    'security': 'SECURITY', 'contributing': 'CONTRIBUTING', 'license': 'CONTRIBUTING',
+  };
+  for (const [k, v] of Object.entries(synonyms)) {
+    if (qLow.includes(k)) { hit = nodes.find(n => n.id === v); if (hit) return hit; }
+  }
+  return null;
+}
+
+promptInput.addEventListener('focus', () => promptFrame.classList.add('active'));
+promptInput.addEventListener('blur', () => promptFrame.classList.remove('active'));
+
+promptForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const q = promptInput.value;
+  const hit = resolveQuery(q);
+  if (hit) {
+    openNode(hit);
+    // Fly camera to node
+    const distance = 120;
+    const distRatio = 1 + distance / Math.hypot(hit.x || 1, hit.y || 1, hit.z || 1);
+    Graph.cameraPosition(
+      { x: (hit.x || 1) * distRatio, y: (hit.y || 1) * distRatio, z: (hit.z || 1) * distRatio },
+      hit, 1600
+    );
+    userInteracted = true;
+    showToast(`→ ${hit.label}`, 1800);
+    promptInput.value = '';
+  } else {
+    showToast(`jARvis: no match for "${q.trim()}". Try "sight triad", "spec", "portals", "rfc 1"…`, 4200);
+  }
+});
+
+// Slash focuses the prompt — classic editor shortcut
+document.addEventListener('keydown', (e) => {
+  if (e.key === '/' && document.activeElement !== promptInput) {
+    e.preventDefault();
+    promptInput.focus();
+  }
+  if (e.key === 'Escape' && document.activeElement === promptInput) {
+    promptInput.blur();
+    promptInput.value = '';
+  }
+});
 
 // ------- Slight orbital auto-rotate for idle view -------
 let userInteracted = false;

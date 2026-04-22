@@ -1,0 +1,363 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   XRAI BRAND SYSTEM — refined minimalism, aligned with h3m.ai.
+   One stylesheet, all pages. Edit here, it propagates everywhere.
+
+   Load order in <head>:
+     <link rel="preconnect" href="https://api.fontshare.com">
+     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+     <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900&display=swap">
+     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap">
+     <link rel="stylesheet" href="styles/brand.css">
+
+   Design tokens ONLY. Page-specific layouts stay in each page's <style>.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Portals RN canonical palette (src/theme/brandColors.ts + theme.ts).
+     Pure-black ground + pale-yellow Iris glow + periwinkle complement. */
+  --bg: #000000;
+  --bg-deeper: #000000;
+  --bg-surface: #1A1A1A;
+  --bg-surface-hi: #2A2A2A;
+  --bg-panel: rgba(0,0,0,0.985);
+
+  --fg: #FFFFFF;
+  --fg-dim: #CCCCCC;
+  --muted-soft: #888888;
+  --muted: #666666;
+
+  --border: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.18);
+
+  /* Portals primary — pale yellow Iris glow. Single accent for all emphasis. */
+  --accent: #F7FFA8;
+  --accent-hover: #FDFFCC;
+  --accent-soft: rgba(247,255,168,0.14);
+  --accent-glow: rgba(247,255,168,0.35);
+
+  /* Portals secondary — periwinkle. For scanner / telemetry cues only. */
+  --secondary: #A8A8FF;
+  --secondary-soft: rgba(168,168,255,0.14);
+
+  /* Portals Iris mascot palette (spec 025) */
+  --iris-brain: #9b59b6;
+  --iris-eye: #3498db;
+  --iris-hand: #2ecc71;
+  --iris-glow: #F7FFA8;
+
+  /* Spec 024 semantic palette */
+  --sem-meta: #9b59b6;
+  --sem-render: #3498db;
+  --sem-transport: #2ecc71;
+  --sem-format: #f39c12;
+  --sem-edge: #e74c3c;
+  --sem-infra: #95a5a6;
+
+  /* Node-type palette — reuses semantic tokens */
+  --type-doc: #888888;
+  --type-concept: #F7FFA8;    /* accent — concepts are glow */
+  --type-demo: #2ecc71;
+  --type-rfc: #9b59b6;
+  --type-runtime: #3498db;
+
+  /* Radius — near-zero; sharp HUD aesthetic */
+  --r-sm: 2px;
+  --r-md: 4px;
+
+  /* Transitions */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --t-fast: 0.15s;
+  --t-med: 0.32s;
+  --t-slow: 0.6s;
+}
+
+/* Scan-line overlay — very subtle HUD texture (body::after or dedicated el) */
+@keyframes scan-line {
+  0% { transform: translateY(-100vh); }
+  100% { transform: translateY(100vh); }
+}
+.scan-lines::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 4; pointer-events: none;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 3px,
+      rgba(247,255,168,0.015) 3px,
+      rgba(247,255,168,0.015) 4px
+    );
+}
+.scan-lines::after {
+  content: '';
+  position: fixed; left: 0; right: 0; height: 2px; z-index: 4; pointer-events: none;
+  background: linear-gradient(to bottom, transparent, var(--accent-glow), transparent);
+  filter: blur(1px); opacity: 0.4;
+  animation: scan-line 8s linear infinite;
+}
+
+/* Corner brackets — HUD framing cue, wrap key elements */
+.brackets { position: relative; }
+.brackets::before, .brackets::after {
+  content: ''; position: absolute;
+  width: 10px; height: 10px;
+  border: 1px solid var(--accent);
+  opacity: 0.6;
+}
+.brackets::before { top: -6px; left: -6px; border-right: 0; border-bottom: 0; }
+.brackets::after { bottom: -6px; right: -6px; border-left: 0; border-top: 0; }
+.brackets.lg::before, .brackets.lg::after { width: 14px; height: 14px; }
+
+/* Reticle cursor — desktop only */
+@media (hover: hover) and (pointer: fine) {
+  .reticle-cursor, .reticle-cursor * {
+    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><circle cx='12' cy='12' r='1' fill='%23F7FFA8'/><line x1='12' y1='3' x2='12' y2='8' stroke='%23F7FFA8' stroke-width='1'/><line x1='12' y1='16' x2='12' y2='21' stroke='%23F7FFA8' stroke-width='1'/><line x1='3' y1='12' x2='8' y2='12' stroke='%23F7FFA8' stroke-width='1'/><line x1='16' y1='12' x2='21' y2='12' stroke='%23F7FFA8' stroke-width='1'/></svg>") 12 12, crosshair;
+  }
+}
+
+/* Reset + base */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+html, body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.55;
+  letter-spacing: -0.005em;
+  font-feature-settings: 'ss01' 1, 'ss02' 1;
+}
+
+/* Typography primitives — used across all pages */
+.display {
+  font-family: 'Satoshi', sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  line-height: 0.9;
+  font-feature-settings: 'ss01' 1;
+}
+.tag, .label, .meta {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10.5px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+}
+.mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+a {
+  color: var(--fg);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color var(--t-fast), border-color var(--t-fast);
+}
+a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* Wordmark — reusable mark for headers + footers */
+.wordmark {
+  font-family: 'Satoshi', sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.055em;
+  color: var(--fg);
+  line-height: 0.82;
+}
+.wordmark .accent { color: var(--accent); font-style: italic; font-weight: 700; }
+.wordmark .dot { color: var(--accent); font-weight: 400; letter-spacing: -0.1em; margin-left: -0.08em; }
+
+/* Chip / pill — used for meta info (version, tier, etc) */
+.pill {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--muted-soft);
+  border: 1px solid var(--border);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+.pill.accent { color: var(--accent); border-color: var(--accent); }
+
+/* Folio / plate marks — editorial manuscript cue */
+.folio {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  opacity: 0.55;
+}
+
+/* Buttons, generic */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--fg);
+  padding: 9px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.14em;
+  cursor: pointer;
+  border-radius: var(--r-sm);
+  transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast);
+}
+.btn:hover { color: var(--accent); border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+
+/* Text-nav — inline links with dot separators */
+.nav-text {
+  display: flex; gap: 0; align-items: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.14em;
+}
+.nav-text > a, .nav-text > button, .nav-text > label, .nav-text > select {
+  background: transparent; border: 0; outline: 0;
+  color: var(--muted-soft);
+  padding: 8px 12px; cursor: pointer;
+  font-family: inherit; font-size: inherit; font-weight: inherit;
+  letter-spacing: inherit; text-transform: inherit;
+  text-decoration: none;
+  border-radius: 0;
+  -webkit-appearance: none; appearance: none;
+  transition: color var(--t-fast);
+}
+.nav-text > a:hover, .nav-text > button:hover, .nav-text > label:hover, .nav-text > select:hover { color: var(--fg); border-bottom: 0; }
+.nav-sep { width: 3px; height: 3px; border-radius: 50%; background: var(--border-strong); margin: 0 2px; flex-shrink: 0; }
+
+/* Editorial content blocks — used in classic.html, stub viewers, panel */
+.editorial {
+  max-width: 720px;
+  font-family: 'Satoshi', sans-serif;
+}
+.editorial h1 {
+  font-family: 'Satoshi', sans-serif; font-weight: 900;
+  font-size: clamp(36px, 5vw, 56px);
+  letter-spacing: -0.035em; line-height: 0.95;
+  color: var(--fg); margin: 0 0 28px;
+}
+.editorial h2 {
+  font-family: 'Satoshi', sans-serif; font-weight: 700;
+  font-size: 22px; letter-spacing: -0.02em; line-height: 1.2;
+  color: var(--fg);
+  margin: 48px 0 16px;
+  padding-top: 28px;
+  border-top: 1px solid var(--border);
+}
+.editorial h2:first-of-type { padding-top: 0; border-top: 0; margin-top: 32px; }
+.editorial h3 {
+  font-family: 'Satoshi', sans-serif; font-weight: 700;
+  font-size: 13px; line-height: 1.3;
+  color: var(--fg); margin: 24px 0 10px;
+  text-transform: uppercase; letter-spacing: 0.1em;
+}
+.editorial p, .editorial li {
+  font-size: 15.5px; line-height: 1.65; letter-spacing: -0.005em;
+  color: var(--fg-dim); margin-bottom: 14px;
+}
+.editorial ul, .editorial ol { margin-left: 22px; margin-bottom: 18px; }
+.editorial li { margin-bottom: 7px; }
+.editorial strong { color: var(--fg); font-weight: 600; }
+.editorial a {
+  color: var(--fg);
+  border-bottom: 1px solid var(--border-strong);
+}
+.editorial a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.editorial blockquote {
+  border-left: 2px solid var(--accent);
+  padding: 4px 0 4px 22px; margin: 22px 0;
+  font-style: italic; font-weight: 400; font-size: 16.5px;
+  line-height: 1.55; color: var(--muted-soft); letter-spacing: -0.005em;
+}
+.editorial pre {
+  background: var(--bg-deeper);
+  border: 1px solid var(--border);
+  padding: 16px 18px; border-radius: var(--r-sm); overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 1.55;
+  margin: 18px 0; color: var(--fg-dim);
+}
+.editorial code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; color: var(--accent);
+}
+.editorial pre code { color: inherit; }
+.editorial hr { border: 0; border-top: 1px solid var(--border); margin: 36px 0; }
+.editorial table {
+  border-collapse: collapse; margin: 18px 0;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  width: 100%;
+}
+.editorial th, .editorial td {
+  border-bottom: 1px solid var(--border);
+  padding: 11px 14px 11px 0; text-align: left;
+}
+.editorial th {
+  color: var(--muted); font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.12em; font-size: 10.5px;
+}
+
+/* Page layout — centered editorial column with generous whitespace */
+.page {
+  min-height: 100vh;
+  padding: 80px 40px 120px;
+}
+.page-content { max-width: 720px; margin: 0 auto; }
+.page-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 64px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.page-header .brand {
+  font-family: 'Satoshi', sans-serif;
+  font-weight: 900;
+  font-size: 20px;
+  letter-spacing: -0.04em;
+  color: var(--fg);
+}
+.page-header .brand .accent { color: var(--accent); font-style: italic; }
+.page-footer {
+  margin-top: 96px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.14em;
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+}
+
+/* Utility */
+.hide { display: none !important; }
+.accent-fg { color: var(--accent); }
+.muted-fg { color: var(--muted); }
+.sep { color: var(--border-strong); margin: 0 6px; }
+
+/* Motion */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.rise { animation: rise 0.7s var(--ease) both; }
+
+/* Mobile */
+@media (max-width: 700px) {
+  .page { padding: 48px 24px 80px; }
+  .editorial h1 { font-size: 34px; }
+  .editorial h2 { font-size: 19px; }
+  .editorial p, .editorial li { font-size: 15px; }
+}
+
+/* Selection */
+::selection { background: var(--accent); color: var(--bg); }
+
+/* Scrollbar — minimal */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }

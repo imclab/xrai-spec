@@ -1,22 +1,50 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8" />
+<html lang="en">
+<head>
+<meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>XRAI — ECharts-GL viewer (stub)</title>
-<style>body{background:#05080f;color:#eaf0ff;font:14px/1.5 system-ui;margin:0;padding:60px 24px;max-width:720px;margin:0 auto}a{color:#ffd166}.pill{background:#111a2e;padding:2px 8px;border-radius:4px;color:#8ab4ff;font-size:12px}</style>
-</head><body>
-<h1 style="font-size:32px;color:#ffd166">⚡ ECharts-GL + WebGPU XRAI viewer</h1>
-<p class="pill">stub — v1.1 target</p>
-<h2>Scope</h2>
-<ul>
-  <li>Graph layout: ECharts <code>graphGL</code> (Apache 2.0, ~300KB) + optional WebGPU compute shader for 10K+ node force simulation.</li>
-  <li>Render target: desktop browsers + mobile Safari/Chrome. Heavy-data view when <code>force-graph</code> budget exceeded.</li>
-  <li>XRAI I/O: same File API + fetch patterns as main <a href="../../index.html">index.html</a>.</li>
-  <li>Multiplayer: LiveKit (spec 010).</li>
-</ul>
-<h2>Status</h2>
-<p>Not yet implemented. Stub referenced by main viewer's engine picker. Full impl lands with RFC TBD — see <a href="../../VIEWER_ARCHITECTURE.md">VIEWER_ARCHITECTURE.md</a> § Layout layer.</p>
-<p>When implemented: passes the same <a href="../_conformance/README.md">conformance harness</a> as <a href="../threejs/">threejs/</a>, so XRAI docs render identically modulo engine-specific shading.</p>
-<h2>Why this engine</h2>
-<p>ECharts-GL is proven at 10K+ node graphs with interactive filtering/search. Spec 006 (KB Visualizer) already selects ECharts-GL for the developer/analytics tier — this viewer reuses that decision.</p>
-<p style="margin-top:48px"><a href="../../index.html">← back to main viewer</a> · <a href="../../VIEWER_ARCHITECTURE.md">viewer architecture</a> · <a href="https://echarts.apache.org/examples/en/index.html#chart-type-graphGL">ECharts graphGL demos</a></p>
-</body></html>
+<title>xrai — ECharts-GL + WebGPU (stub)</title>
+<link rel="preconnect" href="https://api.fontshare.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" />
+<link rel="stylesheet" href="../../styles/brand.css" />
+</head>
+<body>
+<div class="page">
+<div class="page-content">
+
+<header class="page-header">
+  <a href="../../index.html" class="brand"><span class="accent">x</span>rai<span class="accent">.</span></a>
+  <span class="pill">echarts-gl · webgpu</span>
+</header>
+
+<article class="editorial">
+  <h1>ECharts-GL + WebGPU</h1>
+  <p><span class="pill accent">stub · v1.1 target</span></p>
+
+  <h2>Scope</h2>
+  <ul>
+    <li>Graph layout: ECharts <code>graphGL</code> (Apache 2.0, ~300KB) + optional WebGPU compute shader for 10K+ node force simulation.</li>
+    <li>Render target: desktop browsers + mobile Safari/Chrome. Heavy-data view when <code>force-graph</code> budget is exceeded.</li>
+    <li>XRAI I/O: same File API + fetch patterns as the <a href="../../index.html">main viewer</a>.</li>
+    <li>Multiplayer: LiveKit (spec 010).</li>
+  </ul>
+
+  <h2>Status</h2>
+  <p>Not yet implemented. Stub is referenced by the main viewer's engine picker. Full impl lands with RFC TBD — see <a href="../../VIEWER_ARCHITECTURE.md">VIEWER_ARCHITECTURE.md</a> § Layout layer.</p>
+  <p>When implemented: passes the same <a href="../_conformance/README.md">conformance harness</a> as <a href="../threejs/">threejs/</a>, so XRAI docs render identically modulo engine-specific shading.</p>
+
+  <h2>Why this engine</h2>
+  <p>ECharts-GL is proven at 10K+ node graphs with interactive filtering and search. Spec 006 (KB Visualizer) already selects ECharts-GL for the developer and analytics tier — this viewer reuses that decision.</p>
+</article>
+
+<footer class="page-footer">
+  <span>xrai.dev · plate echarts-gl</span>
+  <span><a href="../../index.html">back to main viewer</a> · <a href="../../VIEWER_ARCHITECTURE.md">architecture</a> · <a href="https://echarts.apache.org/examples/en/index.html#chart-type-graphGL">echarts demos</a></span>
+</footer>
+
+</div>
+</div>
+</body>
+</html>
