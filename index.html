@@ -116,6 +116,12 @@
     margin: 3px 0; font-size: 11px; color: var(--muted-soft);
   }
   .legend-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .legend-glyph {
+    display: inline-block; width: 14px; text-align: center; flex-shrink: 0;
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px;
+    font-weight: 500; line-height: 1;
+    filter: drop-shadow(0 0 4px currentColor);
+  }
   .legend-hint {
     font-family: 'Satoshi', sans-serif; font-size: 12px;
     color: var(--muted); margin-top: 16px; line-height: 1.55; letter-spacing: -0.005em;
@@ -311,6 +317,52 @@
   .topnav { animation: rise 0.7s cubic-bezier(0.2,0.8,0.2,1) 0.3s both; }
   .folio { animation: rise 0.7s cubic-bezier(0.2,0.8,0.2,1) 0.9s both; }
   .prompt-bar { animation: rise 0.9s cubic-bezier(0.2,0.8,0.2,1) 0.6s both; }
+  .concepts-rail { animation: rise 0.9s cubic-bezier(0.2,0.8,0.2,1) 1.1s both; }
+
+  /* ───── jARvis voice status dot (topnav) ───── */
+  .jarvis-dot {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--muted); margin-left: 6px;
+    transition: background var(--t-fast), box-shadow var(--t-fast);
+  }
+  .jarvis-dot.idle      { background: var(--accent); box-shadow: 0 0 6px var(--accent-glow); }
+  .jarvis-dot.listening { background: var(--accent); box-shadow: 0 0 10px var(--accent); animation: dot-pulse 1.4s ease-in-out infinite; }
+  .jarvis-dot.awaiting  { background: var(--secondary); box-shadow: 0 0 12px var(--secondary); animation: dot-pulse 0.7s ease-in-out infinite; }
+  @keyframes dot-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50%      { transform: scale(1.4); opacity: 0.6; }
+  }
+  .topnav button.jarvis-on { color: var(--accent); }
+
+  /* ───── Core-concepts rail — top-left beneath the hero ───── */
+  .concepts-rail {
+    position: fixed; top: 260px; left: 40px; z-index: 9;
+    max-width: 420px; pointer-events: auto;
+  }
+  .concept-card {
+    border-left: 1px solid var(--border-strong);
+    padding: 14px 0 14px 18px;
+    margin-bottom: 14px;
+    transition: border-color var(--t-med), padding var(--t-med);
+  }
+  .concept-card:hover { border-left-color: var(--accent); padding-left: 22px; }
+  .concept-card .pill {
+    font-family: 'JetBrains Mono', monospace; font-size: 9.5px; font-weight: 500;
+    color: var(--accent); text-transform: uppercase; letter-spacing: 0.16em;
+    display: inline-block; margin-bottom: 6px; border: 1px solid var(--accent);
+    padding: 2px 7px;
+  }
+  .concept-card h3 {
+    font-family: 'Satoshi', sans-serif; font-weight: 700;
+    font-size: 15px; letter-spacing: -0.015em; line-height: 1.2;
+    color: var(--fg); margin: 0 0 4px;
+  }
+  .concept-card p {
+    font-family: 'Satoshi', sans-serif; font-size: 12.5px; font-weight: 400;
+    line-height: 1.45; color: var(--muted-soft);
+    letter-spacing: -0.005em; margin: 0;
+  }
+  @media (max-width: 1100px) { .concepts-rail { display: none; } }
 
   /* ───── jARvis-HUD prompt bar (talk-to-me CTA) — bottom-center ───── */
   .prompt-bar {
@@ -424,6 +476,24 @@
   </form>
 </div>
 
+<aside class="concepts-rail" aria-label="XRAI core concepts">
+  <div class="concept-card">
+    <span class="pill">01 — sight triad</span>
+    <h3>See through. See over. See across.</h3>
+    <p>X-ray vision (AI black boxes, provenance, cost) · God's-eye view (field topology) · Infinite zoom (time, possibilities, minds, scales).</p>
+  </div>
+  <div class="concept-card">
+    <span class="pill">02 — jarvis</span>
+    <h3>Voice-first agentic swarm.</h3>
+    <p>Small language models, sensor-fusion HCI, zero-latency orchestration across phones, glasses, and browsers. Say "hey jarvis" to start.</p>
+  </div>
+  <div class="concept-card">
+    <span class="pill">03 — portals · cvpr 2026</span>
+    <h3>Stateful 4D worlds on iPhone.</h3>
+    <p>60 FPS on iPhone 14 Pro · 360+ VFX on a shared compute substrate · persistent across sessions, devices, users. The XRAI reference implementation.</p>
+  </div>
+</aside>
+
 <div class="folio tl">xrai.dev · plate i</div>
 <div class="folio br">an h3m laboratory project</div>
 
@@ -448,6 +518,10 @@
   <span class="topnav-sep"></span>
   <button id="mp-btn" class="mp-stub" title="Multiplayer via LiveKit (spec 010) — coming soon">invite</button>
   <span class="topnav-sep"></span>
+  <button id="jarvis-toggle" title='Always-listening voice assistant — say "hey jarvis"'>
+    jarvis<span class="jarvis-dot" id="jarvis-dot"></span>
+  </button>
+  <span class="topnav-sep"></span>
   <a href="VIEWER_ARCHITECTURE.md" title="Hybrid viewer architecture">arch</a>
   <span class="topnav-sep"></span>
   <a href="classic.html" title="Static text-only landing page">read</a>
@@ -460,14 +534,18 @@
 <div class="toast" id="toast"></div>
 
 <div class="legend">
-  <h3>legend</h3>
-  <div class="legend-row"><span class="legend-dot" style="background:var(--doc)"></span> doc · spec</div>
-  <div class="legend-row"><span class="legend-dot" style="background:var(--concept)"></span> concept</div>
-  <div class="legend-row"><span class="legend-dot" style="background:var(--demo)"></span> example</div>
-  <div class="legend-row"><span class="legend-dot" style="background:var(--rfc)"></span> rfc</div>
-  <div class="legend-row"><span class="legend-dot" style="background:var(--runtime)"></span> runtime</div>
+  <h3>taxonomy</h3>
+  <div class="legend-row"><span class="legend-glyph" style="color:#888888">▦</span> file</div>
+  <div class="legend-row"><span class="legend-glyph" style="color:#F7FFA8">◆</span> concept</div>
+  <div class="legend-row"><span class="legend-glyph" style="color:#9b59b6">◇</span> rfc</div>
+  <div class="legend-row"><span class="legend-glyph" style="color:#2ecc71">○</span> example</div>
+  <div class="legend-row"><span class="legend-glyph" style="color:#3498db">▲</span> runtime</div>
+  <div class="legend-row"><span class="legend-glyph" style="color:#A8A8FF">●</span> person</div>
+  <div class="legend-row"><span class="legend-glyph" style="color:#4ecdc4">⬡</span> place</div>
+  <div class="legend-row"><span class="legend-glyph" style="color:#f39c12">⬢</span> xrai entity</div>
+  <div class="legend-row"><span class="legend-glyph" style="color:#666666">▤</span> structure</div>
   <div class="legend-hint">
-    <strong>drag</strong> to orbit. <strong>scroll</strong> to zoom. <strong>click</strong> a node to read. <code>esc</code> to close.
+    <strong>drag</strong> orbit · <strong>scroll</strong> zoom · <strong>click</strong> to read · type <code>/</code> to ask jarvis
   </div>
 </div>
 
@@ -497,48 +575,74 @@
 import { marked } from 'https://esm.sh/marked@11.1.1';
 
 // ------- Graph data: XRAI spec as its own hypergraph -------
-// Nodes = concrete files/concepts in this repo.
-// Edges = real cross-references.
+// Typed taxonomy. Every node has:
+//   type  : semantic class (file / concept / rfc / example / runtime / person / place / xrai-entity / structure)
+//   glyph : single unicode char displayed as sprite — instantly readable, no hover required
+//   group : node-palette color key
+//   cluster: optional group-key for spatial clustering (e.g. per-user, per-location)
+// Edges = cross-references.
+//
+// Glyph vocabulary (unicode geometric — readable at 32px sprite):
+//   ▦ file · ◆ concept · ◇ rfc · ○ example · ▲ runtime · ● person · ⬡ place · ⬢ xrai-entity · ▤ structure
 const nodes = [
-  // Core vision + manifesto
-  { id: 'VISION',             group: 'concept', label: 'VISION',             file: 'VISION.md',               size: 22 },
-  { id: 'MANIFESTO',          group: 'doc',     label: 'MANIFESTO',          file: 'MANIFESTO.md',            size: 18 },
-  { id: 'SPEC',               group: 'doc',     label: 'SPEC v1.0',          file: 'SPEC.md',                 size: 24 },
-  { id: 'FAQ',                group: 'doc',     label: 'FAQ',                file: 'FAQ.md',                  size: 12 },
-  { id: 'CITATION',           group: 'doc',     label: 'CITATION',           file: 'CITATION.cff',            size: 8  },
-  { id: 'CHANGELOG',          group: 'doc',     label: 'CHANGELOG',          file: 'CHANGELOG.md',            size: 8  },
-  { id: 'VERSIONS',           group: 'doc',     label: 'VERSIONS',           file: 'VERSIONS.md',             size: 10 },
-  { id: 'BUILDING',           group: 'doc',     label: 'BUILDING',           file: 'BUILDING.md',             size: 10 },
-  { id: 'CONTRIBUTING',       group: 'doc',     label: 'CONTRIBUTING',       file: 'CONTRIBUTING.md',         size: 8  },
-  { id: 'CODE_OF_CONDUCT',    group: 'doc',     label: 'Code of Conduct',    file: 'CODE_OF_CONDUCT.md',      size: 6  },
-  { id: 'SECURITY',           group: 'doc',     label: 'SECURITY',           file: 'SECURITY.md',             size: 8  },
-  { id: 'LAUNCH_CHECKLIST',   group: 'doc',     label: 'Launch Checklist',   file: 'LAUNCH_CHECKLIST.md',     size: 8  },
-  { id: 'RUNTIMES',           group: 'doc',     label: 'RUNTIMES',           file: 'RUNTIMES.md',             size: 14 },
-  { id: 'RUNTIMES_EVAL',      group: 'doc',     label: 'Runtimes Eval',      file: 'RUNTIMES_EVALUATION.md',  size: 12 },
-  { id: 'USE_CASES',          group: 'doc',     label: 'Use Cases',          file: 'USE_CASES.md',            size: 12 },
-  { id: 'LLMS_TXT',           group: 'doc',     label: 'llms.txt',           file: 'llms.txt',                size: 8  },
+  // Core vision + manifesto (files + concepts)
+  { id: 'VISION',             type: 'concept',  group: 'concept', glyph: '◆', label: 'VISION',             file: 'VISION.md',               size: 22 },
+  { id: 'MANIFESTO',          type: 'file',     group: 'doc',     glyph: '▦', label: 'MANIFESTO',          file: 'MANIFESTO.md',            size: 18 },
+  { id: 'SPEC',               type: 'file',     group: 'doc',     glyph: '▦', label: 'SPEC v1.0',          file: 'SPEC.md',                 size: 24 },
+  { id: 'FAQ',                type: 'file',     group: 'doc',     glyph: '▦', label: 'FAQ',                file: 'FAQ.md',                  size: 12 },
+  { id: 'CITATION',           type: 'file',     group: 'doc',     glyph: '▦', label: 'CITATION',           file: 'CITATION.cff',            size: 8  },
+  { id: 'CHANGELOG',          type: 'file',     group: 'doc',     glyph: '▦', label: 'CHANGELOG',          file: 'CHANGELOG.md',            size: 8  },
+  { id: 'VERSIONS',           type: 'file',     group: 'doc',     glyph: '▦', label: 'VERSIONS',           file: 'VERSIONS.md',             size: 10 },
+  { id: 'BUILDING',           type: 'file',     group: 'doc',     glyph: '▦', label: 'BUILDING',           file: 'BUILDING.md',             size: 10 },
+  { id: 'CONTRIBUTING',       type: 'file',     group: 'doc',     glyph: '▦', label: 'CONTRIBUTING',       file: 'CONTRIBUTING.md',         size: 8  },
+  { id: 'CODE_OF_CONDUCT',    type: 'file',     group: 'doc',     glyph: '▦', label: 'Code of Conduct',    file: 'CODE_OF_CONDUCT.md',      size: 6  },
+  { id: 'SECURITY',           type: 'file',     group: 'doc',     glyph: '▦', label: 'SECURITY',           file: 'SECURITY.md',             size: 8  },
+  { id: 'LAUNCH_CHECKLIST',   type: 'file',     group: 'doc',     glyph: '▦', label: 'Launch Checklist',   file: 'LAUNCH_CHECKLIST.md',     size: 8  },
+  { id: 'RUNTIMES',           type: 'file',     group: 'doc',     glyph: '▦', label: 'RUNTIMES',           file: 'RUNTIMES.md',             size: 14 },
+  { id: 'RUNTIMES_EVAL',      type: 'file',     group: 'doc',     glyph: '▦', label: 'Runtimes Eval',      file: 'RUNTIMES_EVALUATION.md',  size: 12 },
+  { id: 'USE_CASES',          type: 'file',     group: 'doc',     glyph: '▦', label: 'Use Cases',          file: 'USE_CASES.md',            size: 12 },
+  { id: 'LLMS_TXT',           type: 'file',     group: 'doc',     glyph: '▦', label: 'llms.txt',           file: 'llms.txt',                size: 8  },
 
-  // Examples
-  { id: 'EX_MINIMAL',         group: 'demo',    label: 'ex: minimal',        file: 'examples/01-minimal.xrai.json',       size: 6 },
-  { id: 'EX_VOICE',           group: 'demo',    label: 'ex: voice→scene',    file: 'examples/02-voice-prompt.xrai.json',  size: 6 },
-  { id: 'EX_WIRED',           group: 'demo',    label: 'ex: audio-reactive', file: 'examples/03-wired.xrai.json',         size: 6 },
-  { id: 'EX_HOLO',            group: 'demo',    label: 'ex: hologram',       file: 'examples/04-hologram.xrai.json',      size: 6 },
+  // Examples (xrai-entity samples)
+  { id: 'EX_MINIMAL',         type: 'example',  group: 'demo',    glyph: '○', label: 'minimal',            file: 'examples/01-minimal.xrai.json',       size: 7 },
+  { id: 'EX_VOICE',           type: 'example',  group: 'demo',    glyph: '○', label: 'voice→scene',        file: 'examples/02-voice-prompt.xrai.json',  size: 7 },
+  { id: 'EX_WIRED',           type: 'example',  group: 'demo',    glyph: '○', label: 'audio-reactive',     file: 'examples/03-wired.xrai.json',         size: 7 },
+  { id: 'EX_HOLO',            type: 'example',  group: 'demo',    glyph: '○', label: 'hologram',           file: 'examples/04-hologram.xrai.json',      size: 7 },
 
-  // RFCs
-  { id: 'RFC_TEMPLATE',       group: 'rfc',     label: 'RFC template',       file: 'rfcs/0000-template.md',               size: 6 },
-  { id: 'RFC_0001',           group: 'rfc',     label: 'RFC 0001 events',    file: 'rfcs/0001-event-primitives.md',       size: 10 },
-  { id: 'RFC_0002',           group: 'rfc',     label: 'RFC 0002 hyperedges', file: 'rfcs/0002-nary-hyperedges.md',       size: 10 },
-  { id: 'RFC_0003',           group: 'rfc',     label: 'RFC 0003 conformance', file: 'rfcs/0003-conformance-tests.md',    size: 10 },
+  // RFCs (proposals)
+  { id: 'RFC_TEMPLATE',       type: 'rfc',      group: 'rfc',     glyph: '◇', label: 'RFC template',       file: 'rfcs/0000-template.md',               size: 6 },
+  { id: 'RFC_0001',           type: 'rfc',      group: 'rfc',     glyph: '◇', label: 'RFC 0001 events',    file: 'rfcs/0001-event-primitives.md',       size: 10 },
+  { id: 'RFC_0002',           type: 'rfc',      group: 'rfc',     glyph: '◇', label: 'RFC 0002 hyperedges', file: 'rfcs/0002-nary-hyperedges.md',       size: 10 },
+  { id: 'RFC_0003',           type: 'rfc',      group: 'rfc',     glyph: '◇', label: 'RFC 0003 conformance', file: 'rfcs/0003-conformance-tests.md',    size: 10 },
 
-  // Runtimes
-  { id: 'RT_THREEJS',         group: 'runtime', label: 'Three.js adapter',   file: 'runtimes/threejs/README.md',          size: 10 },
-  { id: 'RT_README',          group: 'runtime', label: 'runtimes/ index',    file: 'runtimes/_conformance/README.md',     size: 8  },
-  { id: 'MCP',                group: 'runtime', label: 'Spatial MCP',        file: 'mcp-server/README.md',                size: 12 },
+  // Runtimes (engines / adapters)
+  { id: 'RT_THREEJS',         type: 'runtime',  group: 'runtime', glyph: '▲', label: 'Three.js',           file: 'runtimes/threejs/README.md',          size: 10 },
+  { id: 'RT_README',          type: 'runtime',  group: 'runtime', glyph: '▲', label: 'conformance',        file: 'runtimes/_conformance/README.md',     size: 8  },
+  { id: 'MCP',                type: 'runtime',  group: 'runtime', glyph: '▲', label: 'Spatial MCP',        file: 'mcp-server/README.md',                size: 12 },
 
-  // Abstract concepts (no file — synthetic doc pulled from VISION)
-  { id: 'SIGHT_TRIAD',        group: 'concept', label: 'Sight Triad',        file: '__inline__:sight-triad',              size: 14 },
-  { id: 'JARVIS',             group: 'concept', label: 'jARvis goal',        file: '__inline__:jarvis',                   size: 14 },
-  { id: 'PORTALS_PROOF',      group: 'concept', label: 'Portals (CVPR 2026)', file: '__inline__:portals',                 size: 12 },
+  // Abstract concepts (synthetic — pulled from VISION)
+  { id: 'SIGHT_TRIAD',        type: 'concept',  group: 'concept', glyph: '◆', label: 'Sight Triad',        file: '__inline__:sight-triad',              size: 14 },
+  { id: 'JARVIS',             type: 'concept',  group: 'concept', glyph: '◆', label: 'jARvis',             file: '__inline__:jarvis',                   size: 14 },
+  { id: 'PORTALS_PROOF',      type: 'concept',  group: 'concept', glyph: '◆', label: 'Portals CVPR 2026',  file: '__inline__:portals',                  size: 12 },
+
+  // People — @jamestunick is the BDFL. Extend from Portals app feed when wired.
+  { id: 'AUTHOR_JT',          type: 'person',   group: 'person',  glyph: '●', label: '@jamestunick',       file: '__inline__:author-jt',                size: 11, cluster: 'h3m' },
+
+  // Place — launch gateway
+  { id: 'PLACE_XRAI_DEV',     type: 'place',    group: 'place',   glyph: '⬡', label: 'xrai.dev',           file: '__inline__:place-xrai-dev',           size: 9,  cluster: 'public' },
+  { id: 'PLACE_IMCLAB',       type: 'place',    group: 'place',   glyph: '⬡', label: 'imclab/xra1',        file: '__inline__:place-imclab',             size: 9,  cluster: 'public' },
+
+  // Structure — directory groupings
+  { id: 'DIR_LAUNCH',         type: 'structure', group: 'structure', glyph: '▤', label: 'launch/',        file: '__inline__:dir-launch',               size: 7 },
+  { id: 'DIR_RUNTIMES',       type: 'structure', group: 'structure', glyph: '▤', label: 'runtimes/',      file: '__inline__:dir-runtimes',             size: 7 },
+  { id: 'DIR_RFCS',           type: 'structure', group: 'structure', glyph: '▤', label: 'rfcs/',          file: '__inline__:dir-rfcs',                 size: 7 },
+  { id: 'DIR_EXAMPLES',       type: 'structure', group: 'structure', glyph: '▤', label: 'examples/',      file: '__inline__:dir-examples',             size: 7 },
+  { id: 'DIR_MCP',            type: 'structure', group: 'structure', glyph: '▤', label: 'mcp-server/',    file: '__inline__:dir-mcp',                  size: 7 },
+
+  // XRAI-semantic entities — the format's own primitives
+  { id: 'XRAI_ENT',           type: 'xrai',     group: 'xrai',    glyph: '⬢', label: 'entity',             file: '__inline__:xrai-entity',              size: 8 },
+  { id: 'XRAI_REL',           type: 'xrai',     group: 'xrai',    glyph: '⬢', label: 'relation',           file: '__inline__:xrai-relation',            size: 8 },
+  { id: 'XRAI_EVT',           type: 'xrai',     group: 'xrai',    glyph: '⬢', label: 'event',              file: '__inline__:xrai-event',               size: 8 },
 ];
 
 const links = [
@@ -605,7 +709,73 @@ const links = [
   { source: 'LLMS_TXT', target: 'VISION' },
   { source: 'USE_CASES', target: 'SPEC' },
   { source: 'USE_CASES', target: 'JARVIS' },
+
+  // Author + places (provenance)
+  { source: 'AUTHOR_JT', target: 'VISION' },
+  { source: 'AUTHOR_JT', target: 'MANIFESTO' },
+  { source: 'AUTHOR_JT', target: 'CITATION' },
+  { source: 'PLACE_XRAI_DEV', target: 'PLACE_IMCLAB' },
+  { source: 'PLACE_IMCLAB', target: 'SPEC' },
+
+  // Directory memberships
+  { source: 'DIR_LAUNCH', target: 'LAUNCH_CHECKLIST' },
+  { source: 'DIR_RUNTIMES', target: 'RUNTIMES' },
+  { source: 'DIR_RUNTIMES', target: 'RT_THREEJS' },
+  { source: 'DIR_RUNTIMES', target: 'RT_README' },
+  { source: 'DIR_RFCS', target: 'RFC_TEMPLATE' },
+  { source: 'DIR_RFCS', target: 'RFC_0001' },
+  { source: 'DIR_RFCS', target: 'RFC_0002' },
+  { source: 'DIR_RFCS', target: 'RFC_0003' },
+  { source: 'DIR_EXAMPLES', target: 'EX_MINIMAL' },
+  { source: 'DIR_EXAMPLES', target: 'EX_VOICE' },
+  { source: 'DIR_EXAMPLES', target: 'EX_WIRED' },
+  { source: 'DIR_EXAMPLES', target: 'EX_HOLO' },
+  { source: 'DIR_MCP', target: 'MCP' },
+
+  // XRAI-semantic primitives anchor SPEC
+  { source: 'SPEC', target: 'XRAI_ENT' },
+  { source: 'SPEC', target: 'XRAI_REL' },
+  { source: 'SPEC', target: 'XRAI_EVT' },
+  { source: 'XRAI_EVT', target: 'RFC_0001' },
+  { source: 'XRAI_REL', target: 'RFC_0002' },
 ];
+
+// ------- Portals live feed ingestion stub (non-blocking) -------
+// If a JSON file or endpoint at /api/portals-feed.json is reachable, hydrate
+// new nodes from it. Shape (documented, minimal):
+//   { items: [{ id, author, location, label, kind, cluster }, ...] }
+// kind → type ('person' / 'place' / 'xrai') and label renders as the node.
+// Cluster key pulls same-group items together via d3-force.
+async function hydratePortalsFeed() {
+  try {
+    const res = await fetch('/api/portals-feed.json', { cache: 'no-store' });
+    if (!res.ok) return;
+    const data = await res.json();
+    const items = (data.items || []).slice(0, 32);
+    if (!items.length) return;
+    const GLYPH = { person: '●', place: '⬡', xrai: '⬢' };
+    const feedNodes = items.map(it => ({
+      id: `FEED_${it.id}`,
+      type: it.kind || 'xrai',
+      group: it.kind === 'person' ? 'person' : (it.kind === 'place' ? 'place' : 'xrai'),
+      glyph: GLYPH[it.kind] || '⬢',
+      label: it.label || it.id,
+      cluster: it.cluster || it.author || it.location || 'feed',
+      size: 6,
+      file: `__inline__:feed-${it.id}`,
+      inlineMd: `# ${it.label}\n\nfrom portals feed · cluster: \`${it.cluster || '—'}\`\n\n\`\`\`json\n${JSON.stringify(it, null, 2)}\n\`\`\``,
+    }));
+    const feedLinks = items
+      .filter(it => it.parent)
+      .map(it => ({ source: `FEED_${it.id}`, target: it.parent }));
+    // Merge into existing graph — keeps current edges
+    const cur = Graph.graphData();
+    feedNodes.forEach(n => { if (n.inlineMd) inlineContent[n.file.replace('__inline__:', '')] = n.inlineMd; });
+    Graph.graphData({ nodes: [...cur.nodes, ...feedNodes], links: [...cur.links, ...feedLinks] });
+    showToast(`+${feedNodes.length} from portals feed`, 2400);
+  } catch (_) { /* silent — stub is expected to 404 on public site */ }
+}
+setTimeout(hydratePortalsFeed, 1800);
 
 // ------- Inline content for concept nodes (no markdown file) -------
 const inlineContent = {
@@ -641,6 +811,115 @@ See also [VISION.md](VISION.md), [MANIFESTO.md](MANIFESTO.md), and [RUNTIMES_EVA
 
 See also [VISION.md](VISION.md), [Portals CVPR proof](#PORTALS_PROOF).`,
 
+  'author-jt': `# @jamestunick — BDFL (year 1)
+
+Creator of XRAI. Year-1 benevolent dictator per the [governance section](MANIFESTO.md#governance) of the manifesto.
+
+**Affiliations:** IMC Lab, H3M Inc.
+**Paper:** first author on the [CVPR 2026 Portals paper](#PORTALS_PROOF).
+**Role transition:** BDFL → Apache SF / W3C Community Group once 1000+ external adopters validated (measured by [governance-readiness.sh](https://github.com/imclab/xra1)).
+
+Additional @-nodes will appear here as Portals app contributors post XRAI scenes to the public feed.`,
+
+  'place-xrai-dev': `# xrai.dev — public gateway
+
+The canonical public surface for XRAI v1.0. Serves this interactive spec-graph landing, SPEC, MANIFESTO, all RFCs, reference runtimes, launch-day posts, and the spatial MCP server package.
+
+**CNAME:** \`imclab.github.io\` (GitHub Pages).
+**Mirror origin:** [\`imclab/xra1\`](https://github.com/imclab/xra1). The Portals v4 monorepo staging is the upstream source-of-truth; commits flow: \`portals_v4\` → sync script → \`imclab/xra1\` → Pages → \`xrai.dev\`.
+
+When DNS propagates, everything you see here is available at \`https://xrai.dev\`.`,
+
+  'place-imclab': `# imclab/xra1 — public repo
+
+Home of the XRAI public spec + reference implementations.
+
+**License:** MIT for reference code, CC0 for normative schema. No CLA.
+**Languages:** TypeScript (adapters, MCP server), Markdown (spec + docs), JSON (examples + conformance).
+**Source of truth:** upstream is \`github.com/ryanjbrant/portals_v4\` at \`specs/XXX-zero-to-one/xrai-website/\`.
+
+Sibling repo **[imclab/xrai](https://github.com/imclab/xrai)** is a separate private knowledgebase — not the public XRAI spec. See [FAQ](FAQ.md) for why they differ.`,
+
+  'dir-launch': `# launch/ — operator-facing launch kit
+
+Holds the copy-paste launch posts + cadence templates used on launch day and weekly thereafter.
+
+**Contents:** HN Show HN, X/Twitter thread, Bluesky post, LinkedIn post, "This Week in XRAI" weekly-update drafts #1–#5, \`voice_stack.md\` tone guardrails.
+
+Every post is pre-drafted; [LAUNCH_CHECKLIST.md](LAUNCH_CHECKLIST.md) is the single push-button sequence.`,
+
+  'dir-runtimes': `# runtimes/ — per-engine adapters
+
+One folder per rendering engine. Each adapter implements the XRAI v1.0 parse contract and passes the conformance harness.
+
+**Today (shipped):**
+- [\`threejs/\`](runtimes/threejs/) — MIT reference, 4/4 fixtures green
+
+**Stubs (lock gates pending per [RUNTIMES_EVALUATION](RUNTIMES_EVALUATION.md)):**
+- [\`echarts/\`](runtimes/echarts/viewer.html), [\`playcanvas/\`](runtimes/playcanvas/viewer.html), [\`needle/\`](runtimes/needle/viewer.html), [\`icosa/\`](runtimes/icosa/viewer.html)
+- [\`_conformance/\`](runtimes/_conformance/README.md) harness docs`,
+
+  'dir-rfcs': `# rfcs/ — spec-change proposals
+
+Every change that requires a version bump lives here.
+
+- [\`0000-template.md\`](rfcs/0000-template.md) — RFC scaffolding
+- [\`0001-event-primitives.md\`](rfcs/0001-event-primitives.md) — v1.1 events (validFrom/validTo, causal chains, counterfactual branches)
+- [\`0002-nary-hyperedges.md\`](rfcs/0002-nary-hyperedges.md) — typed n-ary hyperedges
+- [\`0003-conformance-tests.md\`](rfcs/0003-conformance-tests.md) — normative test corpus`,
+
+  'dir-examples': `# examples/ — working v1.0 XRAI fixtures
+
+All four parse green through the reference [Three.js adapter](runtimes/threejs/). These are the conformance-test seed corpus plus the "if you've never seen XRAI" examples.
+
+- \`01-minimal.xrai.json\` — one cube
+- \`02-voice-prompt.xrai.json\` — "blue sphere floating above gold cube"
+- \`03-wired.xrai.json\` — audio-reactive scale via wire
+- \`04-hologram.xrai.json\` — AR anchor + hologram entity`,
+
+  'dir-mcp': `# mcp-server/ — spatial MCP for XRAI
+
+Give any MCP-compatible agent (Claude Desktop, Cursor, Cline, OpenAI, Gemini) the ability to compose + query XRAI scenes.
+
+**8 tools shipped today:**
+\`compose_scene\`, \`add_object\`, \`query_scene\`, \`modify_object\`, \`export_xrai\`, \`get_capabilities\`, \`paint_emit_stroke\`, \`paint_emit_parametric\`
+
+**Install:** \`npx @h3m/spatial-intelligence-mcp\`.`,
+
+  'xrai-entity': `# \`object.*\` entity
+
+The node primitive. Everything in an XRAI \`scene.entities[]\` is one of these.
+
+**v1.0 types:**
+- \`object.primitive\` — cube, sphere, cylinder, capsule, plane
+- \`object.glb\` — URL-referenced glTF asset
+- \`object.hologram\` — depth-aware VFX entity
+- \`object.light\`, \`object.emitter\`, \`object.wire-source\`
+- \`object.paint-stroke\`, \`object.parametric-stroke\` (spec 009)
+
+Every entity has \`id\`, \`type\`, \`transform\` (position + quaternion + scale), optional \`material\`, \`animation\`, \`components[]\`, \`metadata{}\`.
+
+See [SPEC.md](SPEC.md) § Entity.`,
+
+  'xrai-relation': `# \`relation\`
+
+The edge primitive. v1.0 is binary (\`from\` + \`to\`); [RFC 0002](rfcs/0002-nary-hyperedges.md) proposes typed n-ary hyperedges (\`participants[]\` + \`roles[]\`) for v1.1.
+
+**v1.0 types:** \`parent-of\`, \`wire-binds\`, \`reacts-to-audio\`, \`tracks\`.
+
+Relations anchor provenance. Authorship, causal chains, and federated-graph links all compose from relations.`,
+
+  'xrai-event': `# \`event\` — the temporal primitive
+
+v1.0 ships a stub (\`id\`, \`t\`, \`type\`, \`entity\`). [RFC 0001](rfcs/0001-event-primitives.md) proposes the full schema for v1.1:
+
+- \`validFrom\` / \`validTo\` — recurring / scheduled
+- \`causedBy\` / \`causes\` — explicit causal edges
+- \`actors[]\` — multi-entity reactions
+- \`branch\` — counterfactual timelines
+
+Events are the "infinite zoom across time" pillar of the [Sight Triad](#SIGHT_TRIAD).`,
+
   'portals': `# Portals — the shipping proof
 
 **Reference implementation for XRAI**, peer-reviewed at CVPR 2026.
@@ -659,40 +938,144 @@ Prior clinical deployment of volumetric AR at Memorial Sloan Kettering [23] esta
 See [CITATION.cff](CITATION.cff) for the canonical cite. See [SPEC.md](SPEC.md) for the v1.0 public subset that this proof anchors.`,
 };
 
-// ------- Color + sizing helpers -------
-const colorFor = (group) => ({
-  doc: '#8ab4ff',
-  concept: '#ffd166',
-  demo: '#4ade80',
-  rfc: '#c084fc',
-  runtime: '#f87171',
-}[group] || '#ffffff');
+// ------- Palette: Portals canonical (Iris glow) + semantic extensions -------
+const PALETTE = {
+  doc:        '#888888',   // neutral gray — files
+  concept:    '#F7FFA8',   // Iris glow — concepts
+  demo:       '#2ecc71',   // transport green — examples
+  rfc:        '#9b59b6',   // meta purple — proposals
+  runtime:    '#3498db',   // render blue — engines
+  person:     '#A8A8FF',   // periwinkle — people / authors
+  place:      '#4ecdc4',   // teal — locations / gateways
+  structure:  '#666666',   // dim gray — directories
+  xrai:       '#f39c12',   // format orange — xrai primitives
+};
+const colorFor = (group) => PALETTE[group] || '#ffffff';
+
+// ------- Typed-glyph sprite rendering: every node is instantly readable -------
+// Each node gets a THREE.Group with: core sphere + glyph sprite (unicode char on canvas)
+// + label sprite. No hover required — the graph communicates at rest.
+const SPRITE_CACHE = new Map();
+
+function makeGlyphSprite(glyph, color, scale = 1) {
+  const key = `${glyph}|${color}|${scale}`;
+  if (SPRITE_CACHE.has(key)) return SPRITE_CACHE.get(key).clone();
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 128; canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = color;
+  ctx.font = 'bold 88px "JetBrains Mono", ui-monospace, monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 14;
+  ctx.fillText(glyph, 64, 68);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.needsUpdate = true;
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(10 * scale, 10 * scale, 1);
+  SPRITE_CACHE.set(key, sprite);
+  return sprite.clone();
+}
+
+function makeLabelSprite(label, color = '#e5e5e5') {
+  const key = `label:${label}|${color}`;
+  if (SPRITE_CACHE.has(key)) return SPRITE_CACHE.get(key).clone();
+
+  const canvas = document.createElement('canvas');
+  const text = label.length > 22 ? label.slice(0, 20) + '…' : label;
+  canvas.width = 512; canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  ctx.font = '500 26px "JetBrains Mono", ui-monospace, monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  // Subtle black backdrop for readability
+  const m = ctx.measureText(text);
+  const pad = 12, bw = m.width + pad * 2, bh = 40;
+  ctx.fillStyle = 'rgba(0,0,0,0.62)';
+  ctx.fillRect(256 - bw / 2, 32 - bh / 2, bw, bh);
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(256 - bw / 2, 32 - bh / 2, bw, bh);
+  ctx.fillStyle = color;
+  ctx.fillText(text, 256, 34);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.needsUpdate = true;
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(22, 2.75, 1);
+  SPRITE_CACHE.set(key, sprite);
+  return sprite.clone();
+}
 
 // ------- Build the graph -------
 const Graph = ForceGraph3D()(document.getElementById('graph'))
-  .backgroundColor('#05080f')
+  .backgroundColor('#000000')
   .graphData({ nodes, links })
-  .nodeLabel(n => `<div style="font:13px system-ui; color:#eaf0ff; background:rgba(5,8,15,0.9); padding:4px 8px; border-radius:4px; border:1px solid ${colorFor(n.group)}">${n.label}</div>`)
   .nodeColor(n => colorFor(n.group))
-  .nodeVal(n => n.size || 8)
-  .nodeRelSize(3)
-  .linkColor(() => 'rgba(255,255,255,0.14)')
-  .linkOpacity(0.6)
-  .linkWidth(0.6)
-  .linkDirectionalParticles(2)
-  .linkDirectionalParticleSpeed(0.004)
-  .linkDirectionalParticleWidth(1.2)
-  .linkDirectionalParticleColor(() => 'rgba(255,209,102,0.7)')
+  .nodeVal(n => (n.size || 8) * 0.6)
+  .nodeRelSize(2)
+  .nodeOpacity(0.9)
+  .nodeThreeObject(node => {
+    const group = new THREE.Group();
+    const color = colorFor(node.group);
+
+    // Core marker: small sphere w/ emissive feel via MeshBasicMaterial
+    const sphereGeo = new THREE.SphereGeometry(1.6 + (node.size || 8) * 0.08, 12, 12);
+    const sphereMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.85 });
+    const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+    group.add(sphere);
+
+    // Glyph above node — always readable
+    if (node.glyph) {
+      const glyphSprite = makeGlyphSprite(node.glyph, color, 0.85 + (node.size || 8) * 0.025);
+      glyphSprite.position.set(0, 6 + (node.size || 8) * 0.12, 0);
+      group.add(glyphSprite);
+    }
+
+    // Label below node — always readable
+    const labelSprite = makeLabelSprite(node.label, '#FFFFFF');
+    labelSprite.position.set(0, -5.5 - (node.size || 8) * 0.08, 0);
+    group.add(labelSprite);
+
+    return group;
+  })
+  .nodeThreeObjectExtend(false)
+  .nodeLabel(() => '') // disable hover tooltip — all info is always visible
+  .linkColor(l => {
+    // Structural (directory) edges are ultra-subtle; semantic edges stronger
+    const src = typeof l.source === 'object' ? l.source : nodes.find(n => n.id === l.source);
+    if (src && src.type === 'structure') return 'rgba(255,255,255,0.06)';
+    return 'rgba(255,255,255,0.16)';
+  })
+  .linkOpacity(0.7)
+  .linkWidth(0.5)
+  .linkDirectionalParticles(l => {
+    const src = typeof l.source === 'object' ? l.source : nodes.find(n => n.id === l.source);
+    return src && src.type === 'structure' ? 0 : 2;
+  })
+  .linkDirectionalParticleSpeed(0.0042)
+  .linkDirectionalParticleWidth(1.1)
+  .linkDirectionalParticleColor(() => '#F7FFA8')
   .onNodeClick(node => {
     openNode(node);
-    // Center on click
-    const distance = 120;
+    const distance = 110;
     const distRatio = 1 + distance / Math.hypot(node.x || 1, node.y || 1, node.z || 1);
     Graph.cameraPosition(
       { x: (node.x || 1) * distRatio, y: (node.y || 1) * distRatio, z: (node.z || 1) * distRatio },
       node, 1200
     );
+  })
+  .onNodeHover(node => {
+    // Cursor cue only — labels are already visible
+    document.body.style.cursor = node ? 'pointer' : 'default';
   });
+
+// Tighten link distance so glyph labels don't crush into each other
+Graph.d3Force('link').distance(44);
+Graph.d3Force('charge').strength(-120);
 
 // Responsive sizing
 const fitGraph = () => Graph.width(window.innerWidth).height(window.innerHeight);
@@ -713,6 +1096,8 @@ async function openNode(node) {
     if (node.file && node.file.startsWith('__inline__:')) {
       const key = node.file.replace('__inline__:', '');
       mdText = inlineContent[key] || `# ${node.label}\n\n_no content available_`;
+    } else if (node.inlineMd) {
+      mdText = node.inlineMd;
     } else if (node.file && node.file.endsWith('.json')) {
       const raw = await fetch(node.file).then(r => r.text());
       mdText = `# ${node.label}\n\n\`${node.file}\`\n\n\`\`\`json\n${raw}\n\`\`\``;
@@ -876,6 +1261,22 @@ const roomParam = new URLSearchParams(location.search).get('room');
 if (roomParam) {
   showToast(`Joined room ${roomParam} (multiplayer stub — live transport pending)`, 4000);
 }
+
+// ------- jARvis voice module wiring (always-listening wake word) -------
+import('./js/jarvis-web.js').then(({ Jarvis }) => {
+  window.__jarvis = new Jarvis({
+    resolveQuery,
+    openNode,
+    showToast,
+    Graph,
+    nodes,
+  });
+  window.__jarvis.wireToDOM();
+}).catch((e) => {
+  console.warn('[jarvis-web] module load failed:', e);
+  const btn = document.getElementById('jarvis-toggle');
+  if (btn) { btn.textContent = 'jarvis n/a'; btn.disabled = true; btn.title = 'Module load failed'; }
+});
 
 // ------- jARvis prompt — talk-to-me CTA -------
 const promptForm = document.getElementById('prompt-form');

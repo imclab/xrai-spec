@@ -70,6 +70,36 @@ Each layer swaps independently. Changing the renderer doesn't change the data. C
 
 **Selection rule:** if `node count < 500` use 3d-force-graph. 500–10K → ECharts-GL. >10K → WebGPU compute (experimental, v1.2 target).
 
+## WebGPU ECharts hypergraph — v2 upgrade path (research note)
+
+**Inspiration:** Keijiro Takahashi's WebGPU experiments ([keijiro/WebGPU samples on GitHub](https://github.com/keijiro)) — particle audio-reactive systems, globe visualizations, and compute-shader force simulations. Plus the Portals sibling project [MetavidoVFX](https://github.com/imclab/metavidovfx) which pioneered the depth + stencil + audio + ML-pose shared compute substrate used in the CVPR paper.
+
+**Target:** replace 3d-force-graph with a native WebGPU compute-shader force solver + ECharts `graphGL` styling, rendering typed glyphs as GPU-instanced sprites instead of per-node CanvasTexture sprites (current approach).
+
+**Benefits of the upgrade:**
+
+1. **100K+ node budget** — compute shaders calculate force iterations in parallel on the GPU. Current CPU-bound d3-force caps at ~2K interactive.
+2. **Keijiro-style ambient field** — a WebGPU particle background that reacts to node hover/click (same audio-reactive pattern MetavidoVFX uses for holograms), giving the viewer the "jARvis HUD of the future" feel the brand calls for.
+3. **Typed glyph textures** — a single sprite-atlas texture holds all 9 glyphs (▦ ◆ ◇ ○ ▲ ● ⬡ ⬢ ▤). GPU-instanced draws render 10K glyphs per frame with no CPU cost.
+4. **Hyperedge geometry** — n-ary relations (RFC 0002) can be rendered as shaded polygons connecting N participants, instead of forcing binary-edge decomposition.
+5. **Live feed integration** — Portals-app scene authoring streams XRAI deltas over LiveKit (spec 010); a WebGPU viewer can ingest + re-layout 60fps as scenes evolve.
+
+**v1 status (this release):**
+- Typed glyph taxonomy ✅ shipped (sprite-rendered via CanvasTexture, not WebGPU yet)
+- Always-visible labels ✅
+- Live feed hook ✅ stub (tries `/api/portals-feed.json` on load, silent-fail if 404)
+- Per-type color coding ✅ from Portals canonical palette + spec 024 semantics
+- WebGPU compute-shader force solver 🔴 v2 (future RFC)
+- Keijiro-style particle ambient 🔴 v2
+- Hyperedge rendering 🔴 blocked on RFC 0002 ship
+
+**RFC candidates from this section:**
+- **RFC 0004** — visual-diff conformance harness (parity measurement per RUNTIMES_EVALUATION O9)
+- **RFC 0005** — multiplayer delta protocol (LiveKit XRAI-delta shape)
+- **RFC 0006** — `object.graph-node` entity type (graph-as-document self-reference for save/load)
+- **RFC 0007** — `portals://` URL scheme + deep-linking
+- **RFC 0008** *(new)* — WebGPU ECharts hypergraph renderer (covers all 5 upgrade benefits above)
+
 This matches **spec 006 KB Visualizer § Platform renderers:** R3F (mobile), 3d-force-graph (web), Needle (visionOS), ECharts-GL (analytics), Mermaid (docs) — adopting the existing decision.
 
 ---
