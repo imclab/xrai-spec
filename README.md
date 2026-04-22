@@ -2,7 +2,7 @@
 
 **Purpose:** staging area for the public XRAI open-standard site. Will be published at `xrai.dev` once domain is registered + DNS points to hosting.
 
-**Clean separation rule** (see `specs/XXX-zero-to-one/spec.md §5.1`): when ready, contents of this directory move to `github.com/portals-ai/xrai` (or similar open-standard org) — NOT to portals_v4. This directory exists solely as a staging workspace inside the Portals monorepo during Week 1 bootstrap.
+**Clean separation rule** (see `specs/XXX-zero-to-one/spec.md §5.1`): when ready, contents of this directory move to `github.com/imclab/xrai-spec` (or similar open-standard org) — NOT to portals_v4. This directory exists solely as a staging workspace inside the Portals monorepo during Week 1 bootstrap.
 
 ## Files
 
@@ -52,7 +52,7 @@
 
 - [x] **Day 1:** `SPEC.md` v1.0 draft + `MANIFESTO.md` + `LICENSE` + `index.html` (this dir)
 - [x] **Day 1+:** CONTRIBUTING + CODE_OF_CONDUCT + CHANGELOG + .gitignore + launch posts + 4 examples
-- [ ] **Day 2 (HUMAN):** Create `github.com/portals-ai/xrai` org + repo, copy contents
+- [ ] **Day 2 (HUMAN):** Create `github.com/imclab/xrai-spec` org + repo, copy contents
 - [ ] **Day 3 (HUMAN):** Register `xrai.dev`, point DNS
 - [ ] **Day 4:** Deploy landing page (Cloudflare Pages recommended — zero capture risk)
 - [ ] **Day 5:** Record jARvis demo v1 (see `demos/`)

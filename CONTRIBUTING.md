@@ -6,7 +6,7 @@ Thanks for caring about an open spatial graph format. Here's how to help.
 
 1. Read [`MANIFESTO.md`](./MANIFESTO.md) — what XRAI is and is not, and why it has to stay open.
 2. Read [`SPEC.md`](./SPEC.md) — the v1.0 draft (extracted from Portals). "Whatever ships in Portals today IS v1.0."
-3. Skim [open issues](https://github.com/portals-ai/xrai/issues) + [discussions](https://github.com/portals-ai/xrai/discussions) — your idea may already be in flight.
+3. Skim [open issues](https://github.com/imclab/xrai-spec/issues) + [discussions](https://github.com/imclab/xrai-spec/discussions) — your idea may already be in flight.
 
 ## Ways to contribute
 
@@ -28,7 +28,7 @@ Thanks for caring about an open spatial graph format. Here's how to help.
 
 ## How the process works
 
-**Issues first, PRs second.** If the work involves a spec change, open a [discussion](https://github.com/portals-ai/xrai/discussions) or issue before writing a PR — saves you from work we can't accept.
+**Issues first, PRs second.** If the work involves a spec change, open a [discussion](https://github.com/imclab/xrai-spec/discussions) or issue before writing a PR — saves you from work we can't accept.
 
 **Small PRs only.** One change per PR. If your PR touches more than five files, split it.
 
@@ -58,6 +58,6 @@ See [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md). Short version: behave like an 
 
 ## Where to ask
 
-- Public questions: [GitHub Discussions](https://github.com/portals-ai/xrai/discussions).
+- Public questions: [GitHub Discussions](https://github.com/imclab/xrai-spec/discussions).
 - Security issues: `security@xrai.dev` (private). Do not file public issues for security.
 - Everything else: open an issue.

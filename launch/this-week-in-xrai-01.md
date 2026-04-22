@@ -11,7 +11,7 @@
 ### Launch Week — 2026-04-29 → 2026-05-02
 
 **What shipped**
-- v1.0 spec public at github.com/portals-ai/xrai
+- v1.0 spec public at github.com/imclab/xrai-spec
 - xrai.dev landing page + manifesto + SPEC
 - Reference runtime: Portals (Unity 6 + React Native) in production
 - MCP server scaffold at `/mcp-server` (9 tools defined, implementation week 2)

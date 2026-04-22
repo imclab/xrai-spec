@@ -24,25 +24,17 @@ This checklist matches the 6-step playbook in [`specs/XXX-zero-to-one/spec.md §
 
 ---
 
-## Step 1 — Create GitHub org + repo (1hr — **human action required**)
+## Step 1 — GitHub repo (DONE 2026-04-22)
 
-- [ ] **HUMAN:** create `github.com/portals-ai` GitHub organization
-  - [ ] Verify email
-  - [ ] Add @jamestunick as owner
-  - [ ] Set visibility = public
-  - [ ] Upload IMC Lab + H3M Inc. logos (optional, for org profile)
-- [ ] **HUMAN:** create `portals-ai/xrai` repo under the org
-  - [ ] Public visibility
-  - [ ] MIT license (will be overwritten by copying `LICENSE` from staged site)
-  - [ ] Default branch: `main`
-  - [ ] Enable: Issues, Discussions, Wiki (lightweight)
-  - [ ] Disable: Projects (not needed yet), Pages (xrai.dev will be canonical)
-- [ ] Copy staged site contents to repo root (see "Content copy mapping" below)
-- [ ] First commit: `chore: initial v1.0 spec + manifesto + reference manifests` — author @jamestunick, signed
-- [ ] Push to `main`
-- [ ] Verify file tree matches staging
+- [x] **DONE:** `imclab/xrai-spec` created as public repo (exists at https://github.com/imclab/xrai-spec)
+- [x] **DONE:** content pushed via `scripts/xrai_repo_bootstrap.sh --repo imclab/xrai-spec --no-dry-run`
+- [x] **DONE:** 20+ files at repo root (README, SPEC, MANIFESTO, VISION, FAQ, CITATION.cff, LICENSE, CHANGELOG, CONTRIBUTING, CODE_OF_CONDUCT, LAUNCH_CHECKLIST, RUNTIMES, RUNTIMES_EVALUATION, USE_CASES, index.html, demos/, examples/, launch/, mcp-server/, rfcs/, runtimes/)
+- [x] **DONE:** GitHub Pages enabled (source: main/root, CNAME: xrai.dev)
+- [x] **DONE:** 7 labels seeded (rfc, v1.0, v1.1, conformance, runtime, governance, parity)
 
-**Acceptance:** repo is public, readable, MIT-licensed, all files load on github.com with no 404s.
+**Remaining:** enable Discussions (`gh repo edit imclab/xrai-spec --enable-discussions`), optionally add branch protection.
+
+**Acceptance:** ✅ repo live at github.com/imclab/xrai-spec. Pages URL `imclab.github.io/xrai-spec` + CNAME to `xrai.dev` set (resolves after DNS propagation).
 
 ---
 
@@ -132,7 +124,7 @@ This checklist matches the 6-step playbook in [`specs/XXX-zero-to-one/spec.md §
 
 ## Content copy mapping (staged → repo)
 
-When copying from `specs/XXX-zero-to-one/xrai-website/` to `github.com/portals-ai/xrai`:
+When copying from `specs/XXX-zero-to-one/xrai-website/` to `github.com/imclab/xrai-spec`:
 
 | Staged path | Repo path | Notes |
 |---|---|---|
@@ -167,11 +159,11 @@ When copying from `specs/XXX-zero-to-one/xrai-website/` to `github.com/portals-a
 - Wait 72h, try a different angle (e.g., "Show HN: A 5-line XRAI scene compiled from voice in under 2 seconds" — lead with demo, not spec).
 
 **If domain registration fails or DNS takes >24h:**
-- Launch with `github.com/portals-ai/xrai` as canonical URL
+- Launch with `github.com/imclab/xrai-spec` as canonical URL
 - Update all launch posts to point to repo
 - Add `xrai.dev redirect → github repo` once DNS lands
 
-**If GitHub org name `portals-ai` is taken:**
+**If repo rename needed** (e.g. `imclab/xrai-spec` → different name):
 - Fallback: `xrai-dev`, `open-xrai`, `portals-format`
 - Update launch posts + README before submitting
 

@@ -13,8 +13,8 @@
 /rfcs/latest /rfcs/            302
 
 # GitHub org (launch window — canonical repo URL)
-/repo      https://github.com/portals-ai/xrai 302
-/github    https://github.com/portals-ai/xrai 302
+/repo      https://github.com/imclab/xrai-spec 302
+/github    https://github.com/imclab/xrai-spec 302
 
 # Citation: GitHub-compatible path
 /cite      /CITATION.cff       302

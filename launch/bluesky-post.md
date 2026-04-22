@@ -50,6 +50,6 @@ How to help if you care:
 2. Try LLM authoring + report where it breaks
 3. Adopt as an MCP server surface for your agent stack
 
-Repo: https://github.com/portals-ai/xrai
+Repo: https://github.com/imclab/xrai-spec
 
 Weekly public updates start Friday.
