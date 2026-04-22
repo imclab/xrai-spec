@@ -1,0 +1,52 @@
+{
+  "xrai_version": "1.0",
+  "id": "00000000-0000-4000-a000-000000000002",
+  "created_at": "2026-04-22T12:05:00Z",
+  "author": {"type": "llm", "id": "claude-opus-4-7"},
+  "origin": {"app": "portals", "version": "v4", "scene": "SimpleAR"},
+  "metadata": {
+    "voice_prompt": "a glowing blue sphere floating above a gold cube",
+    "latency_ms": 1820
+  },
+  "scene": {
+    "anchors": [],
+    "entities": [
+      {
+        "id": "cube_gold",
+        "type": "object.primitive",
+        "model_id": 0,
+        "transform": {
+          "position": [0, 0.2, -1.5],
+          "rotation": [0, 0, 0, 1],
+          "scale": [0.25, 0.25, 0.25]
+        },
+        "material": {"color": "gold", "preset": "gold"}
+      },
+      {
+        "id": "sphere_glow",
+        "type": "object.primitive",
+        "model_id": 1,
+        "transform": {
+          "position": [0, 0.55, -1.5],
+          "rotation": [0, 0, 0, 1],
+          "scale": [0.15, 0.15, 0.15]
+        },
+        "material": {"color": "#3a7afe", "preset": "neon", "opacity": 0.85},
+        "animation": {"type": "float", "params": {"amplitude": 0.08, "speed": 1.2}},
+        "components": [
+          {"type": "emitter.glow", "props": {"intensity": 1.5, "radius": 0.4}}
+        ]
+      }
+    ],
+    "relations": [
+      {
+        "id": "r_above",
+        "type": "parent-of",
+        "from": "cube_gold",
+        "to": "sphere_glow",
+        "props": {"semantic": "above"}
+      }
+    ],
+    "events": []
+  }
+}

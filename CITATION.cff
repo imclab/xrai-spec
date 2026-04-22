@@ -1,0 +1,61 @@
+cff-version: 1.2.0
+message: "If you use XRAI in academic work, please cite it as below."
+title: "XRAI: An Open Spatial Graph Format for Minds, Machines, and the Physical World"
+authors:
+  - family-names: Tunick
+    given-names: James
+    affiliation: "IMC Lab + H3M Inc."
+    orcid: "https://orcid.org/0000-0000-0000-0000"  # replace with real ORCID when available
+type: software
+license: MIT
+repository-code: "https://github.com/portals-ai/xrai"
+url: "https://xrai.dev"
+version: "1.0.0"
+date-released: "2026-04-29"
+keywords:
+  - spatial-computing
+  - hypergraph
+  - scene-graph
+  - augmented-reality
+  - virtual-reality
+  - mixed-reality
+  - 4d-world-models
+  - agent-memory
+  - model-context-protocol
+  - open-standard
+abstract: >
+  XRAI is an open, MIT-licensed format for typed hypergraphs of entities,
+  relationships, events, and intentions anchored in space and time.
+  Renderable by any engine, authored by any LLM, queryable by any agent.
+  Designed as the interchange layer for spatial intelligence — the
+  substrate on which agents describe, share, and evolve 3D/4D/nD
+  cognition in a vendor-neutral way. The reference implementation
+  (Portals, CVPR 2026 workshop paper on 4D World Models) runs at
+  60 FPS on iPhone 14 Pro with 360+ source-agnostic VFX over a shared
+  compute substrate.
+references:
+  - type: conference-paper
+    title: "Portals: Persistent, Editable 4D Spatial World Models on Edge Devices"
+    authors:
+      - family-names: Tunick
+        given-names: James
+      - family-names: Brant
+        given-names: Ryan
+      - family-names: Pennock
+        given-names: Jacob
+      - family-names: Kasowski
+        given-names: Joshua
+    conference:
+      name: "CVPR 2026 Workshop on 4D World Models: Bridging Generation and Reconstruction"
+    year: 2026
+    month: 6
+    date-published: "2026-06"
+    notes: "Camera-ready submitted 2026-04-10."
+  - type: generic
+    title: "XRAI v1.0 Specification"
+    url: "https://xrai.dev/SPEC.md"
+    year: 2026
+  - type: generic
+    title: "XRAI Manifesto"
+    url: "https://xrai.dev/MANIFESTO.md"
+    year: 2026

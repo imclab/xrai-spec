@@ -1,0 +1,18 @@
+{
+  "name": "@xrai/threejs-adapter",
+  "version": "0.1.0-alpha",
+  "description": "Three.js reference adapter for XRAI v1.0 public spec. Loads XRAI JSON scenes and renders via Three.js primitives.",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node src/cli.js ../../examples/01-minimal.xrai.json",
+    "conformance": "node src/cli.js --conformance"
+  },
+  "dependencies": {
+    "three": "^0.160.0"
+  },
+  "keywords": ["xrai", "threejs", "webgl", "ar", "spatial"],
+  "license": "MIT",
+  "author": "IMC Lab + H3M Inc.",
+  "homepage": "https://xrai.dev"
+}

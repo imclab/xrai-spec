@@ -1,0 +1,81 @@
+# OS
+.DS_Store
+Thumbs.db
+.Spotlight-V100
+.Trashes
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node (MCP server + JS runtimes)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm/
+.yarn/
+.pnp.*
+dist/
+build/
+*.tsbuildinfo
+.env
+.env.local
+.env.*.local
+
+# Python (parser)
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Rust (parser)
+target/
+Cargo.lock
+*.rs.bk
+
+# Unity (reference runtime)
+runtimes/unity/Library/
+runtimes/unity/Temp/
+runtimes/unity/Logs/
+runtimes/unity/UserSettings/
+runtimes/unity/obj/
+runtimes/unity/*.csproj
+runtimes/unity/*.sln
+
+# Docs build artifacts
+_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
+
+# Static-site hosting (Vercel/Netlify/Cloudflare Pages)
+.vercel/
+.netlify/
+.wrangler/
+.cache/
+out/
+
+# Conformance test outputs
+runtimes/_conformance/results/
+*.conformance.log
+
+# Coverage
+coverage/
+*.lcov
+.nyc_output/
+
+# Misc
+*.log
+*.tmp
+.DS_Store?

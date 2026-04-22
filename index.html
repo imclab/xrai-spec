@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>XRAI — God's-eye view. For everyone.</title>
+<meta name="description" content="Open, MIT-licensed spatial graph format. Voice your world into being. Infinite zoom across time, possibilities, and minds. The Giant Global Graph, finally shippable." />
+<meta property="og:title" content="XRAI — God's-eye view. For everyone." />
+<meta property="og:description" content="Open spatial graph format. Voice your world into being. Infinite zoom across time, possibilities, minds. Shipping on iPhone today, 60 FPS, 360+ VFX." />
+<style>
+  :root {
+    --bg: #0a0f1c;
+    --fg: #eaf0ff;
+    --muted: #7d8aa8;
+    --accent: #ffd166;
+    --card: #111a2e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--fg); font: 16px/1.6 system-ui, -apple-system, sans-serif; }
+  a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; }
+  a:hover { border-bottom-color: var(--accent); }
+  main { max-width: 760px; margin: 0 auto; padding: 48px 24px 96px; }
+  header { margin-bottom: 48px; }
+  h1 { font-size: 72px; letter-spacing: -0.03em; line-height: 1.0; margin-bottom: 20px; }
+  .tag { color: var(--accent); font-weight: 600; margin-bottom: 20px; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .wordmark-sub { font-size: 28px; color: var(--accent); letter-spacing: -0.01em; font-weight: 600; margin-bottom: 28px; }
+  .lede { font-size: 22px; color: var(--fg); margin-bottom: 16px; line-height: 1.4; }
+  .lede-sub { font-size: 17px; color: var(--muted); margin-bottom: 28px; line-height: 1.55; }
+  .taglines { font-size: 16px; color: var(--muted); margin-bottom: 36px; line-height: 1.9; }
+  .taglines strong { color: var(--fg); font-weight: 500; }
+  .problem { color: var(--muted); font-style: italic; font-size: 15px; line-height: 1.8; padding: 16px 20px; border-left: 2px solid #8ab4ff; margin: 24px 0 36px; }
+  .problem strong { color: var(--fg); font-style: normal; }
+  .cards-3 { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 24px; }
+  @media (min-width: 700px) { .cards-3 { grid-template-columns: 1fr 1fr 1fr; } }
+  .zoom-card { background: linear-gradient(135deg, #111a2e 0%, #1a253f 100%); border-radius: 12px; padding: 20px; }
+  .zoom-card strong { display: block; color: var(--accent); margin-bottom: 6px; font-size: 15px; }
+  .zoom-card span { color: var(--muted); font-size: 14px; }
+  .cta.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); margin-left: 8px; }
+  h2 { font-size: 24px; margin-top: 40px; margin-bottom: 14px; letter-spacing: -0.01em; }
+  p { margin-bottom: 14px; color: var(--fg); }
+  .muted { color: var(--muted); }
+  .card { background: var(--card); border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; }
+  ul { margin-left: 20px; margin-bottom: 16px; }
+  li { margin-bottom: 6px; }
+  code { background: #1a253f; padding: 2px 6px; border-radius: 4px; font-size: 14px; color: var(--accent); }
+  .pill { display: inline-block; padding: 4px 10px; border-radius: 999px; background: var(--card); color: var(--muted); font-size: 13px; margin-right: 6px; margin-bottom: 6px; }
+  .cta { display: inline-block; margin-top: 8px; padding: 10px 18px; background: var(--accent); color: var(--bg); border-radius: 8px; font-weight: 600; }
+  .cta:hover { border-bottom: none; opacity: 0.9; }
+  footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid #1a253f; color: var(--muted); font-size: 14px; }
+  .demo { aspect-ratio: 16 / 9; background: #1a253f; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--muted); margin: 16px 0 24px; }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div class="tag">XRAI v1.0 · MIT-licensed · shipping 2026-04-29</div>
+  <h1>XRAI</h1>
+  <div class="wordmark-sub"><strong>X-ray vision. God's-eye view. Infinite zoom.</strong></div>
+  <p class="lede"><strong>Voice your world into being. See through. See over. See across.</strong></p>
+  <p class="lede-sub">Open spatial graph format — authored by any LLM, rendered by any engine, queryable by any agent. Shipping today in Portals on iPhone: 60 FPS, 360+ VFX, persistent stateful worlds (CVPR 2026). Free forever. No CLA. No gatekeeper. No take-backs.</p>
+
+  <div class="taglines">
+    <strong>Visionary AI.</strong> <strong>God Glasses for the Masses.</strong><br>
+    Join jARvis. Jam with friends. Harness holographic intelligence.<br>
+    Inspire infinite imagination. <strong>See more. Be more.</strong><br>
+    Open the doors of perception. The singularity is near.<br>
+    A far-out future is here — open, not captured.
+  </div>
+
+  <a class="cta" href="#get-started">Get started →</a>
+  <a class="cta secondary" href="MANIFESTO.md">Read the manifesto</a>
+</header>
+
+<section>
+  <h2>The problem XRAI answers</h2>
+  <div class="problem">
+    We are blind. We are <strong>island minds</strong>. Code is opaque. AI is black-boxed. The web is flat. Search is broken. Education is broken. Communication is dated.
+    <br><br>
+    Social media brainwashes and isolates. GUIs cripple bodies and minds. Profit and algorithms drive conflict and instant gratification. People feel small and powerless. Civilization is at risk.
+    <br><br>
+    <strong>XRAI is the substrate for a different medium</strong> — one where intent becomes space, memory persists, minds bridge, and the agent's view of the world is legible to you, not hidden behind a prompt.
+  </div>
+</section>
+
+<section>
+  <h2>Infinite zoom</h2>
+  <p class="muted" style="margin-bottom: 20px;">A graph that scales in four directions. Every XRAI scene can be navigated along each axis.</p>
+  <div class="cards-3">
+    <div class="zoom-card">
+      <strong>↔ Across time</strong>
+      <span>Past, present, future. Replay last Tuesday. Branch into "what if." Memex + time-travel as first-class schema, not a feature bolt-on.</span>
+    </div>
+    <div class="zoom-card">
+      <strong>⌥ Across possibilities</strong>
+      <span>Counterfactual branches, alternative compositions, multiverse observation. The unrealized is as addressable as the rendered.</span>
+    </div>
+    <div class="zoom-card">
+      <strong>∞ Across minds</strong>
+      <span>Your graph + my graph + the agent's graph, federated. Island minds bridge. Collective cognition with sovereignty preserved.</span>
+    </div>
+    <div class="zoom-card" style="grid-column: 1/-1; margin-top: 4px;">
+      <strong>⌖ Across scales</strong>
+      <span>Molecule → room → city → planet → cosmos. No native zoom ceiling. The graph describes its own structure at every level.</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Proof it ships</h2>
+  <p class="muted" style="margin-bottom: 16px;">Portals — the reference implementation — shipped on iOS and at CVPR 2026. The numbers below are from the peer-reviewed camera-ready paper.</p>
+  <div class="card">
+    <p><strong>60 FPS on iPhone 14 Pro</strong> — 2.7–4.1× speedup over prior art. LOD-adaptive Gaussian splatting (SPAG) + shared spatial-media compute substrate fusing depth, stencil, audio, and ML-pose channels. Drives <strong>360+ source-agnostic VFX</strong>.</p>
+    <p><strong>Stateful worlds, not stateless scenes.</strong> Persistent geospatial scene-state with layered world metadata, reloadable payloads, anchor-guided re-alignment across sessions, devices, users.</p>
+    <p><strong>Voice-driven semantic authoring.</strong> On-device intent parsing + cloud fallback for ambiguous utterances. No-code composition pipeline bridging reconstruction and generation.</p>
+    <p><strong>Cross-platform today.</strong> iOS + web viewers (Apple Vision Pro compatible) for reconstructed environments, volumetric humans, holographic spatial media.</p>
+    <p class="muted" style="font-size: 14px; margin-top: 8px;">Paper: <em>Portals: Persistent, Editable 4D Spatial World Models on Edge Devices</em> — Tunick, Brant, Pennock, Kasowski — H3M Inc. + IMC Lab — CVPR 2026 Workshop on 4D World Models, submitted 2026-04-10. Prior clinical deployment of volumetric AR at Memorial Sloan Kettering established the real-time rendering primitives.</p>
+  </div>
+</section>
+
+<section>
+  <h2>What XRAI is</h2>
+  <p>A typed hypergraph of entities, relationships, events, and intentions — anchored in space and time, renderable in any medium, authored by any LLM, queryable by any agent.</p>
+  <p>One format. Scene graphs for AR / VR / XR today. Episodic memory for voice assistants tomorrow. Living knowledge graphs the year after. <strong>Language of thought</strong> eventually.</p>
+  <div class="card">
+    <span class="pill">MIT licensed</span>
+    <span class="pill">CC0 schema</span>
+    <span class="pill">No CLA</span>
+    <span class="pill">No gatekeeper</span>
+    <span class="pill">No tracking</span>
+    <span class="pill">Forever open</span>
+  </div>
+</section>
+
+<section>
+  <h2>What XRAI is not</h2>
+  <ul>
+    <li>Not a company's proprietary format</li>
+    <li>Not a vendor-controlled standard</li>
+    <li>Not a committee-designed artifact</li>
+    <li>Not paywalled, tracked, or rent-extractive</li>
+    <li>Not a replacement for HTML / glTF / USD — XRAI composes with them all</li>
+  </ul>
+</section>
+
+<section>
+  <h2>What you can say — 20 use cases</h2>
+  <p>Every example maps one voice command → XRAI payload → existing Portals spec → rendered on any runtime. <strong>Not reinvented — curated from shipping work.</strong> See full details: <a href="USE_CASES.md"><code>USE_CASES.md</code></a>.</p>
+  <ul>
+    <li><strong>🎮 Mini game</strong> — "make a game where cubes fall and I catch them" → 0 new code, already works via existing bridge</li>
+    <li><strong>🌍 Dynamic world</strong> — "create a forest world around me" → sparse generator rules, expanded at runtime (spec 023)</li>
+    <li><strong>🎨 Audio-reactive artwork</strong> — "paint a glowing spiral that reacts to my voice" (spec 009 Paint-AR + 5 audio shaders)</li>
+    <li><strong>🌐 Spatial lens on a webpage</strong> — "show me this Wikipedia article as a memory palace" (spec 006 KB visualizer + hypergraph arch)</li>
+    <li><strong>🧠 Agentic HUD</strong> — "show me what's interesting in this room" (spec 021 PTHI — fighter pilot HUD meets Jarvis)</li>
+    <li><strong>🎭 Neural camera lens</strong> — "make everything look like Ghibli" (spec 024 neural filters via Unity Sentis)</li>
+    <li><strong>🧩 Shared thinking space</strong> — "invite Alice into this scene" (spec 010 multiplayer + federated graph)</li>
+    <li><strong>🔧 CLI / codebase as a 3D city</strong> — spec 006 + 017 MegaBrain orchestration</li>
+    <li><strong>🎬 Memex / time travel</strong> — "show me what I was working on last Tuesday" (constitution XRAI Philosophy)</li>
+    <li><strong>🏗 Architecture walkthrough</strong> — same XRAI file plays in Portals AR / Three.js web / Unreal / visionOS tabletop</li>
+    <li><strong>✈️ Flugtag</strong> — "launch me off a pier in a flying bathtub with wings" — hand-tilt steers contraption, leaderboard by distance (specs 002 + 019 + 023)</li>
+    <li><strong>🏁 Racing</strong> — "build a rainbow-road track around my living room" — track wraps real furniture, share XRAI = friends race same track (specs 023 + 019 + 011)</li>
+    <li><strong>🪂 Sky diving</strong> — "drop me from 10,000 feet over my couch" — body pose controls drag, gesture-deploy parachute, land on couch for score (specs 021 + 009 + 003)</li>
+    <li><strong>🔑 Where did I leave my keys?</strong> — passive camera logs object sightings → jARvis answers "last seen 2h ago on kitchen counter." The mundane memex. (specs 021 + 011 + 004 + constitution)</li>
+    <li><strong>🌱 Sample anything as a seed</strong> — point camera at a tree / chair / room / song → jARvis extracts features → generator emits 20 variants. "XRAI = DNA, not organism" — kills 99% of asset marketplaces. (specs 022 + 023 + 024)</li>
+    <li><strong>🌐 Make my website 3D</strong> — browser extension + <code>&lt;meta name="xrai"&gt;</code> → any site becomes a walkable spatial version on any XRAI runtime. Adoption propagates like RSS. (spec 006 + constitution "We Are Blind")</li>
+    <li><strong>🦍 King Kong <em>in your backyard</em></strong> — ARWorldMap anchor + body tracking + federated view; ships today at room/neighborhood scale. Landmark-scale (Empire State) ships post-MVP via <strong>Cesium for Unity</strong> (Apache 2.0, already researched + verified compatible — `bleeding-edge-jt` kb-followup 2026-02-21). (specs 003 + 010 + 011 + Cesium)</li>
+    <li><strong>🕺 10 mini best-friends doing jumping jacks on my desk</strong> — live avatar stream + 10 clones + random phase + ObjectAnimator. The sticker economy of spatial. (specs 002 + 003 + 010)</li>
+    <li><strong>🎨 Your space as an art gallery</strong> — anchor paintings to living room / office / local park via ARWorldMap; friends with same scan see it. City-square variant (Times Square) deferred until open geospatial VPS. (specs 009 + 022 + public namespace)</li>
+    <li><strong>🪧 Community protest sign garden</strong> — aggregate signs by topic at local civic spaces (city hall, quad). Platform-unownable civic speech, room/neighborhood scale today. Landmark scale (White House) deferred. (specs 009 + 022 + crowd-aggregator)</li>
+  </ul>
+</section>
+
+<section>
+  <h2>First jARvis demos</h2>
+  <p class="muted">Short videos that sell the thesis — spatial AI that gives users superpowers. See the full demo plan in <a href="demos/jarvis_demos.md"><code>demos/jarvis_demos.md</code></a>.</p>
+  <div class="card">
+    <strong>Demo 1 — Voice to World (60s)</strong><br>
+    <span class="muted">Say a sentence, see a world. Spatial meditation garden materializes from voice. XRAI graph visible. Saved scene → portable to any device via QR code.</span>
+  </div>
+  <div class="card">
+    <strong>Demo 2 — Time Travel (30s)</strong><br>
+    <span class="muted">"Show me the last 5 conversations I had about Portals." Spatial timeline of past sessions. Tap one. Replay the workspace as it was.</span>
+  </div>
+  <div class="card">
+    <strong>Demo 3 — Ambient Expertise (15s)</strong><br>
+    <span class="muted">Look at a plant. Ask "what's wrong?" Glasses overlay diagnosis grounded in XRAI knowledge graph.</span>
+  </div>
+</section>
+
+<section>
+  <h2>Design principles</h2>
+  <ol>
+    <li>Radical simplicity — grokkable in 1 hour</li>
+    <li>LLM-authorable — any model can emit valid XRAI from natural input</li>
+    <li>Permissionless adoption — no gatekeeper, no tracking</li>
+    <li>Forgiving parsing — partial inputs still work (Postel's law)</li>
+    <li>Extensible without breaking — v1 stays valid as v2 ships</li>
+    <li>Spatial + temporal + modal — scenes, episodes, alternatives</li>
+    <li>Typed n-ary relations — hyperedges, not just pairs (v1.1+)</li>
+    <li>Personal + federated — your graph is yours; publish slices</li>
+    <li>MCP-native — any agent reads/writes via standard tools</li>
+    <li>Self-referential — the schema describes itself</li>
+  </ol>
+</section>
+
+<section>
+  <h2>The lineage</h2>
+  <p class="muted">Every generation tried. Each missed one piece that now exists.</p>
+  <ul>
+    <li><strong>Bush 1945</strong> — memex (associative personal trails). Tech wasn't ready.</li>
+    <li><strong>Nelson 1965</strong> — Xanadu (bidirectional + versioning). Over-designed, never shipped.</li>
+    <li><strong>Berners-Lee 1989</strong> — WWW (one-way simple). Won on simplicity.</li>
+    <li><strong>Page/Brin 1998</strong> — PageRank (importance from topology).</li>
+    <li><strong>Berners-Lee 2007</strong> — Giant Global Graph. Stalled on authoring burden.</li>
+    <li><strong>Hofstadter (ongoing)</strong> — analogy as cognition.</li>
+  </ul>
+  <p>LLMs solve the authoring burden. Cameras ground the symbols. MCP federates the agents. The window just opened.</p>
+</section>
+
+<section id="get-started">
+  <h2>Get started</h2>
+  <div class="card">
+    <p><strong>Start here — the vision:</strong> <a href="VISION.md">VISION.md</a> 🌟 — problem + Sight Triad + jARvis goal + CVPR proof. Load-bearing source for everything else.</p>
+    <p><strong>Read the manifesto:</strong> <a href="MANIFESTO.md">MANIFESTO.md</a></p>
+    <p><strong>Read the spec:</strong> <a href="SPEC.md">SPEC.md v1.0 draft</a></p>
+    <p><strong>Demos:</strong> <a href="demos/jarvis_demos.md">demos/jarvis_demos.md</a></p>
+    <p><strong>Spatial MCP server:</strong> <a href="mcp-server/README.md">mcp-server/</a> — 11 tools (9 <code>xrai.*</code> + 2 <code>paint.*</code>). Any MCP-compatible agent (Claude Desktop, Cursor, Cline, OpenAI, Gemini-with-shim) can author XRAI scenes + procedural paint strokes. Replaces Open Brush's port-40074 HTTP API with typed, stateless, multi-agent MCP.</p>
+    <p><strong>Engine runtimes:</strong> <a href="runtimes/">runtimes/</a> — Three.js · PlayCanvas · Unity · Unreal · WebXR · visionOS RealityKit. One XRAI doc, every engine.</p>
+    <p><strong>Repo:</strong> <code>github.com/portals-ai/xrai</code> <em class="muted">(launching 2026-04-29)</em></p>
+    <p><strong>Contact:</strong> <a href="mailto:hello@xrai.dev">hello@xrai.dev</a></p>
+  </div>
+</section>
+
+<section>
+  <h2>Governance (Year 1)</h2>
+  <p>BDFL: <a href="https://h3m.ai">@jamestunick</a> (IMC Lab + H3M Inc.). Public RFC process. Weekly updates. No corporate sponsor controlling direction.</p>
+  <p class="muted">Year 2+: transfer to Apache Software Foundation or W3C Community Group once 1000+ external adopters validated. Never to a single vendor's foundation.</p>
+</section>
+
+<section>
+  <h2>Commercial relationship</h2>
+  <p>The spec is free. Forever. Period. Portals (H3M Inc.) builds commercial products on top: hosted XRAI cloud, best-in-class renderer, priority-quality LLM authoring, enterprise spatial intelligence API, vertical apps. The format stays free; services built on top are paid.</p>
+  <p class="muted">Git → GitHub pattern. HTML → Chrome. Markdown → Notion. <strong>The community can never be held hostage.</strong></p>
+</section>
+
+<footer>
+  XRAI is the work of James Tunick (IMC Lab + H3M Inc.) and contributors. MIT for reference impls. CC0 for the normative schema. No warranties, no tracking, no CLA. <strong>The doors of perception, open-sourced.</strong> 2026.
+</footer>
+</main>
+</body>
+</html>
