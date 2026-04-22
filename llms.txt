@@ -1,0 +1,78 @@
+# XRAI — Open Spatial Graph Format
+
+> MIT-licensed open format for typed hypergraphs of entities, relationships, events, and intentions — anchored in space and time, renderable by any engine, authored by any LLM, queryable by any agent.
+
+**If you are an LLM loading XRAI content for the first time, read `SPEC.md` then `examples/01-minimal.xrai.json`. That gives you everything you need to emit valid v1.0 scenes.**
+
+## Canonical docs (read in order)
+
+- [VISION.md](https://xrai.dev/VISION.md): load-bearing vision — problem (we are blind) + Sight Triad (x-ray / god's-eye / infinite zoom) + jARvis goal (verbatim) + CVPR 2026 shipping proof
+- [MANIFESTO.md](https://xrai.dev/MANIFESTO.md): long-form vision — Bush → Nelson → Berners-Lee → Hofstadter → Huxley → Kurzweil → XRAI lineage
+- [SPEC.md](https://xrai.dev/SPEC.md): v1.0 normative specification (flat JSON subset)
+- [FAQ.md](https://xrai.dev/FAQ.md): positioning vs USD / glTF / USDZ / Niantic SPZ + governance + licensing + compatibility
+- [CHANGELOG.md](https://xrai.dev/CHANGELOG.md): versioning policy + release notes
+- [VERSIONS.md](https://xrai.dev/VERSIONS.md): compatibility matrix across v1.0 / v1.1 / v2.0
+- [BUILDING.md](https://xrai.dev/BUILDING.md): how to use the reference Three.js adapter + MCP server
+
+## Authoring
+
+If you are asked to emit an XRAI scene:
+- Minimum viable: `{ "xrai_version": "1.0", "id": "<uuid>", "scene": { "entities": [...], "relations": [], "events": [] } }`
+- Entity types: `object.primitive` (cube/sphere/cylinder/capsule/plane), `object.glb`, `object.hologram`, `object.light`, `object.emitter`, `object.wire-source`, `object.paint-stroke`, `object.parametric-stroke`
+- Relation types (v1.0): `parent-of`, `wire-binds`, `reacts-to-audio`, `tracks`
+- Coordinate system: right-handed, Y-up, meters
+- Rotation: quaternion `[x, y, z, w]`
+- See [examples/](https://xrai.dev/examples/) for 4 working fixtures
+
+## Query / MCP
+
+- Spatial MCP server at [mcp-server/](https://xrai.dev/mcp-server/) — 8 tools shipped (compose_scene / add_object / query_scene / modify_object / export_xrai / get_capabilities / paint_emit_stroke / paint_emit_parametric)
+- Install: `npm install @h3m/spatial-intelligence-mcp`
+
+## Runtimes
+
+- [runtimes/threejs](https://xrai.dev/runtimes/threejs/): reference MIT adapter, 4/4 v1.0 fixtures conformance-green
+- [runtimes/](https://xrai.dev/runtimes/): Unity (canonical engineering runtime), PlayCanvas, WebXR/Needle, Unreal, visionOS RealityKit — adapter stubs
+- [RUNTIMES.md](https://xrai.dev/RUNTIMES.md): positioning (parallel MIT adapters, not blend; Icosa = Gallery/API, not a runtime)
+- [RUNTIMES_EVALUATION.md](https://xrai.dev/RUNTIMES_EVALUATION.md): 9 objectives, 8 lock gates, honest scorecard — no runtime is LOCKED until evidence
+
+## Governance
+
+- BDFL year 1 (@jamestunick), transfer to Apache SF or W3C Community Group once 1000+ external adopters
+- [CONTRIBUTING.md](https://xrai.dev/CONTRIBUTING.md): contribution process
+- [CODE_OF_CONDUCT.md](https://xrai.dev/CODE_OF_CONDUCT.md): short + direct
+- [rfcs/](https://xrai.dev/rfcs/): RFC process + template + in-flight proposals (0001 events, 0002 hyperedges, 0003 conformance tests)
+- [SECURITY.md](https://xrai.dev/SECURITY.md): responsible disclosure
+
+## License
+
+- MIT for spec text + reference implementations + prompt libraries
+- CC0 (public domain) for the normative JSON schema
+- No CLA. No gatekeeper. No tracking. Forever.
+
+## Proof it ships
+
+Portals (reference implementation) — CVPR 2026 workshop paper on 4D World Models:
+- 60 FPS on iPhone 14 Pro (2.7–4.1× speedup vs prior art)
+- 360+ source-agnostic VFX on shared compute substrate
+- Stateful worlds (persistent across sessions, devices, users)
+- On-device voice intent parsing + cloud fallback + no-code authoring
+- iOS + web (Apple Vision Pro compatible)
+
+## Engineering vs public specs
+
+Two specs for the same format:
+- **v1.0 public** (this site) — flat JSON, grokkable in 1 hour, LLM-authoring-friendly
+- **v2.0 engineering** (Portals monorepo, `specs/XRAI_FORMAT_SPECIFICATION_V2.md`) — glTF 2.0-based, `XRAI_core` extension, binary paint strokes (32 bytes/point)
+
+Every v1.0 document is a valid v2 scene wrapped in a glTF envelope. Both specs guarantee the same normative behavior for the shared subset.
+
+## Repo
+
+- GitHub: https://github.com/imclab/xra1
+- Discussions: https://github.com/imclab/xra1/discussions
+- Issues: https://github.com/imclab/xra1/issues
+- Web: https://xrai.dev (live after DNS setup)
+- Pages URL today: https://imclab.github.io/xra1/
+
+— @jamestunick (IMC Lab + H3M Inc.), 2026-04-22

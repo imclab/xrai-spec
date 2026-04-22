@@ -3,248 +3,604 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>XRAI — God's-eye view. For everyone.</title>
-<meta name="description" content="Open, MIT-licensed spatial graph format. Voice your world into being. Infinite zoom across time, possibilities, and minds. The Giant Global Graph, finally shippable." />
-<meta property="og:title" content="XRAI — God's-eye view. For everyone." />
-<meta property="og:description" content="Open spatial graph format. Voice your world into being. Infinite zoom across time, possibilities, minds. Shipping on iPhone today, 60 FPS, 360+ VFX." />
+<title>XRAI — explorable 3D spec graph</title>
+<meta name="description" content="Open spatial graph format. Browse the spec as it describes itself — an interactive 3D hypergraph of docs, concepts, RFCs, examples, and runtimes." />
+<meta property="og:title" content="XRAI — God's-eye view. Infinite zoom." />
+<meta property="og:description" content="Spec that renders itself. Click any node to drill in." />
 <style>
   :root {
-    --bg: #0a0f1c;
+    --bg: #05080f;
+    --bg-soft: #0a0f1c;
     --fg: #eaf0ff;
     --muted: #7d8aa8;
     --accent: #ffd166;
-    --card: #111a2e;
+    --accent-2: #8ab4ff;
+    --doc: #8ab4ff;
+    --concept: #ffd166;
+    --demo: #4ade80;
+    --rfc: #c084fc;
+    --runtime: #f87171;
+    --brand: #ffd166;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { background: var(--bg); color: var(--fg); font: 16px/1.6 system-ui, -apple-system, sans-serif; }
-  a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; }
-  a:hover { border-bottom-color: var(--accent); }
-  main { max-width: 760px; margin: 0 auto; padding: 48px 24px 96px; }
-  header { margin-bottom: 48px; }
-  h1 { font-size: 72px; letter-spacing: -0.03em; line-height: 1.0; margin-bottom: 20px; }
-  .tag { color: var(--accent); font-weight: 600; margin-bottom: 20px; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; }
-  .wordmark-sub { font-size: 28px; color: var(--accent); letter-spacing: -0.01em; font-weight: 600; margin-bottom: 28px; }
-  .lede { font-size: 22px; color: var(--fg); margin-bottom: 16px; line-height: 1.4; }
-  .lede-sub { font-size: 17px; color: var(--muted); margin-bottom: 28px; line-height: 1.55; }
-  .taglines { font-size: 16px; color: var(--muted); margin-bottom: 36px; line-height: 1.9; }
-  .taglines strong { color: var(--fg); font-weight: 500; }
-  .problem { color: var(--muted); font-style: italic; font-size: 15px; line-height: 1.8; padding: 16px 20px; border-left: 2px solid #8ab4ff; margin: 24px 0 36px; }
-  .problem strong { color: var(--fg); font-style: normal; }
-  .cards-3 { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 24px; }
-  @media (min-width: 700px) { .cards-3 { grid-template-columns: 1fr 1fr 1fr; } }
-  .zoom-card { background: linear-gradient(135deg, #111a2e 0%, #1a253f 100%); border-radius: 12px; padding: 20px; }
-  .zoom-card strong { display: block; color: var(--accent); margin-bottom: 6px; font-size: 15px; }
-  .zoom-card span { color: var(--muted); font-size: 14px; }
-  .cta.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); margin-left: 8px; }
-  h2 { font-size: 24px; margin-top: 40px; margin-bottom: 14px; letter-spacing: -0.01em; }
-  p { margin-bottom: 14px; color: var(--fg); }
-  .muted { color: var(--muted); }
-  .card { background: var(--card); border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; }
-  ul { margin-left: 20px; margin-bottom: 16px; }
-  li { margin-bottom: 6px; }
-  code { background: #1a253f; padding: 2px 6px; border-radius: 4px; font-size: 14px; color: var(--accent); }
-  .pill { display: inline-block; padding: 4px 10px; border-radius: 999px; background: var(--card); color: var(--muted); font-size: 13px; margin-right: 6px; margin-bottom: 6px; }
-  .cta { display: inline-block; margin-top: 8px; padding: 10px 18px; background: var(--accent); color: var(--bg); border-radius: 8px; font-weight: 600; }
-  .cta:hover { border-bottom: none; opacity: 0.9; }
-  footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid #1a253f; color: var(--muted); font-size: 14px; }
-  .demo { aspect-ratio: 16 / 9; background: #1a253f; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--muted); margin: 16px 0 24px; }
+  html, body { height: 100%; background: var(--bg); color: var(--fg); font: 14px/1.5 system-ui, -apple-system, sans-serif; overflow: hidden; }
+  #graph { position: fixed; inset: 0; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Hero overlay (top-left) */
+  .hero {
+    position: fixed; top: 16px; left: 16px; z-index: 10;
+    max-width: 440px; pointer-events: none;
+  }
+  .hero h1 { font-size: 44px; letter-spacing: -0.02em; line-height: 1; margin-bottom: 8px; color: var(--brand); pointer-events: auto; }
+  .hero .tag { font-size: 13px; color: var(--accent-2); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; pointer-events: auto; }
+  .hero .lede { font-size: 16px; color: var(--fg); margin-bottom: 6px; pointer-events: auto; }
+  .hero .lede-sub { font-size: 13px; color: var(--muted); pointer-events: auto; }
+
+  /* Legend + controls (bottom-left) */
+  .legend {
+    position: fixed; bottom: 16px; left: 16px; z-index: 10;
+    background: rgba(10,15,28,0.85); backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
+    padding: 12px 14px; font-size: 12px; max-width: 300px;
+  }
+  .legend h3 { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+  .legend-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .legend-hint { color: var(--muted); font-size: 11px; margin-top: 10px; line-height: 1.4; }
+  .legend-hint code { background: rgba(255,255,255,0.05); padding: 1px 4px; border-radius: 3px; color: var(--accent-2); }
+
+  /* Top-right navigation + toolbar */
+  .topnav {
+    position: fixed; top: 16px; right: 16px; z-index: 10;
+    display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;
+    max-width: calc(100% - 32px);
+  }
+  .topnav a, .topnav button, .topnav select, .topnav label {
+    background: rgba(10,15,28,0.85); backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+    padding: 8px 12px; font-size: 12px; color: var(--fg);
+    text-decoration: none; cursor: pointer; font-family: inherit;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .topnav a:hover, .topnav button:hover, .topnav select:hover, .topnav label:hover { border-color: var(--accent); color: var(--accent); }
+  .topnav button:disabled, .topnav label.disabled { opacity: 0.4; cursor: not-allowed; }
+  .topnav input[type=file] { display: none; }
+  .topnav .xr-ok { border-color: var(--accent-2); color: var(--accent-2); }
+  .topnav .mp-stub { opacity: 0.55; }
+  .topnav .mp-stub:hover { opacity: 0.9; }
+
+  /* Toast for feedback */
+  .toast {
+    position: fixed; top: 72px; right: 16px; z-index: 30;
+    background: rgba(10,15,28,0.95); border: 1px solid var(--accent-2);
+    border-radius: 8px; padding: 12px 16px; font-size: 13px; color: var(--fg);
+    max-width: 320px; opacity: 0; transform: translateY(-10px);
+    transition: opacity 0.2s, transform 0.2s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* Side panel for content */
+  .panel {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 20;
+    width: 540px; max-width: 100vw;
+    background: rgba(5,8,15,0.96); backdrop-filter: blur(12px);
+    border-left: 1px solid rgba(255,255,255,0.1);
+    overflow-y: auto; padding: 24px 28px 64px;
+    transform: translateX(100%); transition: transform 0.25s ease-out;
+  }
+  .panel.open { transform: translateX(0); }
+  .panel-close {
+    position: sticky; top: 0; float: right;
+    background: rgba(5,8,15,0.8); border: 1px solid rgba(255,255,255,0.1);
+    color: var(--muted); width: 28px; height: 28px; border-radius: 50%;
+    cursor: pointer; font-size: 16px; line-height: 1; padding: 0;
+  }
+  .panel-close:hover { color: var(--accent); border-color: var(--accent); }
+  .panel h1 { font-size: 24px; color: var(--brand); margin: 4px 0 12px; }
+  .panel h2 { font-size: 18px; margin: 20px 0 10px; color: var(--accent-2); }
+  .panel h3 { font-size: 15px; margin: 16px 0 8px; color: var(--fg); }
+  .panel p, .panel li { color: var(--fg); margin-bottom: 10px; }
+  .panel ul, .panel ol { margin-left: 20px; margin-bottom: 14px; }
+  .panel pre { background: #111a2e; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 12px; margin: 10px 0; }
+  .panel code { background: rgba(255,255,255,0.05); padding: 1px 5px; border-radius: 3px; font-size: 12px; color: var(--accent); }
+  .panel pre code { background: transparent; padding: 0; }
+  .panel a { color: var(--accent); border-bottom: 1px solid transparent; }
+  .panel a:hover { border-bottom-color: var(--accent); }
+  .panel blockquote { border-left: 2px solid var(--accent-2); padding-left: 14px; color: var(--muted); margin: 10px 0; }
+  .panel table { border-collapse: collapse; margin: 10px 0; font-size: 12px; }
+  .panel th, .panel td { border: 1px solid rgba(255,255,255,0.1); padding: 6px 10px; }
+  .panel th { background: rgba(255,255,255,0.03); color: var(--accent-2); }
+
+  /* Loading + empty states */
+  .loader { text-align: center; padding: 40px 20px; color: var(--muted); }
+  .meta { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+  .meta span { background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 999px; margin-right: 4px; }
+
+  /* Mobile */
+  @media (max-width: 700px) {
+    .hero h1 { font-size: 32px; }
+    .hero { max-width: calc(100% - 32px); }
+    .legend { max-width: calc(100% - 32px); }
+    .panel { width: 100vw; }
+    .topnav { top: auto; bottom: 16px; right: 16px; }
+  }
 </style>
 </head>
 <body>
-<main>
-<header>
-  <div class="tag">XRAI v1.0 · MIT-licensed · shipping 2026-04-29</div>
+
+<div id="graph"></div>
+
+<div class="hero">
+  <div class="tag">XRAI v1.0 · MIT · shipping 2026-04-29</div>
   <h1>XRAI</h1>
-  <div class="wordmark-sub"><strong>X-ray vision. God's-eye view. Infinite zoom.</strong></div>
-  <p class="lede"><strong>Voice your world into being. See through. See over. See across.</strong></p>
-  <p class="lede-sub">Open spatial graph format — authored by any LLM, rendered by any engine, queryable by any agent. Shipping today in Portals on iPhone: 60 FPS, 360+ VFX, persistent stateful worlds (CVPR 2026). Free forever. No CLA. No gatekeeper. No take-backs.</p>
+  <p class="lede"><strong style="color:var(--accent)">X-ray vision. God's-eye view. Infinite zoom.</strong></p>
+  <p class="lede-sub">The spec renders itself. Click any node to drill in.</p>
+</div>
 
-  <div class="taglines">
-    <strong>Visionary AI.</strong> <strong>God Glasses for the Masses.</strong><br>
-    Join jARvis. Jam with friends. Harness holographic intelligence.<br>
-    Inspire infinite imagination. <strong>See more. Be more.</strong><br>
-    Open the doors of perception. The singularity is near.<br>
-    A far-out future is here — open, not captured.
+<div class="topnav">
+  <label title="Load an XRAI v1.0 JSON file from your device">
+    📂 Load XRAI
+    <input type="file" accept=".json,.xrai,application/json,application/vnd.xrai+json" id="file-input" />
+  </label>
+  <button id="save-btn" title="Save current graph as XRAI v1.0 JSON">💾 Save XRAI</button>
+  <button id="xr-btn" class="xr-ok" title="Enter immersive AR/VR (WebXR)" disabled>🥽 <span id="xr-label">checking…</span></button>
+  <select id="engine-select" title="Rendering engine">
+    <option value="force-graph">⚡ 3d-force-graph</option>
+    <option value="echarts-gl">📊 ECharts-GL (WebGPU)</option>
+    <option value="playcanvas">🎮 PlayCanvas</option>
+    <option value="needle">🪡 Needle</option>
+    <option value="icosa">🔷 Icosa AR</option>
+    <option value="portals">📱 Open in Portals app</option>
+  </select>
+  <button id="mp-btn" class="mp-stub" title="Multiplayer via LiveKit (spec 010) — coming soon">👥 Invite</button>
+  <a href="VIEWER_ARCHITECTURE.md" title="Hybrid viewer architecture">🏗 arch</a>
+  <a href="classic.html" title="Static text-only landing page">📖 classic</a>
+  <a href="https://github.com/imclab/xra1" target="_blank" rel="noopener">⎇ repo</a>
+  <a href="llms.txt" title="LLM-friendly doc index">🤖 llms.txt</a>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="legend">
+  <h3>legend</h3>
+  <div class="legend-row"><span class="legend-dot" style="background:var(--doc)"></span> doc / spec</div>
+  <div class="legend-row"><span class="legend-dot" style="background:var(--concept)"></span> concept</div>
+  <div class="legend-row"><span class="legend-dot" style="background:var(--demo)"></span> example / runtime</div>
+  <div class="legend-row"><span class="legend-dot" style="background:var(--rfc)"></span> RFC</div>
+  <div class="legend-row"><span class="legend-dot" style="background:var(--runtime)"></span> adapter</div>
+  <div class="legend-hint">
+    <strong style="color:var(--fg)">drag</strong> to rotate · <strong style="color:var(--fg)">scroll</strong> zoom · <strong style="color:var(--fg)">click</strong> a node to open · <code>Esc</code> to close
   </div>
+</div>
 
-  <a class="cta" href="#get-started">Get started →</a>
-  <a class="cta secondary" href="MANIFESTO.md">Read the manifesto</a>
-</header>
-
-<section>
-  <h2>The problem XRAI answers</h2>
-  <div class="problem">
-    We are blind. We are <strong>island minds</strong>. Code is opaque. AI is black-boxed. The web is flat. Search is broken. Education is broken. Communication is dated.
-    <br><br>
-    Social media brainwashes and isolates. GUIs cripple bodies and minds. Profit and algorithms drive conflict and instant gratification. People feel small and powerless. Civilization is at risk.
-    <br><br>
-    <strong>XRAI is the substrate for a different medium</strong> — one where intent becomes space, memory persists, minds bridge, and the agent's view of the world is legible to you, not hidden behind a prompt.
+<aside class="panel" id="panel" aria-hidden="true">
+  <button class="panel-close" onclick="closePanel()" aria-label="Close">×</button>
+  <div id="panel-content">
+    <div class="loader">Pick a node.</div>
   </div>
-</section>
+</aside>
 
-<section>
-  <h2>Infinite zoom</h2>
-  <p class="muted" style="margin-bottom: 20px;">A graph that scales in four directions. Every XRAI scene can be navigated along each axis.</p>
-  <div class="cards-3">
-    <div class="zoom-card">
-      <strong>↔ Across time</strong>
-      <span>Past, present, future. Replay last Tuesday. Branch into "what if." Memex + time-travel as first-class schema, not a feature bolt-on.</span>
-    </div>
-    <div class="zoom-card">
-      <strong>⌥ Across possibilities</strong>
-      <span>Counterfactual branches, alternative compositions, multiverse observation. The unrealized is as addressable as the rendered.</span>
-    </div>
-    <div class="zoom-card">
-      <strong>∞ Across minds</strong>
-      <span>Your graph + my graph + the agent's graph, federated. Island minds bridge. Collective cognition with sovereignty preserved.</span>
-    </div>
-    <div class="zoom-card" style="grid-column: 1/-1; margin-top: 4px;">
-      <strong>⌖ Across scales</strong>
-      <span>Molecule → room → city → planet → cosmos. No native zoom ceiling. The graph describes its own structure at every level.</span>
-    </div>
-  </div>
-</section>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+    "3d-force-graph": "https://unpkg.com/3d-force-graph@1.73.4/dist/3d-force-graph.min.js",
+    "marked": "https://esm.sh/marked@11.1.1"
+  }
+}
+</script>
 
-<section>
-  <h2>Proof it ships</h2>
-  <p class="muted" style="margin-bottom: 16px;">Portals — the reference implementation — shipped on iOS and at CVPR 2026. The numbers below are from the peer-reviewed camera-ready paper.</p>
-  <div class="card">
-    <p><strong>60 FPS on iPhone 14 Pro</strong> — 2.7–4.1× speedup over prior art. LOD-adaptive Gaussian splatting (SPAG) + shared spatial-media compute substrate fusing depth, stencil, audio, and ML-pose channels. Drives <strong>360+ source-agnostic VFX</strong>.</p>
-    <p><strong>Stateful worlds, not stateless scenes.</strong> Persistent geospatial scene-state with layered world metadata, reloadable payloads, anchor-guided re-alignment across sessions, devices, users.</p>
-    <p><strong>Voice-driven semantic authoring.</strong> On-device intent parsing + cloud fallback for ambiguous utterances. No-code composition pipeline bridging reconstruction and generation.</p>
-    <p><strong>Cross-platform today.</strong> iOS + web viewers (Apple Vision Pro compatible) for reconstructed environments, volumetric humans, holographic spatial media.</p>
-    <p class="muted" style="font-size: 14px; margin-top: 8px;">Paper: <em>Portals: Persistent, Editable 4D Spatial World Models on Edge Devices</em> — Tunick, Brant, Pennock, Kasowski — H3M Inc. + IMC Lab — CVPR 2026 Workshop on 4D World Models, submitted 2026-04-10. Prior clinical deployment of volumetric AR at Memorial Sloan Kettering established the real-time rendering primitives.</p>
-  </div>
-</section>
+<!-- 3d-force-graph uses SEA.js-style loading; load as global script for stability -->
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+<script src="https://unpkg.com/3d-force-graph@1.73.4/dist/3d-force-graph.min.js"></script>
 
-<section>
-  <h2>What XRAI is</h2>
-  <p>A typed hypergraph of entities, relationships, events, and intentions — anchored in space and time, renderable in any medium, authored by any LLM, queryable by any agent.</p>
-  <p>One format. Scene graphs for AR / VR / XR today. Episodic memory for voice assistants tomorrow. Living knowledge graphs the year after. <strong>Language of thought</strong> eventually.</p>
-  <div class="card">
-    <span class="pill">MIT licensed</span>
-    <span class="pill">CC0 schema</span>
-    <span class="pill">No CLA</span>
-    <span class="pill">No gatekeeper</span>
-    <span class="pill">No tracking</span>
-    <span class="pill">Forever open</span>
-  </div>
-</section>
+<script type="module">
+import { marked } from 'https://esm.sh/marked@11.1.1';
 
-<section>
-  <h2>What XRAI is not</h2>
-  <ul>
-    <li>Not a company's proprietary format</li>
-    <li>Not a vendor-controlled standard</li>
-    <li>Not a committee-designed artifact</li>
-    <li>Not paywalled, tracked, or rent-extractive</li>
-    <li>Not a replacement for HTML / glTF / USD — XRAI composes with them all</li>
-  </ul>
-</section>
+// ------- Graph data: XRAI spec as its own hypergraph -------
+// Nodes = concrete files/concepts in this repo.
+// Edges = real cross-references.
+const nodes = [
+  // Core vision + manifesto
+  { id: 'VISION',             group: 'concept', label: 'VISION',             file: 'VISION.md',               size: 22 },
+  { id: 'MANIFESTO',          group: 'doc',     label: 'MANIFESTO',          file: 'MANIFESTO.md',            size: 18 },
+  { id: 'SPEC',               group: 'doc',     label: 'SPEC v1.0',          file: 'SPEC.md',                 size: 24 },
+  { id: 'FAQ',                group: 'doc',     label: 'FAQ',                file: 'FAQ.md',                  size: 12 },
+  { id: 'CITATION',           group: 'doc',     label: 'CITATION',           file: 'CITATION.cff',            size: 8  },
+  { id: 'CHANGELOG',          group: 'doc',     label: 'CHANGELOG',          file: 'CHANGELOG.md',            size: 8  },
+  { id: 'VERSIONS',           group: 'doc',     label: 'VERSIONS',           file: 'VERSIONS.md',             size: 10 },
+  { id: 'BUILDING',           group: 'doc',     label: 'BUILDING',           file: 'BUILDING.md',             size: 10 },
+  { id: 'CONTRIBUTING',       group: 'doc',     label: 'CONTRIBUTING',       file: 'CONTRIBUTING.md',         size: 8  },
+  { id: 'CODE_OF_CONDUCT',    group: 'doc',     label: 'Code of Conduct',    file: 'CODE_OF_CONDUCT.md',      size: 6  },
+  { id: 'SECURITY',           group: 'doc',     label: 'SECURITY',           file: 'SECURITY.md',             size: 8  },
+  { id: 'LAUNCH_CHECKLIST',   group: 'doc',     label: 'Launch Checklist',   file: 'LAUNCH_CHECKLIST.md',     size: 8  },
+  { id: 'RUNTIMES',           group: 'doc',     label: 'RUNTIMES',           file: 'RUNTIMES.md',             size: 14 },
+  { id: 'RUNTIMES_EVAL',      group: 'doc',     label: 'Runtimes Eval',      file: 'RUNTIMES_EVALUATION.md',  size: 12 },
+  { id: 'USE_CASES',          group: 'doc',     label: 'Use Cases',          file: 'USE_CASES.md',            size: 12 },
+  { id: 'LLMS_TXT',           group: 'doc',     label: 'llms.txt',           file: 'llms.txt',                size: 8  },
 
-<section>
-  <h2>What you can say — 20 use cases</h2>
-  <p>Every example maps one voice command → XRAI payload → existing Portals spec → rendered on any runtime. <strong>Not reinvented — curated from shipping work.</strong> See full details: <a href="USE_CASES.md"><code>USE_CASES.md</code></a>.</p>
-  <ul>
-    <li><strong>🎮 Mini game</strong> — "make a game where cubes fall and I catch them" → 0 new code, already works via existing bridge</li>
-    <li><strong>🌍 Dynamic world</strong> — "create a forest world around me" → sparse generator rules, expanded at runtime (spec 023)</li>
-    <li><strong>🎨 Audio-reactive artwork</strong> — "paint a glowing spiral that reacts to my voice" (spec 009 Paint-AR + 5 audio shaders)</li>
-    <li><strong>🌐 Spatial lens on a webpage</strong> — "show me this Wikipedia article as a memory palace" (spec 006 KB visualizer + hypergraph arch)</li>
-    <li><strong>🧠 Agentic HUD</strong> — "show me what's interesting in this room" (spec 021 PTHI — fighter pilot HUD meets Jarvis)</li>
-    <li><strong>🎭 Neural camera lens</strong> — "make everything look like Ghibli" (spec 024 neural filters via Unity Sentis)</li>
-    <li><strong>🧩 Shared thinking space</strong> — "invite Alice into this scene" (spec 010 multiplayer + federated graph)</li>
-    <li><strong>🔧 CLI / codebase as a 3D city</strong> — spec 006 + 017 MegaBrain orchestration</li>
-    <li><strong>🎬 Memex / time travel</strong> — "show me what I was working on last Tuesday" (constitution XRAI Philosophy)</li>
-    <li><strong>🏗 Architecture walkthrough</strong> — same XRAI file plays in Portals AR / Three.js web / Unreal / visionOS tabletop</li>
-    <li><strong>✈️ Flugtag</strong> — "launch me off a pier in a flying bathtub with wings" — hand-tilt steers contraption, leaderboard by distance (specs 002 + 019 + 023)</li>
-    <li><strong>🏁 Racing</strong> — "build a rainbow-road track around my living room" — track wraps real furniture, share XRAI = friends race same track (specs 023 + 019 + 011)</li>
-    <li><strong>🪂 Sky diving</strong> — "drop me from 10,000 feet over my couch" — body pose controls drag, gesture-deploy parachute, land on couch for score (specs 021 + 009 + 003)</li>
-    <li><strong>🔑 Where did I leave my keys?</strong> — passive camera logs object sightings → jARvis answers "last seen 2h ago on kitchen counter." The mundane memex. (specs 021 + 011 + 004 + constitution)</li>
-    <li><strong>🌱 Sample anything as a seed</strong> — point camera at a tree / chair / room / song → jARvis extracts features → generator emits 20 variants. "XRAI = DNA, not organism" — kills 99% of asset marketplaces. (specs 022 + 023 + 024)</li>
-    <li><strong>🌐 Make my website 3D</strong> — browser extension + <code>&lt;meta name="xrai"&gt;</code> → any site becomes a walkable spatial version on any XRAI runtime. Adoption propagates like RSS. (spec 006 + constitution "We Are Blind")</li>
-    <li><strong>🦍 King Kong <em>in your backyard</em></strong> — ARWorldMap anchor + body tracking + federated view; ships today at room/neighborhood scale. Landmark-scale (Empire State) ships post-MVP via <strong>Cesium for Unity</strong> (Apache 2.0, already researched + verified compatible — `bleeding-edge-jt` kb-followup 2026-02-21). (specs 003 + 010 + 011 + Cesium)</li>
-    <li><strong>🕺 10 mini best-friends doing jumping jacks on my desk</strong> — live avatar stream + 10 clones + random phase + ObjectAnimator. The sticker economy of spatial. (specs 002 + 003 + 010)</li>
-    <li><strong>🎨 Your space as an art gallery</strong> — anchor paintings to living room / office / local park via ARWorldMap; friends with same scan see it. City-square variant (Times Square) deferred until open geospatial VPS. (specs 009 + 022 + public namespace)</li>
-    <li><strong>🪧 Community protest sign garden</strong> — aggregate signs by topic at local civic spaces (city hall, quad). Platform-unownable civic speech, room/neighborhood scale today. Landmark scale (White House) deferred. (specs 009 + 022 + crowd-aggregator)</li>
-  </ul>
-</section>
+  // Examples
+  { id: 'EX_MINIMAL',         group: 'demo',    label: 'ex: minimal',        file: 'examples/01-minimal.xrai.json',       size: 6 },
+  { id: 'EX_VOICE',           group: 'demo',    label: 'ex: voice→scene',    file: 'examples/02-voice-prompt.xrai.json',  size: 6 },
+  { id: 'EX_WIRED',           group: 'demo',    label: 'ex: audio-reactive', file: 'examples/03-wired.xrai.json',         size: 6 },
+  { id: 'EX_HOLO',            group: 'demo',    label: 'ex: hologram',       file: 'examples/04-hologram.xrai.json',      size: 6 },
 
-<section>
-  <h2>First jARvis demos</h2>
-  <p class="muted">Short videos that sell the thesis — spatial AI that gives users superpowers. See the full demo plan in <a href="demos/jarvis_demos.md"><code>demos/jarvis_demos.md</code></a>.</p>
-  <div class="card">
-    <strong>Demo 1 — Voice to World (60s)</strong><br>
-    <span class="muted">Say a sentence, see a world. Spatial meditation garden materializes from voice. XRAI graph visible. Saved scene → portable to any device via QR code.</span>
-  </div>
-  <div class="card">
-    <strong>Demo 2 — Time Travel (30s)</strong><br>
-    <span class="muted">"Show me the last 5 conversations I had about Portals." Spatial timeline of past sessions. Tap one. Replay the workspace as it was.</span>
-  </div>
-  <div class="card">
-    <strong>Demo 3 — Ambient Expertise (15s)</strong><br>
-    <span class="muted">Look at a plant. Ask "what's wrong?" Glasses overlay diagnosis grounded in XRAI knowledge graph.</span>
-  </div>
-</section>
+  // RFCs
+  { id: 'RFC_TEMPLATE',       group: 'rfc',     label: 'RFC template',       file: 'rfcs/0000-template.md',               size: 6 },
+  { id: 'RFC_0001',           group: 'rfc',     label: 'RFC 0001 events',    file: 'rfcs/0001-event-primitives.md',       size: 10 },
+  { id: 'RFC_0002',           group: 'rfc',     label: 'RFC 0002 hyperedges', file: 'rfcs/0002-nary-hyperedges.md',       size: 10 },
+  { id: 'RFC_0003',           group: 'rfc',     label: 'RFC 0003 conformance', file: 'rfcs/0003-conformance-tests.md',    size: 10 },
 
-<section>
-  <h2>Design principles</h2>
-  <ol>
-    <li>Radical simplicity — grokkable in 1 hour</li>
-    <li>LLM-authorable — any model can emit valid XRAI from natural input</li>
-    <li>Permissionless adoption — no gatekeeper, no tracking</li>
-    <li>Forgiving parsing — partial inputs still work (Postel's law)</li>
-    <li>Extensible without breaking — v1 stays valid as v2 ships</li>
-    <li>Spatial + temporal + modal — scenes, episodes, alternatives</li>
-    <li>Typed n-ary relations — hyperedges, not just pairs (v1.1+)</li>
-    <li>Personal + federated — your graph is yours; publish slices</li>
-    <li>MCP-native — any agent reads/writes via standard tools</li>
-    <li>Self-referential — the schema describes itself</li>
-  </ol>
-</section>
+  // Runtimes
+  { id: 'RT_THREEJS',         group: 'runtime', label: 'Three.js adapter',   file: 'runtimes/threejs/README.md',          size: 10 },
+  { id: 'RT_README',          group: 'runtime', label: 'runtimes/ index',    file: 'runtimes/_conformance/README.md',     size: 8  },
+  { id: 'MCP',                group: 'runtime', label: 'Spatial MCP',        file: 'mcp-server/README.md',                size: 12 },
 
-<section>
-  <h2>The lineage</h2>
-  <p class="muted">Every generation tried. Each missed one piece that now exists.</p>
-  <ul>
-    <li><strong>Bush 1945</strong> — memex (associative personal trails). Tech wasn't ready.</li>
-    <li><strong>Nelson 1965</strong> — Xanadu (bidirectional + versioning). Over-designed, never shipped.</li>
-    <li><strong>Berners-Lee 1989</strong> — WWW (one-way simple). Won on simplicity.</li>
-    <li><strong>Page/Brin 1998</strong> — PageRank (importance from topology).</li>
-    <li><strong>Berners-Lee 2007</strong> — Giant Global Graph. Stalled on authoring burden.</li>
-    <li><strong>Hofstadter (ongoing)</strong> — analogy as cognition.</li>
-  </ul>
-  <p>LLMs solve the authoring burden. Cameras ground the symbols. MCP federates the agents. The window just opened.</p>
-</section>
+  // Abstract concepts (no file — synthetic doc pulled from VISION)
+  { id: 'SIGHT_TRIAD',        group: 'concept', label: 'Sight Triad',        file: '__inline__:sight-triad',              size: 14 },
+  { id: 'JARVIS',             group: 'concept', label: 'jARvis goal',        file: '__inline__:jarvis',                   size: 14 },
+  { id: 'PORTALS_PROOF',      group: 'concept', label: 'Portals (CVPR 2026)', file: '__inline__:portals',                 size: 12 },
+];
 
-<section id="get-started">
-  <h2>Get started</h2>
-  <div class="card">
-    <p><strong>Start here — the vision:</strong> <a href="VISION.md">VISION.md</a> 🌟 — problem + Sight Triad + jARvis goal + CVPR proof. Load-bearing source for everything else.</p>
-    <p><strong>Read the manifesto:</strong> <a href="MANIFESTO.md">MANIFESTO.md</a></p>
-    <p><strong>Read the spec:</strong> <a href="SPEC.md">SPEC.md v1.0 draft</a></p>
-    <p><strong>Demos:</strong> <a href="demos/jarvis_demos.md">demos/jarvis_demos.md</a></p>
-    <p><strong>Spatial MCP server:</strong> <a href="mcp-server/README.md">mcp-server/</a> — 11 tools (9 <code>xrai.*</code> + 2 <code>paint.*</code>). Any MCP-compatible agent (Claude Desktop, Cursor, Cline, OpenAI, Gemini-with-shim) can author XRAI scenes + procedural paint strokes. Replaces Open Brush's port-40074 HTTP API with typed, stateless, multi-agent MCP.</p>
-    <p><strong>Engine runtimes:</strong> <a href="runtimes/">runtimes/</a> — Three.js · PlayCanvas · Unity · Unreal · WebXR · visionOS RealityKit. One XRAI doc, every engine.</p>
-    <p><strong>Repo:</strong> <code>github.com/imclab/xra1</code> <em class="muted">(launching 2026-04-29)</em></p>
-    <p><strong>Contact:</strong> <a href="mailto:hello@xrai.dev">hello@xrai.dev</a></p>
-  </div>
-</section>
+const links = [
+  // VISION is the load-bearing source for everything
+  { source: 'VISION', target: 'SIGHT_TRIAD' },
+  { source: 'VISION', target: 'JARVIS' },
+  { source: 'VISION', target: 'PORTALS_PROOF' },
+  { source: 'VISION', target: 'MANIFESTO' },
+  { source: 'VISION', target: 'SPEC' },
 
-<section>
-  <h2>Governance (Year 1)</h2>
-  <p>BDFL: <a href="https://h3m.ai">@jamestunick</a> (IMC Lab + H3M Inc.). Public RFC process. Weekly updates. No corporate sponsor controlling direction.</p>
-  <p class="muted">Year 2+: transfer to Apache Software Foundation or W3C Community Group once 1000+ external adopters validated. Never to a single vendor's foundation.</p>
-</section>
+  // MANIFESTO extends VISION with lineage
+  { source: 'MANIFESTO', target: 'SIGHT_TRIAD' },
+  { source: 'MANIFESTO', target: 'SPEC' },
 
-<section>
-  <h2>Commercial relationship</h2>
-  <p>The spec is free. Forever. Period. Portals (H3M Inc.) builds commercial products on top: hosted XRAI cloud, best-in-class renderer, priority-quality LLM authoring, enterprise spatial intelligence API, vertical apps. The format stays free; services built on top are paid.</p>
-  <p class="muted">Git → GitHub pattern. HTML → Chrome. Markdown → Notion. <strong>The community can never be held hostage.</strong></p>
-</section>
+  // SPEC has examples
+  { source: 'SPEC', target: 'EX_MINIMAL' },
+  { source: 'SPEC', target: 'EX_VOICE' },
+  { source: 'SPEC', target: 'EX_WIRED' },
+  { source: 'SPEC', target: 'EX_HOLO' },
+  { source: 'SPEC', target: 'VERSIONS' },
+  { source: 'SPEC', target: 'FAQ' },
+  { source: 'SPEC', target: 'CHANGELOG' },
 
-<footer>
-  XRAI is the work of James Tunick (IMC Lab + H3M Inc.) and contributors. MIT for reference impls. CC0 for the normative schema. No warranties, no tracking, no CLA. <strong>The doors of perception, open-sourced.</strong> 2026.
-</footer>
-</main>
+  // RFCs propose extensions to SPEC
+  { source: 'RFC_TEMPLATE', target: 'RFC_0001' },
+  { source: 'RFC_0001', target: 'SPEC' },
+  { source: 'RFC_0002', target: 'SPEC' },
+  { source: 'RFC_0003', target: 'SPEC' },
+  { source: 'RFC_0003', target: 'RT_THREEJS' },
+  { source: 'RFC_0003', target: 'RT_README' },
+
+  // Runtimes implement SPEC + exercise examples
+  { source: 'RT_THREEJS', target: 'SPEC' },
+  { source: 'RT_THREEJS', target: 'EX_MINIMAL' },
+  { source: 'RT_THREEJS', target: 'EX_VOICE' },
+  { source: 'RT_THREEJS', target: 'EX_WIRED' },
+  { source: 'RT_THREEJS', target: 'EX_HOLO' },
+  { source: 'RT_THREEJS', target: 'RT_README' },
+  { source: 'RT_README', target: 'RUNTIMES' },
+  { source: 'RUNTIMES', target: 'RUNTIMES_EVAL' },
+  { source: 'RUNTIMES', target: 'RT_THREEJS' },
+  { source: 'RUNTIMES_EVAL', target: 'SIGHT_TRIAD' },
+
+  // MCP speaks SPEC
+  { source: 'MCP', target: 'SPEC' },
+  { source: 'MCP', target: 'EX_VOICE' },
+  { source: 'MCP', target: 'EX_HOLO' },
+
+  // Governance ring
+  { source: 'MANIFESTO', target: 'CONTRIBUTING' },
+  { source: 'CONTRIBUTING', target: 'CODE_OF_CONDUCT' },
+  { source: 'CONTRIBUTING', target: 'RFC_TEMPLATE' },
+  { source: 'CONTRIBUTING', target: 'SECURITY' },
+  { source: 'SECURITY', target: 'SPEC' },
+
+  // Operator-facing
+  { source: 'BUILDING', target: 'RT_THREEJS' },
+  { source: 'BUILDING', target: 'MCP' },
+  { source: 'LAUNCH_CHECKLIST', target: 'MANIFESTO' },
+  { source: 'LAUNCH_CHECKLIST', target: 'SPEC' },
+  { source: 'CITATION', target: 'SPEC' },
+  { source: 'CITATION', target: 'PORTALS_PROOF' },
+  { source: 'LLMS_TXT', target: 'SPEC' },
+  { source: 'LLMS_TXT', target: 'VISION' },
+  { source: 'USE_CASES', target: 'SPEC' },
+  { source: 'USE_CASES', target: 'JARVIS' },
+];
+
+// ------- Inline content for concept nodes (no markdown file) -------
+const inlineContent = {
+  'sight-triad': `# The Sight Triad
+
+**Three complementary ways of seeing**, each healing a different facet of "we are blind":
+
+| Pillar | Direction | Heals |
+|---|---|---|
+| **X-ray vision** | see *through* | AI black-box, code, provenance, cost |
+| **God's-eye view** | see *over* | field topology, market dynamics, civ-scale problems |
+| **Infinite zoom** | see *across* | time, possibilities, minds, scales |
+
+A feature advancing only one pillar is incomplete. A pitch that activates all three is the gold standard.
+
+Load-bearing in \`constitution.md § The Affirmative Mirror\` of the Portals monorepo. Triple-anchored across constitution + XXX spec + INDEX.md + \`xrai-website/VISION.md\`.
+
+See also [VISION.md](VISION.md), [MANIFESTO.md](MANIFESTO.md), and [RUNTIMES_EVALUATION.md](RUNTIMES_EVALUATION.md) § O9 parity rubric.`,
+
+  'jarvis': `# jARvis — the mission
+
+**Preserved verbatim from the project constitution. Do not sand down.**
+
+> jARvis is a multi-model agentic swarm for more intuitive voice / gesture / predictive capabilities, leading to compounding engineering capabilities and tangible world-class breakthroughs in every session.
+>
+> Instant zero-to-one agent creation — ever more powerful agents, ML workflows, models, skills, and tools empowering users with astonishing world-building, dynamic data visualization, and complex-problem-solving capabilities across platform-agnostic, massively-multiplayer online virtual worlds, augmented-reality scenarios, and mixed-reality tele-presence scenarios.
+>
+> All with zero latency, stunning Disney-level visual fidelity, and real-time VFX post-processing — generative AI production of truly magical, living, breathing, immersive experiences unlike anything the world has seen before.
+>
+> Augmenting and enhancing collaborative creativity and new forms of expression and perception, achieving a type of heightened consciousness — with special focus on human factors, spatial memory, neuroplasticity, sensor-fusion computing, and human-computer-interface designs that adapt to user needs and rapidly changing platform and environmental contextual constraints.
+>
+> Special focus on small language models, lightweight microservices, scalable and fault-tolerant asynchronous orchestration across the widest possible range of mixed-reality devices — especially those that will define the upcoming spatial computing revolution, such as wearables and edge devices, smart glasses, virtual-reality and augmented-reality headsets, as well as traditional devices: mobile phones, PC and Mac web browsers, etc.
+
+See also [VISION.md](VISION.md), [Portals CVPR proof](#PORTALS_PROOF).`,
+
+  'portals': `# Portals — the shipping proof
+
+**Reference implementation for XRAI**, peer-reviewed at CVPR 2026.
+
+**Paper:** *Portals: Persistent, Editable 4D Spatial World Models on Edge Devices* — Tunick, Brant, Pennock, Kasowski (H3M Inc. + IMC Lab), CVPR 2026 Workshop on 4D World Models, submitted 2026-04-10.
+
+**Contributions (all T1-verified):**
+
+1. **Edge-device runtime** — LOD-adaptive Gaussian splatting (SPAG) + shared spatial-media compute substrate fusing depth, stencil, audio, and ML-pose channels → **360+ source-agnostic VFX at 60 FPS on iPhone 14 Pro (2.7–4.1× speedup)**.
+2. **Persistent geospatial scene-state architecture** — layered world metadata, reloadable scene payloads, anchor-guided re-alignment across sessions / devices / users.
+3. **Creator-facing composition pipeline** — VFX composition + voice-driven semantic actions (on-device intent parsing + cloud fallback) + no-code authoring.
+4. **Benchmark axes** — mobile rendering efficiency, persistent scenes, editable world state.
+
+Prior clinical deployment of volumetric AR at Memorial Sloan Kettering [23] established the real-time rendering primitives underlying this work.
+
+See [CITATION.cff](CITATION.cff) for the canonical cite. See [SPEC.md](SPEC.md) for the v1.0 public subset that this proof anchors.`,
+};
+
+// ------- Color + sizing helpers -------
+const colorFor = (group) => ({
+  doc: '#8ab4ff',
+  concept: '#ffd166',
+  demo: '#4ade80',
+  rfc: '#c084fc',
+  runtime: '#f87171',
+}[group] || '#ffffff');
+
+// ------- Build the graph -------
+const Graph = ForceGraph3D()(document.getElementById('graph'))
+  .backgroundColor('#05080f')
+  .graphData({ nodes, links })
+  .nodeLabel(n => `<div style="font:13px system-ui; color:#eaf0ff; background:rgba(5,8,15,0.9); padding:4px 8px; border-radius:4px; border:1px solid ${colorFor(n.group)}">${n.label}</div>`)
+  .nodeColor(n => colorFor(n.group))
+  .nodeVal(n => n.size || 8)
+  .nodeRelSize(3)
+  .linkColor(() => 'rgba(255,255,255,0.14)')
+  .linkOpacity(0.6)
+  .linkWidth(0.6)
+  .linkDirectionalParticles(2)
+  .linkDirectionalParticleSpeed(0.004)
+  .linkDirectionalParticleWidth(1.2)
+  .linkDirectionalParticleColor(() => 'rgba(255,209,102,0.7)')
+  .onNodeClick(node => {
+    openNode(node);
+    // Center on click
+    const distance = 120;
+    const distRatio = 1 + distance / Math.hypot(node.x || 1, node.y || 1, node.z || 1);
+    Graph.cameraPosition(
+      { x: (node.x || 1) * distRatio, y: (node.y || 1) * distRatio, z: (node.z || 1) * distRatio },
+      node, 1200
+    );
+  });
+
+// Responsive sizing
+const fitGraph = () => Graph.width(window.innerWidth).height(window.innerHeight);
+fitGraph();
+window.addEventListener('resize', fitGraph);
+
+// ------- Panel behavior -------
+const panel = document.getElementById('panel');
+const panelContent = document.getElementById('panel-content');
+
+async function openNode(node) {
+  panel.classList.add('open');
+  panel.setAttribute('aria-hidden', 'false');
+  panelContent.innerHTML = `<div class="loader">loading ${node.label}…</div>`;
+
+  try {
+    let mdText;
+    if (node.file && node.file.startsWith('__inline__:')) {
+      const key = node.file.replace('__inline__:', '');
+      mdText = inlineContent[key] || `# ${node.label}\n\n_no content available_`;
+    } else if (node.file && node.file.endsWith('.json')) {
+      const raw = await fetch(node.file).then(r => r.text());
+      mdText = `# ${node.label}\n\n\`${node.file}\`\n\n\`\`\`json\n${raw}\n\`\`\``;
+    } else if (node.file) {
+      mdText = await fetch(node.file).then(r => r.text());
+    } else {
+      mdText = `# ${node.label}\n\nno file bound`;
+    }
+
+    const html = marked.parse(mdText);
+    const metaPills = `<div class="meta"><span>${node.group}</span>${node.file ? `<span>${node.file}</span>` : ''}</div>`;
+    panelContent.innerHTML = metaPills + html;
+    panelContent.scrollTop = 0;
+    panel.scrollTop = 0;
+  } catch (e) {
+    panelContent.innerHTML = `<h1>${node.label}</h1><p>Failed to load: ${e.message}</p>`;
+  }
+}
+
+function closePanel() {
+  panel.classList.remove('open');
+  panel.setAttribute('aria-hidden', 'true');
+}
+
+window.closePanel = closePanel;
+
+// Esc closes panel
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
+
+// ------- Toast feedback -------
+const toast = document.getElementById('toast');
+function showToast(msg, ms = 2600) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => toast.classList.remove('show'), ms);
+}
+
+// ------- XRAI load (File API) -------
+document.getElementById('file-input').addEventListener('change', async (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const doc = JSON.parse(text);
+    if (!doc.xrai_version) throw new Error('missing xrai_version — not an XRAI document');
+    // Convert XRAI scene → graph data
+    const newNodes = (doc.scene?.entities || []).map(ent => ({
+      id: ent.id,
+      label: ent.id,
+      group: 'demo',
+      size: 8,
+      file: '__inline__:loaded-' + ent.id,
+    }));
+    const newLinks = (doc.scene?.relations || []).map(rel => ({
+      source: rel.from || rel.participants?.[0],
+      target: rel.to || rel.participants?.[1],
+    })).filter(l => l.source && l.target);
+    Graph.graphData({ nodes: newNodes, links: newLinks });
+    // Populate inline content cache so click → panel still works
+    (doc.scene?.entities || []).forEach(ent => {
+      inlineContent['loaded-' + ent.id] = `# ${ent.id}\n\n**type:** \`${ent.type}\`\n\n\`\`\`json\n${JSON.stringify(ent, null, 2)}\n\`\`\``;
+    });
+    showToast(`Loaded ${newNodes.length} entities + ${newLinks.length} relations from ${file.name}`);
+  } catch (err) {
+    showToast(`Load failed: ${err.message}`, 5000);
+  }
+});
+
+// ------- XRAI save (current graph → file) -------
+document.getElementById('save-btn').addEventListener('click', () => {
+  const data = Graph.graphData();
+  const doc = {
+    xrai_version: '1.0',
+    id: `00000000-0000-4000-a000-${Date.now().toString(16).padStart(12, '0').slice(-12)}`,
+    created_at: new Date().toISOString(),
+    author: { type: 'human', id: 'xrai.dev-viewer' },
+    origin: { app: 'xrai-viewer', version: '1.0', scene: 'browser' },
+    scene: {
+      anchors: [],
+      entities: data.nodes.map(n => ({
+        id: n.id,
+        type: 'object.graph-node',
+        model_id: null,
+        transform: {
+          position: [n.x || 0, n.y || 0, n.z || 0].map(v => v / 50),
+          rotation: [0, 0, 0, 1],
+          scale: [0.1, 0.1, 0.1],
+        },
+        material: { color: colorFor(n.group || 'doc') },
+        metadata: { label: n.label, group: n.group, file: n.file },
+      })),
+      relations: data.links.map((l, i) => ({
+        id: `r_${i}`,
+        type: 'parent-of',
+        from: typeof l.source === 'object' ? l.source.id : l.source,
+        to: typeof l.target === 'object' ? l.target.id : l.target,
+      })),
+      events: [],
+    },
+    metadata: { source: 'xrai.dev/index.html force-graph export' },
+  };
+  const blob = new Blob([JSON.stringify(doc, null, 2)], { type: 'application/vnd.xrai+json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `xrai-graph-${Date.now()}.xrai.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`Saved ${doc.scene.entities.length} entities to ${a.download}`);
+});
+
+// ------- WebXR availability check -------
+const xrBtn = document.getElementById('xr-btn');
+const xrLabel = document.getElementById('xr-label');
+(async () => {
+  if (!navigator.xr) { xrLabel.textContent = 'WebXR n/a'; return; }
+  try {
+    const arOK = await navigator.xr.isSessionSupported('immersive-ar');
+    const vrOK = await navigator.xr.isSessionSupported('immersive-vr');
+    if (arOK) { xrLabel.textContent = 'Enter AR'; xrBtn.disabled = false; xrBtn.dataset.mode = 'immersive-ar'; }
+    else if (vrOK) { xrLabel.textContent = 'Enter VR'; xrBtn.disabled = false; xrBtn.dataset.mode = 'immersive-vr'; }
+    else { xrLabel.textContent = 'WebXR off'; }
+  } catch { xrLabel.textContent = 'WebXR err'; }
+})();
+xrBtn.addEventListener('click', () => {
+  showToast('WebXR session hookup lives in the playcanvas + needle runtime stubs — see VIEWER_ARCHITECTURE.md. Force-graph → XR migration is RFC-0004 scope.', 5000);
+});
+
+// ------- Engine picker -------
+document.getElementById('engine-select').addEventListener('change', (e) => {
+  const v = e.target.value;
+  const routes = {
+    'force-graph': null,
+    'echarts-gl': 'runtimes/echarts/viewer.html',
+    'playcanvas': 'runtimes/playcanvas/viewer.html',
+    'needle': 'runtimes/needle/viewer.html',
+    'icosa': 'runtimes/icosa/viewer.html',
+    'portals': 'portals://xrai/open?src=' + encodeURIComponent(location.href),
+  };
+  const target = routes[v];
+  if (!target) { showToast('3d-force-graph (current)'); return; }
+  if (target.startsWith('portals://')) {
+    showToast('Opening in Portals app (requires portals:// URL handler installed)');
+    location.href = target;
+    e.target.value = 'force-graph';
+    return;
+  }
+  showToast(`Opening ${v} renderer…`);
+  setTimeout(() => location.href = target, 800);
+});
+
+// ------- Multiplayer stub (LiveKit — spec 010) -------
+document.getElementById('mp-btn').addEventListener('click', () => {
+  const roomId = 'xrai-' + Math.random().toString(36).slice(2, 8);
+  const inviteUrl = `${location.origin}${location.pathname}?room=${roomId}`;
+  navigator.clipboard?.writeText(inviteUrl).catch(() => {});
+  showToast(`Room ${roomId} — invite URL copied. LiveKit transport lands with spec 010 / RFC (TBD).`, 5000);
+});
+const roomParam = new URLSearchParams(location.search).get('room');
+if (roomParam) {
+  showToast(`Joined room ${roomParam} (multiplayer stub — live transport pending)`, 4000);
+}
+
+// ------- Slight orbital auto-rotate for idle view -------
+let userInteracted = false;
+const controls = Graph.controls();
+controls.addEventListener('start', () => { userInteracted = true; });
+let angle = 0;
+setInterval(() => {
+  if (userInteracted) return;
+  angle += 0.002;
+  Graph.cameraPosition({ x: Math.cos(angle) * 420, y: 80, z: Math.sin(angle) * 420 });
+}, 30);
+
+// ------- Deep-link support: #node=SPEC loads + opens SPEC -------
+function handleHash() {
+  const match = location.hash.match(/node=([A-Z0-9_]+)/i);
+  if (!match) return;
+  const node = nodes.find(n => n.id.toLowerCase() === match[1].toLowerCase());
+  if (node) openNode(node);
+}
+handleHash();
+window.addEventListener('hashchange', handleHash);
+</script>
 </body>
 </html>

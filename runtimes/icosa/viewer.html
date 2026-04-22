@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>XRAI — Icosa Gallery integration (stub)</title>
+<style>body{background:#05080f;color:#eaf0ff;font:14px/1.5 system-ui;margin:0;padding:60px 24px;max-width:720px;margin:0 auto}a{color:#ffd166}.pill{background:#111a2e;padding:2px 8px;border-radius:4px;color:#8ab4ff;font-size:12px}</style>
+</head><body>
+<h1 style="font-size:32px;color:#ffd166">🔷 Icosa Gallery + AR viewer</h1>
+<p class="pill">stub — NOT a runtime; CONSUMER integration</p>
+<h2>Scope</h2>
+<p>Icosa is <strong>not</strong> an XRAI rendering engine — it's a gallery + API for 3D assets. XRAI's <code>object.glb</code> / <code>object.tilt</code> entities can reference Icosa-hosted assets; Icosa's own web AR viewer renders the glTF/tilt payload; XRAI adds the relational + temporal metadata on top.</p>
+<h2>Integration paths</h2>
+<ul>
+  <li><strong>Publish:</strong> export an XRAI scene's <code>object.glb</code> to Icosa Gallery via the vendored <code>com.icosa.icosa-api-client-unity</code> package (in the Portals monorepo). See spec 009 Paint-AR migration plan § "the 4-layer Icosa divide".</li>
+  <li><strong>Embed:</strong> Icosa's public AR viewer URL can be embedded in an iframe below an XRAI doc — the asset renders in Icosa's viewer, XRAI-specific metadata displays alongside.</li>
+  <li><strong>Import:</strong> Icosa Gallery GLB URL → reference in <code>object.glb.model_url</code> → any XRAI runtime loads it.</li>
+  <li><strong>Paint brushes:</strong> <code>AllBrushes.asset</code> (72 Open Brush brushes) ships with the vendored package — curated 10 for our Paint-AR layer per spec 009 migration plan v2.</li>
+</ul>
+<h2>Status</h2>
+<p>Consumer-side integration documented. No dedicated viewer page needed — Icosa <em>is</em> the viewer for its own content. Our role: publish XRAI entities that reference Icosa assets, never embed Icosa inside our render loop.</p>
+<h2>Why document this?</h2>
+<p>Launch-day FAQ (<a href="../../FAQ.md">FAQ.md</a>) had to clarify "is Icosa a runtime?" since xra1 and imclab/xrai both trade on the XRAI name. Short answer in <a href="../../RUNTIMES.md#what-icosa-is-and-is-not">RUNTIMES.md § What Icosa IS and IS NOT</a>. This page is the engine-picker target that redirects to that clarification.</p>
+<p style="margin-top:48px"><a href="../../index.html">← back to main viewer</a> · <a href="../../VIEWER_ARCHITECTURE.md">viewer architecture</a> · <a href="https://icosa.gallery/">Icosa Gallery</a> · <a href="../../RUNTIMES.md">RUNTIMES.md</a></p>
+</body></html>

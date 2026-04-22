@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>XRAI — PlayCanvas viewer (stub)</title>
+<style>body{background:#05080f;color:#eaf0ff;font:14px/1.5 system-ui;margin:0;padding:60px 24px;max-width:720px;margin:0 auto}a{color:#ffd166}.pill{background:#111a2e;padding:2px 8px;border-radius:4px;color:#8ab4ff;font-size:12px}</style>
+</head><body>
+<h1 style="font-size:32px;color:#ffd166">🎮 PlayCanvas XRAI viewer</h1>
+<p class="pill">stub — RUNTIMES_EVALUATION lock gate pending</p>
+<h2>Scope</h2>
+<ul>
+  <li>Engine: PlayCanvas Engine (MIT, desktop editor + runtime). Full PBR + native WebXR (Android Chrome, Meta Quest, future iOS/visionOS when Apple unlocks Safari WebXR-AR).</li>
+  <li>Render target: Android Chrome primary, desktop browsers secondary, Quest browser (WebXR AR/VR both), iOS Safari (non-XR fallback).</li>
+  <li>XRAI I/O: File API + fetch, shared w/ main viewer.</li>
+  <li>Multiplayer: LiveKit transport (spec 010).</li>
+  <li>WebXR Hands API integration pending (RUNTIMES_EVALUATION O6).</li>
+</ul>
+<h2>Status</h2>
+<p>🔴 Not yet implemented. Adapter + CLI + conformance harness must pass per <a href="../../RUNTIMES_EVALUATION.md">RUNTIMES_EVALUATION</a> 8 gates. This page is the engine-picker target until then.</p>
+<h2>Why PlayCanvas</h2>
+<p>Best perf-per-watt on mid-tier Android. Mature WebXR support (used by Meta / Snap). Editor-first workflow is good for designer-led XRAI authoring. Spec 014 web-integration lists PlayCanvas as an option for the login-gated Portals Viewer surface.</p>
+<p style="margin-top:48px"><a href="../../index.html">← back to main viewer</a> · <a href="../../VIEWER_ARCHITECTURE.md">viewer architecture</a> · <a href="https://playcanvas.com/">PlayCanvas</a></p>
+</body></html>
