@@ -1,0 +1,1137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>XRAI — the semantic bus for any time-based stream</title>
+<meta name="description" content="XRAI is a faceted, learning, self-referential ontology and sparse semantic encoding that any decoder — renderer, simulator, agent, generator — can read to render, replay, or build from.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,200..900,0..100,0..1;1,9..144,200..900,0..100,0..1&family=IBM+Plex+Serif:ital,wght@0,300;0,400;0,500;1,400&family=JetBrains+Mono:wght@300;400;500;700&display=swap">
+<style>
+/* ============================================================
+   XRAI · instrument-panel brutalism × scientific journal
+   ============================================================ */
+
+:root{
+  --ink:          #0B0F0C;
+  --ink-2:        #111814;
+  --ink-3:        #1A221E;
+  --paper:        #F3EFE5;
+  --paper-dim:    #D9D3C4;
+  --ph:           #5EE387;        /* phosphor green */
+  --ph-dim:       #2C7A46;
+  --ph-glow:      0 0 0.5ch rgba(94,227,135,.55), 0 0 2ch rgba(94,227,135,.18);
+  --amber:        #F5B040;
+  --amber-dim:    #8C5F1E;
+  --bleed:        #E54B4B;
+  --mute:         #48564D;
+  --mute-2:       #6C7A71;
+  --rule:         rgba(94,227,135,.18);
+  --rule-heavy:   rgba(94,227,135,.40);
+
+  --serif:        "Fraunces", "IBM Plex Serif", Georgia, serif;
+  --body:         "IBM Plex Serif", Georgia, serif;
+  --mono:         "JetBrains Mono", ui-monospace, "Menlo", monospace;
+
+  --space:        clamp(1rem, 1.2vw, 1.4rem);
+  --gutter:       clamp(1.5rem, 4vw, 4rem);
+  --maxw:         92rem;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html{background:var(--ink); color:var(--paper); font-family:var(--body); line-height:1.5; font-size:17px; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility}
+body{
+  background:
+    radial-gradient(140% 80% at 15% 0%, rgba(94,227,135,.055), transparent 60%),
+    radial-gradient(120% 90% at 95% 30%, rgba(245,176,64,.045), transparent 55%),
+    linear-gradient(180deg, var(--ink) 0%, #070A08 100%);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* CRT scanline overlay ----------------------------------- */
+body::before{
+  content:"";
+  position:fixed; inset:0;
+  pointer-events:none;
+  z-index:50;
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,.06) 0 1px, transparent 1px 3px),
+    radial-gradient(120% 90% at 50% 50%, transparent 55%, rgba(0,0,0,.45) 100%);
+  mix-blend-mode:multiply;
+  opacity:.75;
+  animation:flicker 10s steps(1, end) infinite;
+}
+body::after{
+  content:"";
+  position:fixed; inset:0;
+  pointer-events:none;
+  z-index:51;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.06 0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
+  opacity:.55;
+  mix-blend-mode:overlay;
+}
+@keyframes flicker{
+  0%,97%,100%{opacity:.75}
+  97.5%{opacity:.55}
+  98%{opacity:.90}
+  98.5%{opacity:.58}
+  99%{opacity:.82}
+}
+
+/* Typography -------------------------------------------- */
+h1,h2,h3,h4{font-family:var(--serif); font-weight:300; font-variation-settings:"opsz" 144, "SOFT" 0, "WONK" 1; letter-spacing:-0.01em; line-height:.98; margin:0}
+h1{font-size:clamp(3.5rem, 9vw, 10rem); font-weight:200; letter-spacing:-0.04em}
+h2{font-size:clamp(2.2rem, 5vw, 4.5rem); font-weight:300; letter-spacing:-0.025em}
+h3{font-size:clamp(1.4rem, 2.4vw, 2rem); font-weight:400; letter-spacing:-0.015em}
+h4{font-size:1.05rem; font-family:var(--mono); font-weight:500; text-transform:uppercase; letter-spacing:.18em; color:var(--ph)}
+p{margin:0 0 1.1em; max-width:62ch}
+em{font-family:var(--serif); font-style:italic; font-variation-settings:"opsz" 9, "SOFT" 80, "WONK" 1; color:var(--paper-dim)}
+strong{font-weight:500; color:var(--ph)}
+code,.mono{font-family:var(--mono); font-size:.92em; color:var(--ph); letter-spacing:0}
+a{color:var(--amber); text-decoration:none; border-bottom:1px solid var(--amber-dim); transition:color .25s, border-color .25s}
+a:hover{color:var(--ph); border-color:var(--ph)}
+
+.small{font-size:.78rem; letter-spacing:.08em; text-transform:uppercase; font-family:var(--mono); color:var(--mute-2)}
+.mark{color:var(--ph); text-shadow:var(--ph-glow)}
+.amb{color:var(--amber)}
+.bleed{color:var(--bleed)}
+
+/* Page frame -------------------------------------------- */
+.frame{max-width:var(--maxw); margin:0 auto; padding:0 var(--gutter); position:relative}
+
+/* Crosshair reticle cursor on interactive terminals */
+.recticle{cursor:crosshair}
+
+/* ============================================================
+   HEADER · constant chrome strip
+   ============================================================ */
+.chrome{
+  position:sticky; top:0; z-index:40;
+  border-bottom:1px solid var(--rule);
+  background:rgba(11,15,12,.82);
+  backdrop-filter:blur(9px) saturate(130%);
+  -webkit-backdrop-filter:blur(9px) saturate(130%);
+}
+.chrome-row{
+  display:grid;
+  grid-template-columns:auto 1fr auto auto;
+  align-items:center;
+  gap:2rem;
+  padding:.65rem 0;
+  font-family:var(--mono); font-size:.78rem; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--mute-2);
+}
+.brand{
+  font-family:var(--serif); font-size:1.2rem; font-weight:500; letter-spacing:-0.02em;
+  color:var(--paper); font-variation-settings:"opsz" 30, "SOFT" 0, "WONK" 1;
+  text-transform:none;
+}
+.brand::before{content:"▮ "; color:var(--ph); text-shadow:var(--ph-glow)}
+.chrome-nav{display:flex; gap:2rem; color:var(--mute-2)}
+.chrome-nav a{color:inherit; border:none}
+.chrome-nav a:hover{color:var(--ph)}
+.chrome-tick{font-variant-numeric:tabular-nums; color:var(--ph)}
+.chrome-sid{color:var(--amber); font-size:.74rem}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero{
+  padding:clamp(3rem, 10vh, 8rem) 0 clamp(4rem, 10vh, 9rem);
+  position:relative;
+  border-bottom:1px solid var(--rule);
+}
+.hero-grid{
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) minmax(18rem, 32%);
+  gap:clamp(2rem, 5vw, 6rem);
+  align-items:end;
+}
+@media (max-width:760px){.hero-grid{grid-template-columns:1fr}}
+
+.eyebrow{
+  display:flex; gap:1.2rem; align-items:center;
+  font-family:var(--mono); font-size:.78rem; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--mute-2); margin-bottom:2rem;
+}
+.eyebrow .pip{width:.55rem; height:.55rem; border-radius:50%; background:var(--ph); box-shadow:0 0 1ch var(--ph); animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(.8); opacity:.55}}
+
+.hero h1{
+  /* exaggerated tracking + optical-size for scientific-journal effect */
+  font-variation-settings:"opsz" 144, "SOFT" 0, "WONK" 1;
+  margin-bottom:1.2rem;
+}
+.hero h1 .row{display:block}
+.hero h1 .row.one{color:var(--paper)}
+.hero h1 .row.two{color:var(--ph); font-style:italic; font-variation-settings:"opsz" 144, "SOFT" 100, "WONK" 1}
+.hero h1 .row.three{color:var(--paper-dim); font-style:normal}
+.hero h1 .underline{
+  position:relative; display:inline-block;
+  padding:0 .08em;
+}
+.hero h1 .underline::after{
+  content:""; position:absolute; left:0; right:0; bottom:.04em;
+  height:.055em; background:var(--amber);
+}
+
+.hero-lede{
+  font-family:var(--serif); font-weight:300; font-size:clamp(1.15rem, 1.8vw, 1.55rem);
+  line-height:1.35; max-width:48ch;
+  color:var(--paper-dim);
+  margin-top:2.2rem;
+}
+
+.hero-aside{
+  border:1px solid var(--rule-heavy);
+  background:linear-gradient(180deg, rgba(94,227,135,.04), rgba(94,227,135,0));
+  padding:1.4rem 1.3rem 1.2rem;
+  position:relative;
+  font-family:var(--mono); font-size:.82rem; line-height:1.55;
+}
+.hero-aside::before{
+  content:""; position:absolute; left:-1px; top:-1px;
+  width:1.2rem; height:1.2rem;
+  border-left:2px solid var(--amber); border-top:2px solid var(--amber);
+}
+.hero-aside::after{
+  content:""; position:absolute; right:-1px; bottom:-1px;
+  width:1.2rem; height:1.2rem;
+  border-right:2px solid var(--amber); border-bottom:2px solid var(--amber);
+}
+.hero-aside h4{margin-bottom:.8rem}
+.hero-aside ul{margin:0; padding:0; list-style:none; color:var(--paper-dim)}
+.hero-aside li{display:grid; grid-template-columns:3.4rem 1fr; gap:.8rem; padding:.35rem 0; border-top:1px dashed var(--rule)}
+.hero-aside li:first-child{border-top:none}
+.hero-aside li .key{color:var(--ph)}
+.hero-aside li .val{color:var(--paper-dim)}
+
+/* Tick-mark ruler under hero */
+.ruler{
+  display:grid; grid-template-columns:repeat(40, 1fr);
+  align-items:end; height:1.2rem; margin-top:3.5rem;
+  border-top:1px solid var(--rule);
+}
+.ruler span{
+  display:block; border-left:1px solid var(--rule);
+  height:.35rem;
+}
+.ruler span:nth-child(5n){height:.7rem; border-color:var(--rule-heavy)}
+.ruler span:nth-child(10n){height:1rem; border-color:var(--ph-dim)}
+
+/* ============================================================
+   SECTION · generic
+   ============================================================ */
+section{padding:clamp(4rem, 9vh, 7.5rem) 0; border-bottom:1px solid var(--rule); position:relative}
+.sec-header{
+  display:grid;
+  grid-template-columns:10rem 1fr;
+  gap:clamp(1rem, 3vw, 3rem);
+  align-items:baseline;
+  margin-bottom:clamp(2rem, 5vh, 4rem);
+}
+@media (max-width:700px){.sec-header{grid-template-columns:1fr}}
+.sec-num{
+  font-family:var(--mono); font-size:.82rem; letter-spacing:.2em; color:var(--amber);
+  text-transform:uppercase;
+  border-top:1px solid var(--amber-dim); padding-top:.7rem;
+}
+.sec-title .kicker{
+  font-family:var(--mono); font-size:.78rem; letter-spacing:.2em; text-transform:uppercase; color:var(--mute-2);
+  margin-bottom:.7rem;
+}
+.sec-title p{margin-top:1.2rem; max-width:68ch; color:var(--paper-dim); font-size:1.1rem}
+
+/* ============================================================
+   STREAM · live SSE decoder box
+   ============================================================ */
+.stream-wrap{
+  display:grid; grid-template-columns:1.1fr 1fr;
+  gap:2rem;
+  border:1px solid var(--rule-heavy);
+  background:linear-gradient(180deg, rgba(12,17,14,.75), rgba(6,9,7,.95));
+}
+@media (max-width:900px){.stream-wrap{grid-template-columns:1fr}}
+
+.stream-col{padding:1.7rem 1.6rem; position:relative}
+.stream-col + .stream-col{border-left:1px solid var(--rule); background:rgba(94,227,135,.02)}
+@media (max-width:900px){.stream-col + .stream-col{border-left:none; border-top:1px solid var(--rule)}}
+
+.stream-head{
+  display:flex; justify-content:space-between; align-items:baseline;
+  margin-bottom:1rem;
+  padding-bottom:.7rem;
+  border-bottom:1px solid var(--rule);
+  font-family:var(--mono); font-size:.74rem; letter-spacing:.18em; text-transform:uppercase; color:var(--mute-2);
+}
+.stream-head b{color:var(--ph); font-weight:500}
+
+.stream-body{
+  font-family:var(--mono); font-size:.82rem; line-height:1.55;
+  color:var(--paper-dim);
+  min-height:18rem;
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+.stream-body .k{color:var(--mute-2)}
+.stream-body .s{color:var(--amber)}
+.stream-body .n{color:#A8C8FF}
+.stream-body .g{color:var(--ph); text-shadow:0 0 1ch rgba(94,227,135,.25)}
+
+.decoded{
+  list-style:none; margin:0; padding:0;
+  font-family:var(--mono); font-size:.82rem; line-height:1.6;
+}
+.decoded li{
+  display:grid; grid-template-columns:1rem 10rem 1fr auto;
+  align-items:baseline;
+  gap:.7rem;
+  padding:.35rem .1rem;
+  border-top:1px dashed var(--rule);
+  opacity:0; transform:translateY(4px);
+  animation:emerge .6s ease-out forwards;
+}
+.decoded li:first-child{border-top:none}
+.decoded .dot{color:var(--ph); text-shadow:var(--ph-glow)}
+.decoded .arch{color:var(--amber); font-weight:500}
+.decoded .comp{color:var(--paper)}
+.decoded .t{color:var(--mute-2); font-size:.72rem}
+
+@keyframes emerge{to{opacity:1; transform:translateY(0)}}
+
+.caret{display:inline-block; width:.55ch; background:var(--ph); color:transparent; animation:caret 1s steps(1) infinite}
+@keyframes caret{50%{background:transparent}}
+
+/* ============================================================
+   FACETS · 18-axis ontology table
+   ============================================================ */
+.facets{
+  display:grid;
+  grid-template-columns:repeat(6, 1fr);
+  border:1px solid var(--rule-heavy);
+  background:rgba(17,24,20,.5);
+}
+@media (max-width:1000px){.facets{grid-template-columns:repeat(3, 1fr)}}
+@media (max-width:560px){.facets{grid-template-columns:repeat(2, 1fr)}}
+.facet{
+  border-right:1px solid var(--rule); border-bottom:1px solid var(--rule);
+  padding:1.1rem 1rem 1.3rem;
+  position:relative;
+  transition:background .25s;
+  cursor:crosshair;
+}
+.facet:hover{background:rgba(94,227,135,.05)}
+.facet:hover::after{content:""; position:absolute; inset:0; pointer-events:none; box-shadow:inset 0 0 0 1px var(--ph)}
+.facet .id{
+  font-family:var(--mono); font-size:.72rem; letter-spacing:.2em; color:var(--amber);
+  margin-bottom:.35rem;
+}
+.facet .name{
+  font-family:var(--serif); font-size:1.12rem; font-weight:400;
+  font-variation-settings:"opsz" 30, "SOFT" 0, "WONK" 1;
+  letter-spacing:-0.01em;
+  color:var(--paper); margin-bottom:.55rem; line-height:1.1;
+}
+.facet .vals{
+  font-family:var(--mono); font-size:.74rem; line-height:1.45;
+  color:var(--mute-2);
+}
+.facet .vals b{color:var(--ph); font-weight:500}
+
+/* ============================================================
+   STRATA · quark → cosmos vertical chart
+   ============================================================ */
+.strata{
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  gap:1.2rem 2rem;
+  align-items:baseline;
+  font-family:var(--serif);
+  border-left:1px solid var(--rule-heavy);
+  padding-left:2rem;
+}
+.strata .row{display:contents}
+.strata .tier{
+  font-family:var(--mono); font-size:.72rem; letter-spacing:.22em; color:var(--amber);
+  text-transform:uppercase;
+  padding-top:.35rem;
+  font-variant-numeric:tabular-nums;
+}
+.strata .name{
+  font-size:clamp(1.3rem, 2.2vw, 1.85rem);
+  font-weight:300;
+  letter-spacing:-0.015em;
+  font-variation-settings:"opsz" 60, "SOFT" 0, "WONK" 1;
+  color:var(--paper);
+  line-height:1.15;
+  padding:.4rem 0;
+  border-top:1px dashed var(--rule);
+}
+.strata .row:first-child .name{border-top:none}
+.strata .tags{
+  font-family:var(--mono); font-size:.74rem; letter-spacing:.06em;
+  color:var(--mute-2);
+  padding-top:.45rem;
+  text-align:right;
+  min-width:26ch;
+}
+.strata .tags b{color:var(--ph); font-weight:500}
+.strata .tags i{color:var(--amber); font-style:normal}
+
+/* ============================================================
+   DECODERS · card gallery
+   ============================================================ */
+.decoders{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(17rem, 1fr));
+  gap:1rem;
+}
+.decoder{
+  position:relative;
+  border:1px solid var(--rule-heavy);
+  background:linear-gradient(180deg, rgba(17,24,20,.75), rgba(11,15,12,.9));
+  padding:1.3rem 1.2rem 1.5rem;
+  overflow:hidden;
+}
+.decoder::before{
+  content:attr(data-kind);
+  position:absolute; top:0; left:0;
+  background:var(--ink-3); color:var(--amber);
+  font-family:var(--mono); font-size:.7rem; letter-spacing:.2em; text-transform:uppercase;
+  padding:.3rem .65rem .28rem;
+  border-right:1px solid var(--amber-dim);
+  border-bottom:1px solid var(--amber-dim);
+}
+.decoder::after{
+  content:"";
+  position:absolute; top:0; right:0;
+  width:1rem; height:1rem;
+  border-right:2px solid var(--ph); border-top:2px solid var(--ph);
+  opacity:.6;
+}
+.decoder h3{
+  font-family:var(--serif); font-weight:400;
+  font-variation-settings:"opsz" 30, "SOFT" 0, "WONK" 1;
+  font-size:1.35rem; letter-spacing:-0.02em;
+  margin:1.3rem 0 .55rem;
+  color:var(--paper);
+}
+.decoder .d-sub{
+  font-family:var(--mono); font-size:.74rem; letter-spacing:.1em; color:var(--ph);
+  margin-bottom:.85rem;
+}
+.decoder p{font-size:.95rem; line-height:1.45; margin:0 0 1rem; color:var(--paper-dim)}
+.decoder .d-io{
+  display:grid; grid-template-columns:auto 1fr; gap:.4rem 1rem;
+  font-family:var(--mono); font-size:.72rem; color:var(--mute-2);
+  padding-top:.8rem; border-top:1px dashed var(--rule);
+}
+.decoder .d-io b{color:var(--amber); font-weight:500}
+
+/* ============================================================
+   LADDER · representation tiers (T0..T22)
+   ============================================================ */
+.ladder{
+  display:grid;
+  grid-template-columns:repeat(6, 1fr);
+  border:1px solid var(--rule-heavy);
+  background:rgba(11,15,12,.6);
+}
+@media (max-width:1100px){.ladder{grid-template-columns:repeat(4, 1fr)}}
+@media (max-width:680px){.ladder{grid-template-columns:repeat(3, 1fr)}}
+@media (max-width:420px){.ladder{grid-template-columns:repeat(2, 1fr)}}
+.tier{
+  position:relative;
+  border-right:1px solid var(--rule); border-bottom:1px solid var(--rule);
+  padding:1rem .9rem 1rem;
+  min-height:10.5rem;
+  display:flex; flex-direction:column; gap:.55rem;
+  transition:background .25s;
+}
+.tier:hover{background:rgba(94,227,135,.04)}
+.tier .tnum{
+  font-family:var(--mono); font-size:.68rem; letter-spacing:.22em; color:var(--amber);
+  text-transform:uppercase; font-variant-numeric:tabular-nums;
+}
+.tier .tname{
+  font-family:var(--serif); font-size:.95rem; font-weight:400;
+  font-variation-settings:"opsz" 14, "SOFT" 0, "WONK" 1;
+  letter-spacing:-0.005em; color:var(--paper); line-height:1.15;
+}
+.tier .tviz{
+  flex:1; display:flex; align-items:center; justify-content:center;
+  font-family:var(--mono);
+  min-height:3.6rem;
+}
+.tier .tfoot{font-family:var(--mono); font-size:.66rem; letter-spacing:.12em; color:var(--mute-2); text-transform:uppercase}
+.tier.mandatory::before{
+  content:"REQ"; position:absolute; top:.55rem; right:.55rem;
+  font-family:var(--mono); font-size:.62rem; letter-spacing:.18em;
+  color:var(--ink); background:var(--ph); padding:.15rem .4rem;
+}
+
+/* Individual tier mini-renders */
+.v-dot{width:.7rem; height:.7rem; border-radius:50%; background:var(--ph); box-shadow:var(--ph-glow)}
+.v-mono{color:var(--ph); font-size:.95rem; letter-spacing:.04em; text-shadow:var(--ph-glow)}
+.v-ascii{color:var(--paper); font-size:.82rem; font-weight:500}
+.v-lsys{color:var(--amber); font-size:.8rem; font-family:var(--mono)}
+.v-emoji{font-size:2.6rem; line-height:1; filter:drop-shadow(0 0 .3ch rgba(94,227,135,.4))}
+.v-shape{display:flex; gap:.45rem; align-items:flex-end}
+.v-shape i{display:block; width:0; height:0; border:.7rem solid transparent; border-bottom:1.2rem solid var(--ph); filter:drop-shadow(0 0 .3ch rgba(94,227,135,.4))}
+.v-shape i.sq{border:none; width:1.2rem; height:1.2rem; background:var(--amber)}
+.v-shape i.ci{border:none; width:1.2rem; height:1.2rem; background:var(--bleed); border-radius:50%}
+.v-graph{width:100%; height:3.4rem}
+.v-chart{width:100%; height:3.4rem}
+.v-cube{width:3rem; height:3rem; perspective:200px; transform-style:preserve-3d; animation:cubeSpin 10s linear infinite}
+.v-cube i{position:absolute; width:3rem; height:3rem; background:rgba(94,227,135,.18); border:1px solid var(--ph)}
+.v-cube i:nth-child(1){transform:translateZ(1.5rem)}
+.v-cube i:nth-child(2){transform:rotateY(180deg) translateZ(1.5rem)}
+.v-cube i:nth-child(3){transform:rotateY(90deg) translateZ(1.5rem); background:rgba(245,176,64,.15)}
+.v-cube i:nth-child(4){transform:rotateY(-90deg) translateZ(1.5rem); background:rgba(245,176,64,.15)}
+.v-cube i:nth-child(5){transform:rotateX(90deg) translateZ(1.5rem)}
+.v-cube i:nth-child(6){transform:rotateX(-90deg) translateZ(1.5rem)}
+@keyframes cubeSpin{to{transform:rotateY(360deg) rotateX(360deg)}}
+.v-img{width:100%; max-width:5.5rem; height:3.2rem; background:
+  linear-gradient(120deg, rgba(245,176,64,.4) 0%, rgba(94,227,135,.35) 45%, rgba(94,227,135,.1) 100%),
+  radial-gradient(ellipse at 30% 40%, rgba(255,255,255,.25), transparent 60%);
+  border:1px solid var(--rule-heavy)}
+.v-vid{position:relative; width:100%; max-width:5.5rem; height:3.2rem; background:var(--ink-3); border:1px solid var(--rule-heavy); overflow:hidden}
+.v-vid::before{content:""; position:absolute; inset:0; background:linear-gradient(90deg, transparent 0%, rgba(94,227,135,.35) 50%, transparent 100%); animation:vidScan 2.3s linear infinite}
+@keyframes vidScan{from{transform:translateX(-100%)} to{transform:translateX(100%)}}
+.v-vid::after{content:"▶"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--amber); font-size:1rem}
+.v-mesh{width:100%; height:3.2rem}
+.v-360{width:3.2rem; height:3.2rem; border-radius:50%; background:
+  radial-gradient(circle at 30% 30%, rgba(245,176,64,.5), transparent 40%),
+  radial-gradient(circle at 70% 70%, rgba(94,227,135,.5), transparent 40%),
+  radial-gradient(circle at 50% 50%, rgba(229,75,75,.3), transparent 45%);
+  border:1px solid var(--rule-heavy);
+  animation:spin360 12s linear infinite}
+@keyframes spin360{to{transform:rotate(360deg)}}
+.v-rgbd{display:grid; grid-template-columns:1fr 1fr; gap:2px; width:100%; max-width:5rem; height:3rem}
+.v-rgbd i{display:block}
+.v-rgbd i:nth-child(1){background:linear-gradient(45deg, #F5B040, #E54B4B)}
+.v-rgbd i:nth-child(2){background:linear-gradient(45deg, #1a1a1a 0%, #5EE387 100%)}
+.v-rgbd i:nth-child(3){background:linear-gradient(45deg, #0a0a0a, #F3EFE5); opacity:.8}
+.v-rgbd i:nth-child(4){background:radial-gradient(circle, rgba(94,227,135,.6), var(--ink))}
+.v-rerun{width:100%; height:3rem; background:repeating-linear-gradient(90deg, rgba(94,227,135,.2) 0 2px, transparent 2px 6px), linear-gradient(180deg, rgba(245,176,64,.12), transparent); border:1px solid var(--rule-heavy)}
+.v-schema{width:100%; font-family:var(--mono); font-size:.62rem; color:var(--ph); line-height:1.2; text-align:left; padding:.2rem .1rem}
+.v-neural{width:3.2rem; height:3.2rem; position:relative; background:radial-gradient(circle at 40% 40%, rgba(94,227,135,.5), transparent 50%), radial-gradient(circle at 60% 60%, rgba(229,75,75,.4), transparent 55%), radial-gradient(circle at 50% 50%, rgba(245,176,64,.35), transparent 60%); border-radius:50%; filter:blur(.5px); animation:neuralPulse 3s ease-in-out infinite}
+@keyframes neuralPulse{50%{filter:blur(1.5px) hue-rotate(25deg)}}
+.v-bigdata{width:100%; height:3.2rem}
+.v-quantum{width:3.2rem; height:3.2rem; border-radius:50%; background:
+  radial-gradient(circle at 50% 50%, transparent 30%, rgba(94,227,135,.2) 35%, transparent 45%),
+  radial-gradient(circle at 50% 50%, rgba(94,227,135,.35) 0%, transparent 20%);
+  box-shadow:0 0 1.2rem rgba(94,227,135,.35) inset;
+  animation:quantum 4s ease-in-out infinite}
+@keyframes quantum{0%,100%{transform:scale(1)}50%{transform:scale(1.08); box-shadow:0 0 1.8rem rgba(94,227,135,.55) inset}}
+.v-verse{width:3.2rem; height:3.2rem; position:relative}
+.v-verse::before,.v-verse::after{content:""; position:absolute; inset:0; border-radius:50%; border:1px solid var(--ph); opacity:.55}
+.v-verse::after{animation:verseOrbit 6s linear infinite; border-color:var(--amber); transform:rotate(60deg) scale(.75)}
+.v-verse i{position:absolute; top:50%; left:50%; width:.5rem; height:.5rem; margin:-.25rem; background:var(--ph); border-radius:50%; box-shadow:var(--ph-glow); animation:verseOrbit 4s linear infinite}
+@keyframes verseOrbit{to{transform:rotate(360deg) scale(1)}}
+.v-verse i:nth-child(2){background:var(--amber); animation-duration:7s; animation-direction:reverse; transform:translate(1.1rem, -.3rem)}
+.v-verse i:nth-child(3){background:var(--bleed); animation-duration:9s; transform:translate(-.4rem, 1rem)}
+
+/* ============================================================
+   RFC · index table
+   ============================================================ */
+.rfcs{
+  font-family:var(--mono); font-size:.86rem;
+  border-top:1px solid var(--rule-heavy);
+}
+.rfcs li{
+  list-style:none;
+  display:grid; grid-template-columns:5rem 1.1fr 2fr auto;
+  gap:1.2rem;
+  padding:1rem .2rem;
+  border-bottom:1px solid var(--rule);
+  align-items:baseline;
+  transition:background .2s, padding .2s;
+}
+.rfcs li:hover{background:rgba(94,227,135,.04); padding-left:.8rem}
+.rfcs .n{color:var(--amber)}
+.rfcs .t{
+  font-family:var(--serif); font-weight:400;
+  font-size:1.05rem;
+  font-variation-settings:"opsz" 30, "SOFT" 0, "WONK" 1;
+  letter-spacing:-0.01em; color:var(--paper);
+}
+.rfcs .d{color:var(--paper-dim); line-height:1.4}
+.rfcs .s{
+  font-size:.72rem; letter-spacing:.14em; text-transform:uppercase;
+  padding:.15rem .5rem; border:1px solid var(--rule-heavy); color:var(--ph);
+}
+
+/* ============================================================
+   CLOSING · self-reference footer
+   ============================================================ */
+.close{
+  padding:clamp(4rem, 10vh, 8rem) 0 2.5rem;
+  text-align:left;
+  border-bottom:none;
+}
+.close h2{
+  font-size:clamp(2.5rem, 6.5vw, 6rem);
+  color:var(--paper);
+  font-style:italic;
+  font-variation-settings:"opsz" 144, "SOFT" 100, "WONK" 1;
+  max-width:22ch;
+  margin-bottom:2rem;
+}
+.close h2 em{color:var(--ph); font-style:italic}
+.close-bar{
+  display:flex; flex-wrap:wrap; gap:2rem 3.5rem;
+  margin-top:3rem; padding-top:2rem;
+  border-top:1px solid var(--rule);
+  font-family:var(--mono); font-size:.76rem; letter-spacing:.14em; text-transform:uppercase; color:var(--mute-2);
+}
+.close-bar b{color:var(--ph)}
+.self-trace{
+  margin-top:2.5rem;
+  font-family:var(--mono); font-size:.72rem; line-height:1.6;
+  color:var(--mute-2);
+  max-width:none;
+  padding:1.1rem 1.2rem;
+  border:1px solid var(--rule);
+  background:rgba(11,15,12,.6);
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+.self-trace .h{color:var(--amber)}
+.self-trace .k{color:var(--ph)}
+
+/* Ghost line running full page */
+.rail{
+  position:fixed; top:0; bottom:0; left:2rem;
+  width:1px; background:linear-gradient(180deg, transparent, var(--ph-dim) 10%, var(--ph-dim) 90%, transparent);
+  z-index:5; pointer-events:none; opacity:.35;
+}
+@media (max-width:760px){.rail{display:none}}
+
+/* Selection */
+::selection{background:var(--ph); color:var(--ink)}
+
+/* Focus */
+:focus-visible{outline:2px solid var(--amber); outline-offset:3px}
+
+/* Reveal on scroll utility */
+.reveal{opacity:0; transform:translateY(14px); transition:opacity .8s ease, transform .8s ease}
+.reveal.in{opacity:1; transform:none}
+.reveal.d1{transition-delay:.06s}
+.reveal.d2{transition-delay:.12s}
+.reveal.d3{transition-delay:.18s}
+.reveal.d4{transition-delay:.24s}
+.reveal.d5{transition-delay:.30s}
+.reveal.d6{transition-delay:.36s}
+
+/* Button / CTA */
+.cta{
+  display:inline-flex; align-items:center; gap:.8rem;
+  font-family:var(--mono); font-size:.82rem; letter-spacing:.22em; text-transform:uppercase;
+  color:var(--ink); background:var(--ph);
+  padding:.85rem 1.3rem .8rem;
+  border:1px solid var(--ph); border-bottom:3px solid var(--ph-dim);
+  transition:all .2s;
+}
+.cta:hover{background:var(--amber); border-color:var(--amber); border-bottom-color:var(--amber-dim); color:var(--ink)}
+.cta::after{content:"→"; transition:transform .2s}
+.cta:hover::after{transform:translateX(4px)}
+.cta.ghost{background:transparent; color:var(--ph); border:1px solid var(--ph-dim); border-bottom:1px solid var(--ph-dim)}
+.cta.ghost:hover{color:var(--amber); border-color:var(--amber)}
+
+.cta-row{display:flex; flex-wrap:wrap; gap:1rem; margin-top:2rem}
+</style>
+</head>
+<body>
+
+<div class="rail" aria-hidden="true"></div>
+
+<!-- CHROME ............................................. -->
+<header class="chrome">
+  <div class="frame chrome-row">
+    <span class="brand">XRAI</span>
+    <nav class="chrome-nav" aria-label="primary">
+      <a href="./SPEC.md">spec</a>
+      <a href="./rfcs/">rfcs</a>
+      <a href="./examples/">examples</a>
+      <a href="./VIEWER_ARCHITECTURE.md">viewer</a>
+      <a href="./runtimes/">runtimes</a>
+    </nav>
+    <span class="chrome-tick" id="chromeClock">&nbsp;</span>
+    <span class="chrome-sid">xrai://graph/self</span>
+  </div>
+</header>
+
+<!-- HERO ............................................... -->
+<section class="hero frame">
+  <div class="eyebrow">
+    <span class="pip" aria-hidden="true"></span>
+    <span>v1.0 public · v1.2 draft · 2026-04-23</span>
+    <span>· cc0 schema · mit parsers</span>
+  </div>
+
+  <div class="hero-grid">
+    <div>
+      <h1>
+        <span class="row one">The semantic</span>
+        <span class="row two"><span class="underline">bus</span></span>
+        <span class="row three">for any time-based stream.</span>
+      </h1>
+
+      <p class="hero-lede">
+        XRAI ingests <em>any</em> stream &mdash; ARKit anchors, LiveKit packets, stock ticks, mocap,
+        console logs, biosignals, LLM tool calls, news feeds, sim ticks &mdash; through a declarative
+        schema mapping into a <strong>sparse semantic encoding</strong>, so any decoder
+        (a renderer, a simulator, an agent, a generator, a game engine, a neural renderer)
+        can render, replay, or build from the same bus.
+      </p>
+
+      <div class="cta-row">
+        <a class="cta" href="./SPEC.md">read the v1.0 spec</a>
+        <a class="cta ghost" href="./rfcs/0009-stream-ingestion-sparse-semantic-encoding.md">RFC 0009 &nbsp;ingestion</a>
+        <a class="cta ghost" href="./rfcs/0013-master-ontology-faceted-learning.md">RFC 0013 &nbsp;ontology</a>
+      </div>
+    </div>
+
+    <aside class="hero-aside" aria-label="runtime status">
+      <h4>runtime · live</h4>
+      <ul>
+        <li><span class="key">sources</span> <span class="val">27 mappings planned · 8 tier-1</span></li>
+        <li><span class="key">ontology</span> <span class="val">18 faceted axes · ~200 starter entries</span></li>
+        <li><span class="key">decoders</span> <span class="val">10 kinds · 6 reference impls</span></li>
+        <li><span class="key">wire</span> <span class="val">json-patch · arrow · cbor · proto</span></li>
+        <li><span class="key">transports</span> <span class="val">http · websocket · livekit · file</span></li>
+        <li><span class="key">patent</span> <span class="val">uspto provisional · 2026-04-08</span></li>
+        <li><span class="key">paper</span> <span class="val">cvpr 2026 4D-WM · ReGen4D-14</span></li>
+      </ul>
+    </aside>
+  </div>
+
+  <div class="ruler" aria-hidden="true">
+    <!-- 40 tick marks inject via JS -->
+  </div>
+</section>
+
+<!-- LIVE DECODE ........................................ -->
+<section class="frame">
+  <header class="sec-header">
+    <div class="sec-num">§01 · INGEST</div>
+    <div class="sec-title">
+      <div class="kicker">SOURCES → MAPPING → SSE → DECODERS</div>
+      <h2>A neutral semantic middle.</h2>
+      <p>Each source ships a declarative mapping. Each mapping emits sparse deltas keyed by entity path × timeline × ontology component. The wire format is plural; the shape is one. Below: a live transcript of the mapping <code>claude-session-history-v1</code> ingesting <code>~/.claude/session-stats/history.jsonl</code> into XRAI SSE at ~4 Hz. This is running right now in your browser.</p>
+    </div>
+  </header>
+
+  <div class="stream-wrap">
+    <div class="stream-col">
+      <div class="stream-head"><span>raw &mdash; history.jsonl</span><b id="rawRate">0 rows/s</b></div>
+      <div class="stream-body" id="rawOut" aria-live="polite"></div>
+    </div>
+    <div class="stream-col">
+      <div class="stream-head"><span>sse &mdash; xrai-semantic delta</span><b id="sseRate">0 deltas/s</b></div>
+      <ul class="decoded" id="decodedOut" aria-live="polite"></ul>
+    </div>
+  </div>
+</section>
+
+<!-- FACETED ONTOLOGY ................................... -->
+<section class="frame">
+  <header class="sec-header">
+    <div class="sec-num">§02 · ONTOLOGY</div>
+    <div class="sec-title">
+      <div class="kicker">RFC 0013 · FACETED, LEARNING, SELF-REFERENTIAL</div>
+      <h2>Eighteen axes. One entry, many readings.</h2>
+      <p>The master ontology is not a tree. Every component, archetype, and relation is tagged along eighteen independent axes. Decoders filter on axis tuples: a physics simulator subscribes to <code>A13 = classical-newtonian</code>; a cultural historian subscribes to <code>A15 = {social, cultural}</code>; a diffusion renderer subscribes to <code>A9 = latent</code>. The ontology learns &mdash; unknown slugs arrive from ingestion, align via embeddings, promote via review.</p>
+    </div>
+  </header>
+
+  <div class="facets" role="table" aria-label="eighteen faceted axes">
+    <div class="facet reveal"><div class="id">A·01</div><div class="name">Identity</div><div class="vals"><b>person</b> · <b>place</b> · <b>thing</b> · concept · event · quantity · property · relation · agent · system · process</div></div>
+    <div class="facet reveal d1"><div class="id">A·02</div><div class="name">Temporality</div><div class="vals">static · linear · <b>non-linear</b> · <b>live-stream</b> · recorded · snapshot · interval · recurring · counterfactual</div></div>
+    <div class="facet reveal d2"><div class="id">A·03</div><div class="name">Structure</div><div class="vals">structured · <b>semi-structured</b> · unstructured · mixed</div></div>
+    <div class="facet reveal d3"><div class="id">A·04</div><div class="name">Topology</div><div class="vals">atom · node · edge · <b>hyperedge</b> · graph · <b>hypergraph</b> · tree · lattice · bag · sequence · grid</div></div>
+    <div class="facet reveal d4"><div class="id">A·05</div><div class="name">Scale</div><div class="vals">quark · proton · atom · <b>molecule</b> · <b>protein</b> · <b>cell</b> · tissue · organism · super-organism · ecosystem · biome · planet · star · galaxy · <b>cosmos</b> · (+ ling · narrative · digital)</div></div>
+    <div class="facet reveal d5"><div class="id">A·06</div><div class="name">Role</div><div class="vals"><b>data</b> · <b>algorithm</b> · <b>model</b> · <b>asset</b> · file · schema · mapping · decoder · blueprint</div></div>
+
+    <div class="facet reveal"><div class="id">A·07</div><div class="name">Grammar</div><div class="vals">symbol · referent · signifier · signified · <b>noun</b> · <b>verb</b> · adj · adv · det · prep · conj · interj · numeral</div></div>
+    <div class="facet reveal d1"><div class="id">A·08</div><div class="name">Dimensionality</div><div class="vals">0D · 1D-t · 1D-s · 2D · <b>3D</b> · <b>4D-spacetime</b> · 4D-video · 5D-feature · <b>ND-tensor</b></div></div>
+    <div class="facet reveal d2"><div class="id">A·09</div><div class="name">Modality</div><div class="vals">text · numeric · image · video · audio · depth · pose · point-cloud · mesh · <b>latent</b> · shader-param · biosignal · haptic · thermal · EM</div></div>
+    <div class="facet reveal d3"><div class="id">A·10</div><div class="name">Provenance</div><div class="vals">human · <b>agent</b> · <b>sensor</b> · simulator · generator · derived · inferred · annotated</div></div>
+    <div class="facet reveal d4"><div class="id">A·11</div><div class="name">Unit</div><div class="vals">dimensionless · <b>SI.*</b> · <b>ISO-8601</b> · currency.ISO-4217 · custom.*</div></div>
+    <div class="facet reveal d5"><div class="id">A·12</div><div class="name">Trust</div><div class="vals"><b>T1 battle-tested</b> · T2 partially-validated · T3 speculative · T4 benchmarked-external</div></div>
+
+    <div class="facet reveal"><div class="id">A·13</div><div class="name">Physics regime</div><div class="vals"><b>newtonian</b> · special-rel · general-rel · <b>quantum-mechanical</b> · quantum-field · <b>statistical</b> · thermodynamic · continuum · lattice · none</div></div>
+    <div class="facet reveal d1"><div class="id">A·14</div><div class="name">Dynamics</div><div class="vals"><b>deterministic</b> · <b>stochastic</b> · probabilistic · chaotic · <b>emergent</b> · reductive · adaptive · equilibrium · non-equilibrium</div></div>
+    <div class="facet reveal d2"><div class="id">A·15</div><div class="name">Causality</div><div class="vals">physical-law · interaction · force · <b>entropy</b> · <b>free-energy</b> · information · <b>selection</b> · mutation · learning · design · intention · social · cultural</div></div>
+    <div class="facet reveal d3"><div class="id">A·16</div><div class="name">Origin</div><div class="vals"><b>innate</b> · genetic · epigenetic · developmental · <b>environmental</b> · <b>learned</b> · cultural · designed · mixed · gene-environment</div></div>
+    <div class="facet reveal d4"><div class="id">A·17</div><div class="name">Expression</div><div class="vals">bio: <b>genotype → protein → phenotype → behavior</b> · sw: source → compiled → runtime · phys: law → field → particle · design: concept → spec → product</div></div>
+    <div class="facet reveal d5"><div class="id">A·18</div><div class="name">Emergence</div><div class="vals"><b>fundamental</b> · composite · <b>weakly-emergent</b> · <b>strongly-emergent</b> · irreducible</div></div>
+  </div>
+</section>
+
+<!-- STRATA ............................................. -->
+<section class="frame">
+  <header class="sec-header">
+    <div class="sec-num">§03 · STRATA</div>
+    <div class="sec-title">
+      <div class="kicker">QUARK → CULTURE · ONE SCHEMA, ALL SCALES</div>
+      <h2>Every scale obeys the layer below &mdash; and has its own emergent laws.</h2>
+      <p>A stock tick, a motion-capture joint, a gene expression event, and a quantum orbital land on the same bus with the same delta shape. The difference is which facet tuple they populate. Decoders decide what to do with each stratum: render as space, chart as series, simulate as physics, narrate as story.</p>
+    </div>
+  </header>
+
+  <div class="strata">
+    <div class="row reveal"><div class="tier">L9</div><div class="name">Culture &middot; society &middot; memes</div><div class="tags"><i>A15</i>=<b>cultural</b>  <i>A18</i>=<b>strongly-emergent</b></div></div>
+    <div class="row reveal d1"><div class="tier">L8</div><div class="name">Mind &middot; cognition &middot; language</div><div class="tags"><i>A15</i>=<b>learning, intention</b>  <i>A18</i>=<b>strongly-emergent</b></div></div>
+    <div class="row reveal d2"><div class="tier">L7</div><div class="name">Organism &middot; behavior &middot; ecology</div><div class="tags"><i>A14</i>=<b>adaptive</b>  <i>A15</i>=<b>selection</b></div></div>
+    <div class="row reveal d3"><div class="tier">L6</div><div class="name">Cell &middot; tissue &middot; organ &middot; system</div><div class="tags"><i>A13</i>=<b>continuum / biochem</b>  <i>A14</i>=<b>adaptive</b></div></div>
+    <div class="row reveal d4"><div class="tier">L5</div><div class="name">Biochemistry &middot; metabolism</div><div class="tags"><i>A13</i>=<b>statistical</b>  <i>A15</i>=<b>free-energy</b></div></div>
+    <div class="row reveal d5"><div class="tier">L4</div><div class="name">Chemistry &middot; reactions</div><div class="tags"><i>A13</i>=<b>quantum-mech</b>  <i>A14</i>=<b>stochastic</b></div></div>
+    <div class="row reveal"><div class="tier">L3</div><div class="name">Atomic &middot; molecular</div><div class="tags"><i>A13</i>=<b>quantum-mech</b>  <i>A5</i>=<b>atomic/molecular</b></div></div>
+    <div class="row reveal d1"><div class="tier">L2</div><div class="name">Subatomic &middot; fields</div><div class="tags"><i>A13</i>=<b>quantum-field</b>  <i>A18</i>=<b>fundamental</b></div></div>
+    <div class="row reveal d2"><div class="tier">L1</div><div class="name">Spacetime &middot; cosmology</div><div class="tags"><i>A13</i>=<b>general-rel</b>  <i>A5</i>=<b>cosmos</b></div></div>
+  </div>
+</section>
+
+<!-- DECODERS ........................................... -->
+<section class="frame">
+  <header class="sec-header">
+    <div class="sec-num">§04 · DECODERS</div>
+    <div class="sec-title">
+      <div class="kicker">RFC 0012 · PLUGGABLE CONSUMERS</div>
+      <h2>If it consumes deltas, it can render, replay, or build.</h2>
+      <p>A decoder declares what ontology components it reads and what it produces &mdash; pixels, a simulated world, a downstream stream, a converted file, tokens, actions. A single SSE stream drives many decoders in parallel. Agents and generators are first-class: they can emit back into the bus.</p>
+    </div>
+  </header>
+
+  <div class="decoders">
+    <article class="decoder reveal" data-kind="renderer">
+      <h3>Unity · VFX Graph</h3>
+      <div class="d-sub">kind · renderer &nbsp;&middot;&nbsp; rate · 90 hz</div>
+      <p>HDRP + VFX Graph draws Portals holograms on iPhone + visionOS. 370+ shader networks wired from SSE components at 11 ms latency.</p>
+      <div class="d-io"><b>consumes</b><span>Hologram, Primitive, Light</span><b>produces</b><span>pixels · display://unity</span></div>
+    </article>
+
+    <article class="decoder reveal d1" data-kind="neural renderer">
+      <h3>3D Gaussian Splatting</h3>
+      <div class="d-sub">kind · neural &nbsp;&middot;&nbsp; modality · latent + pose</div>
+      <p>NeRF-on-the-fly / 3D-GS / diffusion-conditioned renderers pick up any pose + latent stream and render photoreal without re-authoring.</p>
+      <div class="d-io"><b>consumes</b><span>pose_6dof, neural_latent, rgb_image</span><b>produces</b><span>pixels · GPU readback</span></div>
+    </article>
+
+    <article class="decoder reveal d2" data-kind="generator">
+      <h3>LLM scene expander</h3>
+      <div class="d-sub">kind · generator &nbsp;&middot;&nbsp; bidirectional</div>
+      <p>Reads a seed entity + voice intent, writes new SSE deltas. &ldquo;a mystical forest with floating lights&rdquo; becomes a subtree of ontology-typed entities.</p>
+      <div class="d-io"><b>consumes</b><span>text, intent, entity seed</span><b>produces</b><span>SSE · emit() stream</span></div>
+    </article>
+
+    <article class="decoder reveal d3" data-kind="agent">
+      <h3>jARvis &middot; MCP server</h3>
+      <div class="d-sub">kind · agent &nbsp;&middot;&nbsp; tool_call &harr; tool_result</div>
+      <p>Tool calls and chain-of-thought roll onto the bus as deltas. jARvis consumes scene state, emits edits, runs inside Portals or any MCP host.</p>
+      <div class="d-io"><b>consumes</b><span>tool_call, thought, plan_step</span><b>produces</b><span>actions · SSE · text</span></div>
+    </article>
+
+    <article class="decoder reveal d4" data-kind="bridge">
+      <h3>SSE → Rerun .rrd</h3>
+      <div class="d-sub">kind · bridge &nbsp;&middot;&nbsp; round-trippable</div>
+      <p>Replay an XRAI session in the Rerun viewer, or decode an existing <code>.rrd</code> as SSE via the inverse mapping. Zero lock-in.</p>
+      <div class="d-io"><b>consumes</b><span>*</span><b>produces</b><span>rerun .rrd Arrow stream</span></div>
+    </article>
+
+    <article class="decoder reveal d5" data-kind="replayer">
+      <h3>xra1.com &middot; force-graph</h3>
+      <div class="d-sub">kind · replayer + renderer</div>
+      <p>This page is a decoder. It reads <code>xrai://graph/self</code>, renders the hypergraph, scrubs the timeline. Try shift-click a node.</p>
+      <div class="d-io"><b>consumes</b><span>Entity, Relation, Event</span><b>produces</b><span>DOM · svg · canvas</span></div>
+    </article>
+  </div>
+</section>
+
+<!-- LADDER ............................................. -->
+<section class="frame">
+  <header class="sec-header">
+    <div class="sec-num">§05 · LADDER</div>
+    <div class="sec-title">
+      <div class="kicker">GRACEFUL DEGRADATION · T0 ALWAYS WORKS · T22 NEEDS A CLUSTER</div>
+      <h2>The same entity, rendered from one bit to a universe.</h2>
+      <p>Any XRAI document must display somewhere. Twenty-three tiers of fallback, from 1-bit existence to multiverse simulation. The host negotiates the highest tier it can render given the installed decoders + bandwidth + power. Every runtime ships T0–T6 as built-ins — worst case any doc is still readable as ASCII + emoji + a color-coded graph. HTTP works on 2G and on fiber; XRAI works on a terminal and on a render farm. Below: the same entity <code>/scene/tree_1</code> displayed at every tier.</p>
+    </div>
+  </header>
+
+  <div class="ladder">
+    <div class="tier mandatory reveal"><div class="tnum">T·00</div><div class="tname">Existence</div><div class="tviz"><span class="v-dot"></span></div><div class="tfoot">1-bit</div></div>
+    <div class="tier mandatory reveal d1"><div class="tnum">T·01</div><div class="tname">Binary / DNA</div><div class="tviz"><span class="v-mono">ACGT · 01101</span></div><div class="tfoot">sparse alphabet</div></div>
+    <div class="tier mandatory reveal d2"><div class="tnum">T·02</div><div class="tname">ASCII label</div><div class="tviz"><span class="v-ascii">[tree_1]</span></div><div class="tfoot">text</div></div>
+    <div class="tier mandatory reveal d3"><div class="tnum">T·03</div><div class="tname">L-system rule</div><div class="tviz"><span class="v-lsys">F→F[+F][-F]F</span></div><div class="tfoot">grammar</div></div>
+    <div class="tier mandatory reveal d4"><div class="tnum">T·04</div><div class="tname">Emoji glyph</div><div class="tviz"><span class="v-emoji">🌳</span></div><div class="tfoot">Unicode</div></div>
+    <div class="tier mandatory reveal d5"><div class="tnum">T·05</div><div class="tname">Color shape</div><div class="tviz"><span class="v-shape"><i></i><i class="sq"></i><i class="ci"></i></span></div><div class="tfoot">geom + palette</div></div>
+
+    <div class="tier mandatory reveal"><div class="tnum">T·06</div><div class="tname">Node graph</div><div class="tviz"><svg class="v-graph" viewBox="0 0 120 44"><line x1="60" y1="8" x2="30" y2="36" stroke="#5EE387" stroke-width="1"/><line x1="60" y1="8" x2="90" y2="36" stroke="#5EE387" stroke-width="1"/><line x1="60" y1="8" x2="60" y2="36" stroke="#5EE387" stroke-width="1" stroke-dasharray="2 2"/><circle cx="60" cy="8" r="4" fill="#F5B040"/><circle cx="30" cy="36" r="3" fill="#5EE387"/><circle cx="60" cy="36" r="3" fill="#5EE387"/><circle cx="90" cy="36" r="3" fill="#5EE387"/></svg></div><div class="tfoot">flowchart</div></div>
+    <div class="tier reveal d1"><div class="tnum">T·07</div><div class="tname">Timeline / chart</div><div class="tviz"><svg class="v-chart" viewBox="0 0 120 44"><polyline points="4,38 22,30 38,32 58,18 78,22 98,10 116,14" fill="none" stroke="#5EE387" stroke-width="1.5"/><line x1="0" y1="42" x2="120" y2="42" stroke="#48564D"/><line x1="0" y1="42" x2="0" y2="6" stroke="#48564D"/></svg></div><div class="tfoot">scalar series</div></div>
+    <div class="tier reveal d2"><div class="tnum">T·08</div><div class="tname">3D primitive</div><div class="tviz"><div class="v-cube"><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="tfoot">cube / sphere</div></div>
+    <div class="tier reveal d3"><div class="tnum">T·09</div><div class="tname">2D image</div><div class="tviz"><div class="v-img"></div></div><div class="tfoot">raster</div></div>
+    <div class="tier reveal d4"><div class="tnum">T·10</div><div class="tname">2D video / gif</div><div class="tviz"><div class="v-vid"></div></div><div class="tfoot">looping frames</div></div>
+    <div class="tier reveal d5"><div class="tnum">T·11</div><div class="tname">3D mesh · glTF</div><div class="tviz"><svg class="v-mesh" viewBox="0 0 60 44"><polygon points="30,6 50,38 10,38" fill="none" stroke="#5EE387" stroke-width="1"/><polygon points="30,6 30,22 50,38" fill="rgba(94,227,135,.15)" stroke="#5EE387" stroke-width=".5"/><polygon points="30,6 30,22 10,38" fill="rgba(245,176,64,.15)" stroke="#F5B040" stroke-width=".5"/><polygon points="30,22 50,38 10,38" fill="rgba(229,75,75,.08)" stroke="#48564D" stroke-width=".5"/></svg></div><div class="tfoot">textured geometry</div></div>
+
+    <div class="tier reveal"><div class="tnum">T·12</div><div class="tname">3D animation</div><div class="tviz"><svg class="v-mesh" viewBox="0 0 60 44"><g style="transform-origin:30px 22px; animation:cubeSpin 6s linear infinite"><polygon points="30,6 50,38 10,38" fill="none" stroke="#5EE387" stroke-width="1"/><circle cx="30" cy="22" r="3" fill="#F5B040"/></g></svg></div><div class="tfoot">rigged + keyed</div></div>
+    <div class="tier reveal d1"><div class="tnum">T·13</div><div class="tname">360 image</div><div class="tviz"><div class="v-360"></div></div><div class="tfoot">equirectangular</div></div>
+    <div class="tier reveal d2"><div class="tnum">T·14</div><div class="tname">360 video</div><div class="tviz"><div class="v-360" style="animation-duration:6s"></div></div><div class="tfoot">spherical frames</div></div>
+    <div class="tier reveal d3"><div class="tnum">T·15</div><div class="tname">RGBD image</div><div class="tviz"><div class="v-rgbd"><i></i><i></i><i></i><i></i></div></div><div class="tfoot">color + depth</div></div>
+    <div class="tier reveal d4"><div class="tnum">T·16</div><div class="tname">RGBD-stencil · hologram</div><div class="tviz"><div class="v-rgbd" style="filter:drop-shadow(0 0 .4ch rgba(94,227,135,.5))"><i></i><i></i><i></i><i></i></div></div><div class="tfoot">MetaVido · Portals</div></div>
+    <div class="tier reveal d5"><div class="tnum">T·17</div><div class="tname">Rerun rrd</div><div class="tviz"><div class="v-rerun"></div></div><div class="tfoot">Arrow multimodal</div></div>
+
+    <div class="tier reveal"><div class="tnum">T·18</div><div class="tname">Schema · shader · VFX</div><div class="tviz"><pre class="v-schema">fn frag() {
+  col = sdBox(p, r);
+  return ring(col);
+}</pre></div><div class="tfoot">executable</div></div>
+    <div class="tier reveal d1"><div class="tnum">T·19</div><div class="tname">Neural world</div><div class="tviz"><div class="v-neural"></div></div><div class="tfoot">3D-GS · NeRF · diffusion</div></div>
+    <div class="tier reveal d2"><div class="tnum">T·20</div><div class="tname">N-dim hypergraph</div><div class="tviz"><svg class="v-bigdata" viewBox="0 0 120 44"><g stroke="#5EE387" stroke-width=".4" opacity=".6"><line x1="20" y1="22" x2="60" y2="8"/><line x1="60" y1="8" x2="100" y2="22"/><line x1="100" y1="22" x2="60" y2="38"/><line x1="60" y1="38" x2="20" y2="22"/><line x1="20" y1="22" x2="100" y2="22"/><line x1="60" y1="8" x2="60" y2="38"/></g><circle cx="20" cy="22" r="2.5" fill="#F5B040"/><circle cx="60" cy="8" r="2.5" fill="#5EE387"/><circle cx="100" cy="22" r="2.5" fill="#E54B4B"/><circle cx="60" cy="38" r="2.5" fill="#5EE387"/></svg></div><div class="tfoot">ECharts-GL · WebGPU</div></div>
+    <div class="tier reveal d3"><div class="tnum">T·21</div><div class="tname">Quantum · prob cloud</div><div class="tviz"><div class="v-quantum"></div></div><div class="tfoot">wavefunction</div></div>
+    <div class="tier reveal d4"><div class="tnum">T·22</div><div class="tname">Universe · multiverse</div><div class="tviz"><div class="v-verse"><i></i><i></i><i></i></div></div><div class="tfoot">full sim · counterfactual</div></div>
+  </div>
+
+  <p style="font-family:var(--mono); font-size:.78rem; letter-spacing:.06em; color:var(--mute-2); margin-top:1.2rem; max-width:none; line-height:1.6">
+    Every decoder declares <code>produces.tier</code> in its manifest &mdash; the host negotiates the best match. Down-tier projection is lossy-but-readable (T22 universe → T6 node graph → T4 🌳). Up-tier synthesis is optional and tagged with <code>provenance.inferred=true</code> so downstream viewers can dim or flag guessed content. <span class="mark">T0–T6 are mandatory built-ins.</span>
+  </p>
+</section>
+
+<!-- RFCS ............................................... -->
+<section class="frame">
+  <header class="sec-header">
+    <div class="sec-num">§05 · RFCs</div>
+    <div class="sec-title">
+      <div class="kicker">OPEN PROCESS · BDFL YR 1 · FOUNDATION YR 2+</div>
+      <h2>Change the spec by proposing an RFC.</h2>
+      <p>Anything that would bump the version touches an RFC. Discussion first, implementation after, rejected RFCs archived with a postscript. No silent drift.</p>
+    </div>
+  </header>
+
+  <ul class="rfcs" role="list">
+    <li><span class="n">0001</span><span class="t">Event primitives</span><span class="d">Temporal scheduling, trigger chains, reaction graphs.</span><span class="s">v1.1 · stub</span></li>
+    <li><span class="n">0002</span><span class="t">Typed n-ary hyperedges</span><span class="d">Replace v1.0 binary relations.</span><span class="s">v1.1 · draft</span></li>
+    <li><span class="n">0003</span><span class="t">Conformance test corpus</span><span class="d">Normative runtime behavior + golden docs.</span><span class="s">v1.1 · draft</span></li>
+    <li><span class="n">0004</span><span class="t">Relation types + semantics</span><span class="d">Wire-binds, reacts-to-audio, tracks — runtime semantics locked.</span><span class="s">v1.1 · draft</span></li>
+    <li><span class="n">0009</span><span class="t">Stream ingestion · SSE</span><span class="d">Schema mapping + sparse semantic encoding. Any time-based stream on one bus.</span><span class="s">v1.2 · draft</span></li>
+    <li><span class="n">0010</span><span class="t">Archetypes + paths</span><span class="d">Named component bundles, hierarchical entity paths with inherited transforms.</span><span class="s">v1.1 · draft</span></li>
+    <li><span class="n">0011</span><span class="t">Blueprints</span><span class="d">Viewer state as a shareable versioned document.</span><span class="s">v1.1 · draft</span></li>
+    <li><span class="n">0012</span><span class="t">Decoder contract</span><span class="d">Renderers, neural renderers, simulators, agents, generators, bridges, converters, recorders, probes.</span><span class="s">v1.2 · draft</span></li>
+    <li><span class="n">0013</span><span class="t">Master ontology · faceted + learning</span><span class="d">Eighteen axes, archetype-as-query, continuous learning, ontology-as-XRAI.</span><span class="s">v1.2 · draft</span></li>
+  </ul>
+</section>
+
+<!-- CLOSING ............................................ -->
+<section class="close frame">
+  <h2>The format is <em>DNA</em>, not the organism.</h2>
+  <p style="font-family:var(--serif); font-size:1.25rem; line-height:1.4; max-width:48ch; color:var(--paper-dim)">
+    XRAI stores rules, seeds, and intents &mdash; not pixels, not geometry, not the full weight of the world.
+    The software on the edge and in the cloud endows it with its look, dynamics, and interactions.
+    The format itself is as lightweight and generative as the laws of physics.
+  </p>
+
+  <div class="cta-row">
+    <a class="cta" href="./SPEC.md">read v1.0</a>
+    <a class="cta ghost" href="./examples/09-specs-map.xrai.json">specs map (self)</a>
+    <a class="cta ghost" href="./examples/10-project-map.xrai.json">project map</a>
+    <a class="cta ghost" href="https://github.com/portals-ai/xrai">github</a>
+  </div>
+
+  <div class="close-bar">
+    <span><b>license</b> &nbsp; CC0 schema · MIT parsers</span>
+    <span><b>governance</b> &nbsp; BDFL yr 1 · foundation yr 2+</span>
+    <span><b>paper</b> &nbsp; CVPR 2026 4D-WM</span>
+    <span><b>patent</b> &nbsp; USPTO 2026-04-08</span>
+    <span><b>origin</b> &nbsp; portals &middot; 2026</span>
+  </div>
+
+  <pre class="self-trace" id="selfTrace"></pre>
+</section>
+
+<script>
+/* =============================================================
+   Tick-mark ruler generation
+   ============================================================= */
+(function(){
+  const ruler = document.querySelector('.ruler');
+  if (!ruler) return;
+  ruler.innerHTML = Array.from({length:40}, ()=>'<span></span>').join('');
+})();
+
+/* =============================================================
+   Chrome clock · UTC + mock decode frame counter
+   ============================================================= */
+(function(){
+  const el = document.getElementById('chromeClock');
+  let frame = 0;
+  function tick(){
+    const t = new Date();
+    const z = n => String(n).padStart(2,'0');
+    const s = `${t.getUTCFullYear()}-${z(t.getUTCMonth()+1)}-${z(t.getUTCDate())}·${z(t.getUTCHours())}:${z(t.getUTCMinutes())}:${z(t.getUTCSeconds())}z · f${String(frame++).padStart(5,'0')}`;
+    el.textContent = s;
+  }
+  tick(); setInterval(tick, 1000);
+})();
+
+/* =============================================================
+   LIVE DECODE demo
+   Simulates ingest of ~/.claude/session-stats/history.jsonl
+   on the left and the emitted SSE deltas on the right.
+   ============================================================= */
+(function(){
+  const rawOut  = document.getElementById('rawOut');
+  const decOut  = document.getElementById('decodedOut');
+  const rawRate = document.getElementById('rawRate');
+  const sseRate = document.getElementById('sseRate');
+
+  const sample = [
+    {ts:"2026-04-23T05:21:03Z", type:"session", session_id:"94bbb273", project:"portals_v4", duration_min:37, commits:0, files_changed:11, est_input_tokens:67031, est_output_tokens:195700, peak_context:195183, pct_used:97},
+    {ts:"2026-04-23T05:30:02Z", type:"session", session_id:"94bbb273", project:"portals_v4", duration_min:46, commits:0, files_changed:56, est_input_tokens:68529, est_output_tokens:242799, peak_context:260728, pct_used:26},
+    {ts:"2026-04-23T05:34:59Z", type:"session", session_id:"93364104", project:"portals_v4", duration_min:51, commits:2, files_changed:54, est_input_tokens:279,   est_output_tokens:138523, peak_context:198839, pct_used:99},
+    {ts:"2026-04-23T05:40:12Z", type:"session", session_id:"ae11a2c4", project:"portals_v4", duration_min:12, commits:1, files_changed:4,  est_input_tokens:15204, est_output_tokens:41023,  peak_context:48120,  pct_used:24},
+  ];
+
+  /* colorize JSON for the raw panel */
+  function fmtRaw(obj){
+    const parts = [];
+    parts.push('<span class="k">{</span>');
+    const keys = Object.keys(obj);
+    keys.forEach((k, i)=>{
+      const v = obj[k];
+      let vHTML;
+      if (typeof v === 'string') vHTML = `<span class="s">"${v}"</span>`;
+      else if (typeof v === 'number') vHTML = `<span class="n">${v}</span>`;
+      else vHTML = String(v);
+      parts.push(`\n  <span class="g">"${k}"</span><span class="k">:</span> ${vHTML}${i<keys.length-1?',':''}`);
+    });
+    parts.push('\n<span class="k">}</span>');
+    return parts.join('');
+  }
+
+  /* derive SSE deltas from a row */
+  function deltasFor(row){
+    const path = `/claude/session/${row.session_id}`;
+    const t = Date.parse(row.ts);
+    const items = [
+      {path, arch:'SessionMetric', comp:'duration_min',     val:row.duration_min + ' min'},
+      {path, arch:'SessionMetric', comp:'est_input_tokens', val:Math.round(row.est_input_tokens/1000)+'k'},
+      {path, arch:'SessionMetric', comp:'est_output_tokens',val:Math.round(row.est_output_tokens/1000)+'k'},
+      {path, arch:'Event',         comp:'scm.commits',      val:row.commits + ' commits'},
+      {path, arch:'Event',         comp:'scm.files_changed',val:row.files_changed + ' files'},
+      {path:`${path}/context`, arch:'ContextGauge', comp:'pct_used', val:row.pct_used + '%'},
+    ];
+    items.forEach(it => it.t = t);
+    return items;
+  }
+
+  let idx = 0;
+  let rawTally = 0, sseTally = 0;
+  let lastSec = performance.now();
+
+  function step(){
+    const row = sample[idx % sample.length];
+    idx++;
+    rawTally++;
+
+    // push raw
+    const rawLine = fmtRaw(row) + '<span class="caret">_</span>';
+    rawOut.innerHTML = rawLine;
+
+    // push decoded rows, staggered
+    const deltas = deltasFor(row);
+    deltas.forEach((d, i) => {
+      setTimeout(()=>{
+        const li = document.createElement('li');
+        li.style.animationDelay = '0ms';
+        li.innerHTML = `
+          <span class="dot">◆</span>
+          <span class="arch">${d.arch}</span>
+          <span><span class="mono" style="color:var(--mute-2)">${d.path}</span> · <span class="comp">${d.comp}</span> = <b style="color:var(--ph)">${d.val}</b></span>
+          <span class="t">${new Date(d.t).toISOString().slice(11,19)}z</span>
+        `;
+        decOut.prepend(li);
+        // trim to 10 items so the list stays bounded
+        while (decOut.children.length > 10) decOut.lastChild.remove();
+        sseTally++;
+      }, i * 80);
+    });
+
+    // rate display once per second
+    const now = performance.now();
+    if (now - lastSec > 1000){
+      rawRate.textContent = rawTally + ' rows/s';
+      sseRate.textContent = sseTally + ' deltas/s';
+      rawTally = 0; sseTally = 0;
+      lastSec = now;
+    }
+  }
+
+  // initial
+  step();
+  setInterval(step, 1500);
+})();
+
+/* =============================================================
+   Reveal-on-scroll
+   ============================================================= */
+(function(){
+  const els = document.querySelectorAll('.reveal');
+  if (!('IntersectionObserver' in window)){
+    els.forEach(el=>el.classList.add('in'));
+    return;
+  }
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, {threshold:0.12, rootMargin:'0px 0px -8% 0px'});
+  els.forEach(el=>io.observe(el));
+})();
+
+/* =============================================================
+   Self-reference SSE trace — this page decoded live
+   ============================================================= */
+(function(){
+  const el = document.getElementById('selfTrace');
+  if (!el) return;
+  const now = new Date();
+  const t = now.toISOString();
+  const dur = Math.round((performance.now())/100)/10;
+  const trace = `<span class="h">xrai://graph/self · xra1.com/landing</span>
+type        : blueprint+doc
+wire_format : application/vnd.xrai.sse+json
+ontology    : xrai://ontology/v1  (rfc 0013)
+decoder     : xra1.com · force-graph + html/css/js (kind=replayer+renderer)
+
+<span class="k">delta 001</span> add  /xra1/hero                archetype=Hero        text="The semantic bus for any time-based stream."
+<span class="k">delta 002</span> add  /xra1/live-decode         archetype=DecodeDemo  rate_hz=~0.7
+<span class="k">delta 003</span> add  /xra1/facets              archetype=OntologyAxes axes=18
+<span class="k">delta 004</span> add  /xra1/strata              archetype=StrataStack levels=9
+<span class="k">delta 005</span> add  /xra1/decoders            archetype=DecoderGallery cards=6
+<span class="k">delta 006</span> add  /xra1/rfcs                archetype=RfcIndex    n=9
+<span class="k">delta 007</span> add  /xra1/close               archetype=Manifesto
+<span class="k">delta 008</span> annot /xra1                    self_reference="this page is an XRAI document"
+
+rendered_at : ${t}
+uptime      : ${dur}s
+decoder_ver : 1.2-draft
+provenance  : human=@jamestunick · agent=claude-opus-4-7 · 2026-04-23`;
+  el.innerHTML = trace;
+})();
+
+/* =============================================================
+   Facet hover: brief dim-flicker to reinforce interactivity
+   ============================================================= */
+document.querySelectorAll('.facet').forEach(f=>{
+  f.addEventListener('mouseenter', ()=>{
+    f.style.transition = 'background .2s';
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>dev x-ray · last 7 days · xra1.com</title>
+<link rel="stylesheet" href="styles/brand.css">
+<style>
+  body{margin:0;background:#08090c;color:#F7FFA8;font:13px/1.45 ui-monospace,"SF Mono",Menlo,monospace;}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 24px 80px;}
+  h1{font-size:18px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;margin:0 0 4px;}
+  .sub{opacity:.55;font-size:11px;margin-bottom:24px;}
+  .nav{margin-bottom:18px;font-size:11px;}
+  .nav a{color:rgba(247,255,168,0.55);text-decoration:none;margin-right:14px;}
+  .nav a:hover{color:#F7FFA8;}
+  .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:28px;}
+  .stat{background:rgba(247,255,168,0.06);border:1px solid rgba(247,255,168,0.18);border-radius:8px;padding:10px 12px;}
+  .stat .n{font-size:22px;color:#F7FFA8;font-weight:500;}
+  .stat .l{opacity:.55;font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-top:2px;}
+  h2{font-size:13px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;margin:28px 0 8px;color:rgba(247,255,168,0.65);}
+  .heat{display:grid;grid-template-columns:60px repeat(24,1fr);gap:2px;font-size:9px;}
+  .heat .hh{opacity:.45;text-align:center;}
+  .heat .day{opacity:.45;text-align:right;padding-right:6px;align-self:center;}
+  .heat .cell{aspect-ratio:1;background:rgba(247,255,168,0.04);border-radius:2px;cursor:default;transition:transform .08s;}
+  .heat .cell:hover{transform:scale(1.4);outline:1px solid #F7FFA8;}
+  .commits{display:flex;flex-direction:column;gap:4px;}
+  .row{display:grid;grid-template-columns:64px 86px 1fr 90px;gap:10px;padding:6px 8px;background:rgba(0,0,0,0.3);border-left:2px solid rgba(247,255,168,0.25);border-radius:4px;font-size:11px;}
+  .row.fr{border-left-color:#ff8a8a;background:rgba(255,138,138,0.06);}
+  .row .sha{color:rgba(247,255,168,0.55);}
+  .row .when{opacity:.55;}
+  .row .subj{color:#F7FFA8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .row .delta{opacity:.65;text-align:right;}
+  .filter{margin:8px 0;}
+  .filter input{width:100%;padding:6px 10px;background:rgba(0,0,0,0.4);border:1px solid rgba(247,255,168,0.18);color:#F7FFA8;border-radius:6px;font:inherit;font-size:11px;}
+  .legend{display:flex;gap:8px;margin-top:6px;align-items:center;font-size:10px;opacity:.55;}
+  .legend .sw{width:14px;height:10px;border-radius:2px;display:inline-block;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav">
+    <a href="jarvis.html">← jarvis</a>
+    <a href="index.html">graph</a>
+    <a href="landing.html">landing</a>
+    <a href="examples/README.md">examples</a>
+  </div>
+  <h1>dev · x-ray · last 7 days</h1>
+  <div class="sub" id="meta">loading…</div>
+
+  <div class="stats" id="stats"></div>
+
+  <h2>commit heatmap · day × hour</h2>
+  <div class="heat" id="heat"></div>
+  <div class="legend">
+    <span>0</span>
+    <span class="sw" style="background:rgba(247,255,168,0.04);"></span>
+    <span class="sw" style="background:rgba(247,255,168,0.18);"></span>
+    <span class="sw" style="background:rgba(247,255,168,0.4);"></span>
+    <span class="sw" style="background:rgba(247,255,168,0.7);"></span>
+    <span class="sw" style="background:#F7FFA8;"></span>
+    <span>5+ commits/hr</span>
+    <span style="margin-left:18px;">·</span>
+    <span class="sw" style="background:#ff8a8a;"></span>
+    <span>friction marker</span>
+  </div>
+
+  <h2>commits · click a row → open in github (links coming)</h2>
+  <div class="filter"><input id="filter" placeholder="filter (e.g. xrai · jarvis · revert)"/></div>
+  <div class="commits" id="commits"></div>
+</div>
+
+<script>
+const peelEl = (id) => document.getElementById(id);
+const fmt = (d) => new Date(d).toISOString().slice(0,10);
+const fmtT = (d) => new Date(d).toISOString().slice(11,16);
+
+(async () => {
+  const r = await fetch('data/dev-snapshot.json');
+  if (!r.ok) { peelEl('meta').textContent = 'snapshot missing — run: node scripts/build_dev_snapshot.cjs'; return; }
+  const snap = await r.json();
+  peelEl('meta').textContent = `built ${snap.built_at.slice(0,16).replace('T',' ')} · window=${snap.window_days}d`;
+
+  const s = snap.summary;
+  peelEl('stats').innerHTML = `
+    <div class="stat"><div class="n">${s.sessions_count}</div><div class="l">sessions</div></div>
+    <div class="stat"><div class="n">${s.commits_count}</div><div class="l">commits</div></div>
+    <div class="stat"><div class="n">${s.friction_count}</div><div class="l">friction events</div></div>
+    <div class="stat"><div class="n">${s.total_files_changed}</div><div class="l">files touched</div></div>
+    <div class="stat"><div class="n">${Math.round(s.total_minutes/60)}h</div><div class="l">on task</div></div>
+  `;
+
+  // Heatmap: 7 rows × 24 cols
+  const today = new Date(); today.setMinutes(0,0,0);
+  const days = [];
+  for (let i = snap.window_days - 1; i >= 0; i--) {
+    const d = new Date(today); d.setDate(d.getDate()-i);
+    days.push(fmt(d));
+  }
+  const buckets = {};
+  for (const d of days) buckets[d] = new Array(24).fill(0);
+  const fricBuckets = {};
+  for (const d of days) fricBuckets[d] = new Array(24).fill(0);
+  snap.commits.forEach(c => {
+    const dt = new Date(c.ts); const d = fmt(dt); const h = dt.getHours();
+    if (buckets[d]) { buckets[d][h] += 1; if (c.friction) fricBuckets[d][h] += 1; }
+  });
+  const heat = peelEl('heat');
+  heat.innerHTML = '<div></div>' + Array.from({length:24}, (_,h)=>`<div class="hh">${h}</div>`).join('');
+  const max = Math.max(1, ...days.flatMap(d=>buckets[d]));
+  for (const d of days) {
+    heat.insertAdjacentHTML('beforeend', `<div class="day">${d.slice(5)}</div>`);
+    for (let h=0; h<24; h++) {
+      const v = buckets[d][h]; const fv = fricBuckets[d][h];
+      const a = v ? Math.min(1, 0.18 + (v/max)*0.82) : 0;
+      const bg = fv ? `#ff8a8a` : (v ? `rgba(247,255,168,${a})` : `rgba(247,255,168,0.04)`);
+      heat.insertAdjacentHTML('beforeend', `<div class="cell" style="background:${bg};" title="${d} ${h}:00 · ${v} commit(s)${fv?` · ${fv} friction`:''}"></div>`);
+    }
+  }
+
+  // Commits list (newest first)
+  const list = peelEl('commits');
+  function paint(filter='') {
+    const f = filter.toLowerCase();
+    list.innerHTML = '';
+    let n = 0;
+    for (const c of snap.commits) {
+      if (f && !c.subj.toLowerCase().includes(f) && !c.sha.includes(f)) continue;
+      const tag = c.friction ? ' fr' : '';
+      const delta = `+${c.ins}/-${c.del} · ${c.files}f`;
+      list.insertAdjacentHTML('beforeend', `<div class="row${tag}"><span class="sha">${c.sha}</span><span class="when">${fmt(c.ts).slice(5)} ${fmtT(c.ts)}</span><span class="subj">${escapeHtml(c.subj)}</span><span class="delta">${delta}</span></div>`);
+      if (++n >= 80) break;
+    }
+    if (n === 0) list.innerHTML = '<div style="opacity:.55;padding:8px;">no commits match</div>';
+  }
+  paint();
+  peelEl('filter').addEventListener('input', e => paint(e.target.value));
+})();
+
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+</script>
+</body>
+</html>

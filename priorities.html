@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>priorities · MVP bird's-eye · xra1.com</title>
+<link rel="stylesheet" href="styles/brand.css">
+<style>
+  body{margin:0;background:#08090c;color:#F7FFA8;font:13px/1.45 ui-monospace,"SF Mono",Menlo,monospace;}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 24px 80px;}
+  h1{font-size:18px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;margin:0 0 4px;}
+  .sub{opacity:.55;font-size:11px;margin-bottom:24px;}
+  .nav{margin-bottom:18px;font-size:11px;}
+  .nav a{color:rgba(247,255,168,0.55);text-decoration:none;margin-right:14px;}
+  .nav a:hover{color:#F7FFA8;}
+  .pri{display:flex;flex-direction:column;gap:8px;}
+  .card{background:rgba(247,255,168,0.06);border:1px solid rgba(247,255,168,0.18);border-left:4px solid rgba(247,255,168,0.6);border-radius:8px;padding:12px 14px;}
+  .card.done{opacity:.55;border-left-color:#5eff8a;}
+  .card.top{border-left-color:#F7FFA8;background:rgba(247,255,168,0.1);}
+  .card .id{display:inline-block;background:rgba(247,255,168,0.18);color:#F7FFA8;padding:1px 8px;border-radius:4px;font-size:10px;letter-spacing:.06em;margin-right:8px;}
+  .card.done .id{background:rgba(94,255,138,0.18);color:#5eff8a;}
+  .card .title{font-size:13px;color:#F7FFA8;font-weight:500;margin:2px 0 4px;}
+  .card .next{font-size:11px;opacity:.78;color:rgba(247,255,168,0.85);}
+  .card .commit{margin-top:6px;font-size:10px;opacity:.55;}
+  .card .commit b{color:rgba(247,255,168,0.85);font-weight:500;}
+  .stale{color:#ff8a8a;}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px;}
+  .stat{background:rgba(247,255,168,0.06);border:1px solid rgba(247,255,168,0.18);border-radius:8px;padding:10px 12px;}
+  .stat .n{font-size:22px;color:#F7FFA8;font-weight:500;}
+  .stat .l{opacity:.55;font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-top:2px;}
+  code{background:rgba(0,0,0,0.4);padding:1px 5px;border-radius:3px;font-size:11px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav">
+    <a href="jarvis.html">← jarvis</a>
+    <a href="index.html">graph</a>
+    <a href="dev.html">dev x-ray</a>
+    <a href="https://github.com/imclab/xra1/issues">issues</a>
+  </div>
+  <h1>priorities · bird's-eye</h1>
+  <div class="sub" id="meta">loading…</div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="pri" id="pri"></div>
+</div>
+
+<script>
+(async () => {
+  const r = await fetch('data/priorities-snapshot.json');
+  if (!r.ok) { document.getElementById('meta').textContent = 'snapshot missing — run: node scripts/build_priorities_snapshot.cjs'; return; }
+  const snap = await r.json();
+  document.getElementById('meta').textContent = `built ${snap.built_at.slice(0,16).replace('T',' ')} · source: ${snap.source}`;
+
+  const open = snap.priorities.filter(p => !p.done);
+  const done = snap.priorities.filter(p => p.done);
+  const stale = open.filter(p => !p.latest_commit || daysSince(p.latest_commit.ts) > 7);
+
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="n">${open.length}</div><div class="l">open priorities</div></div>
+    <div class="stat"><div class="n">${done.length}</div><div class="l">shipped</div></div>
+    <div class="stat"><div class="n" style="color:${stale.length?'#ff8a8a':'#F7FFA8'}">${stale.length}</div><div class="l">stale > 7d</div></div>
+    <div class="stat"><div class="n">${snap.friction_count_7d ?? '—'}</div><div class="l">friction (7d)</div></div>
+  `;
+
+  const list = document.getElementById('pri');
+  for (const p of snap.priorities) {
+    const cls = p.done ? 'done' : (p.id === '#1' ? 'top' : '');
+    const c = p.latest_commit;
+    const days = c ? daysSince(c.ts) : null;
+    const stamp = c ? `<b>${c.sha}</b> · ${c.subj} · ${days===0?'today':days+'d ago'}${days>7?' <span class="stale">(stale)</span>':''}` : '<span class="stale">no commit referencing this priority in 14d</span>';
+    list.insertAdjacentHTML('beforeend', `
+      <div class="card ${cls}">
+        <div><span class="id">${esc(p.id)}</span><span style="font-size:10px;opacity:.55;">${p.done ? 'shipped' : 'active'}</span></div>
+        <div class="title">${esc(p.title)}</div>
+        <div class="next">${esc(p.next)}</div>
+        <div class="commit">${stamp}</div>
+      </div>
+    `);
+  }
+})();
+
+function daysSince(iso){return Math.floor((Date.now()-new Date(iso).getTime())/86400000);}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+</script>
+</body>
+</html>

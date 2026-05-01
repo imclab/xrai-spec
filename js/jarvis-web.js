@@ -349,6 +349,12 @@ export class Jarvis {
     this._resetConversationTimer();
     this.speak('yes?');
     this.showToast('listening — keep talking', 4000);
+    // Dispatch for reticle/gesture-key + future subscribers.
+    // firstEver flag lets listeners (e.g. reticle-web.js) show the gesture key only on first wake of session.
+    const firstEver = !sessionStorage.getItem('xrai.jarvis.wake.seen');
+    if (firstEver) sessionStorage.setItem('xrai.jarvis.wake.seen', '1');
+    document.dispatchEvent(new CustomEvent('jarvis:wake', { detail: { firstEver } }));
+    window.__trace?.fire('wake', firstEver ? 'first.wake' : 'wake', { firstEver }, 'jarvis-web.js _onWake');
   }
   _resetConversationTimer() {
     clearTimeout(this.conversationTimer);
@@ -391,8 +397,83 @@ export class Jarvis {
       }
     }
 
-    // 4. Web search fallback (Wikipedia)
-    this.showToast('jARvis: searching…', 2000);
+    // 3.4. Past-session triage (Phase 6.39) — answer from CC session transcripts
+    try {
+      const sessRx = /\b(yesterday|earlier|last (hour|session|night|week)|did we|when did (we|i)|find the (session|conversation|prompt))\b/i;
+      if (sessRx.test(utterance) && window.__sessions) {
+        const q = utterance.replace(/.*?(yesterday|earlier|last|did we|when did|find)\s+/i, '').trim() || utterance;
+        const hits = await window.__sessions.search(q, 5);
+        if (hits.length) {
+          const summary = hits.map(h => `• ${h.ts?.slice(0,16).replace('T',' ')} (sess ${h.session}) — ${h.t.slice(0, 140)}`).join('\n');
+          this.speak(`Found ${hits.length} past prompt${hits.length===1?'':'s'} matching that.`);
+          this.onHudShow({ title: 'past sessions', body: summary, meta: 'local · CC transcripts (read-only)' });
+          window.__trace?.fire('pipeline', 'connector.sessions', { hits: hits.length, q }, 'jarvis-web.js');
+          return;
+        }
+      }
+    } catch {}
+
+    // 3.5. Google connector triage (Phase 6.37) — opt-in scopes; fail silently if not granted
+    try {
+      const calRx = /\b(calendar|schedule|next meeting|on (my|the) (cal|sched)|when am i)\b/i;
+      const mailRx = /\b(email|inbox|gmail|message from|did .* email)\b/i;
+      if (calRx.test(utterance) && window.__google) {
+        const evts = await window.__google.listEvents({ max: 5 });
+        const summary = evts.length ? evts.map(e => `• ${e.start?.slice(0,16).replace('T',' ')} — ${e.summary || '(no title)'}${e.location?` @ ${e.location}`:''}`).join('\n') : 'no upcoming events in the next week';
+        this.speak(`You have ${evts.length} event${evts.length===1?'':'s'} coming up.`);
+        this.onHudShow({ title: 'Calendar', body: summary, meta: 'live · google calendar v3' });
+        window.__trace?.fire('pipeline', 'connector.calendar', { count: evts.length }, 'jarvis-web.js');
+        return;
+      }
+      if (mailRx.test(utterance) && window.__google) {
+        const q = utterance.replace(/.*?(email|gmail|inbox)\s*(about|for|from)?\s*/i, '').trim() || 'in:inbox newer_than:7d';
+        const hits = await window.__google.searchGmail(q, 5);
+        const summary = hits.length ? hits.map(m => `• ${m.from?.split('<')[0].trim()} — ${m.subject || '(no subj)'}\n  ${(m.snippet||'').slice(0,120)}`).join('\n\n') : 'no matching threads';
+        this.speak(`Found ${hits.length} thread${hits.length===1?'':'s'}.`);
+        this.onHudShow({ title: 'Gmail', body: summary, meta: `live · gmail v1 · q=${q}` });
+        window.__trace?.fire('pipeline', 'connector.gmail', { hits: hits.length, q }, 'jarvis-web.js');
+        return;
+      }
+    } catch (e) {
+      window.__trace?.fire('pipeline', 'connector.error', { error: String(e).slice(0,140) }, 'jarvis-web.js');
+      // Fall through to LLM — connector failure shouldn't block the answer
+    }
+
+    // 4. Gemini Live grounded in (perceptual frame + XRAI doc 11 + KB index)
+    if (window.__perceptualFrame) window.__perceptualFrame.recordPrompt(utterance);
+    window.__trace?.fire('pipeline', 'utterance', { text: utterance }, 'jarvis-web.js _onTurn');
+    this.showToast('jARvis: thinking…', 2000);
+    try {
+      const { askGemini, hasKey } = await import('./gemini-web.js');
+      if (hasKey()) {
+        const frame = window.__perceptualFrame?.getFrame() || null;
+        window.__trace?.fire('llm', 'gemini.call', { model: 'gemini-2.5-flash', frame_focus: frame?.screen_focus?.focused_label }, 'gemini-web.js askGemini');
+        const result = await askGemini(utterance, { frame });
+        if (result.ok) {
+          this.record({ q: utterance, gemini: true, kbHits: result.kbHits || [] });
+          window.__trace?.fire('llm', 'gemini.ok', { kbHits: result.kbHits, chars: result.text.length }, 'gemini-web.js');
+          window.__trace?.fire('tts', 'speak', { chars: result.text.length }, 'jarvis-web.js speak');
+          this.speak(result.text);
+          this.onHudShow({
+            title: 'jARvis',
+            body: result.text,
+            meta: result.kbHits?.length ? `grounded in ${result.kbHits.length} KB hit(s) · screen + DNA + KB` : 'grounded in screen + DNA',
+          });
+          return;
+        }
+        // Gemini call failed — fall through to Wikipedia, but log
+        window.__trace?.fire('llm', 'gemini.error', { error: result.error, message: result.message }, 'gemini-web.js');
+        console.warn('[jarvis-web] gemini error:', result);
+        this.showToast(`gemini: ${result.error}`, 3500);
+      } else {
+        window.__trace?.fire('llm', 'no_key', { hint: 'set localStorage.gemini_key' }, 'gemini-web.js hasKey');
+        this.showToast('Set localStorage.gemini_key in DevTools for smart answers', 5500);
+      }
+    } catch (e) {
+      console.warn('[jarvis-web] gemini-web import failed:', e);
+    }
+
+    // 5. Web search fallback (Wikipedia) — only when Gemini absent or failed
     const web = await webSearchWikipedia(utterance);
     if (web && web.extract) {
       this.record({ q: utterance, webHit: web.title });
@@ -407,8 +488,10 @@ export class Jarvis {
       return;
     }
 
-    // 5. Give up gracefully
-    this.speak(`I don't have "${utterance}" in my index yet. Try a different phrasing.`);
+    // 6. Give up gracefully — but suggest a fix
+    const focused = window.__perceptualFrame?.getFrame()?.screen_focus?.focused_label;
+    const suffix = focused ? ` Currently focused on: ${focused}. Want me to open something related?` : '';
+    this.speak(`I don't have an answer for "${utterance}" yet.${suffix}`);
     this.showToast(`jARvis: nothing for "${utterance.slice(0, 40)}"`, 4000);
   }
 

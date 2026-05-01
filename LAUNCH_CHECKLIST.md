@@ -17,9 +17,9 @@ This checklist matches the 6-step playbook in [`specs/XXX-zero-to-one/spec.md §
 - [x] .gitignore written
 - [x] Launch posts drafted (HN, X, Bluesky, LinkedIn)
 - [x] "This Week in XRAI #1" template ready
-- [ ] Final read-through of SPEC.md — any hallucinated example, any missing primitive that blocks day-1 authoring?
-- [ ] Final read-through of MANIFESTO.md — any claim that could be contested + embarrass the project?
-- [ ] At least 1 working example in `examples/` (currently empty — minimum: one 5-line scene + one 50-line scene)
+- [x] Final read-through of SPEC.md — relation-types gap flagged + closed via RFC-0004; 8/8 citations triple-verified clean; entity types cross-referenced clean. Done `9fe168801`.
+- [x] Final read-through of MANIFESTO.md — USDZ framing corrected ("ecosystem captured" vs "locked to Apple hardware"); all citations verified. Done `9fe168801`.
+- [x] At least 1 working example in `examples/` — 4 files present (01-minimal, 02-voice-prompt, 03-wired, 04-hologram).
 - [ ] Demo video of voice-to-XRAI authoring (unlisted YouTube OK; will be linked from HN first comment)
 
 ---

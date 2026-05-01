@@ -121,7 +121,7 @@ Creators (named, map 1:1 to `Portals.Paint.Parametric` classes in Unity runtime)
 1. **Open forever** — MIT reference impl, no CLA, no telemetry
 2. **Simple** — each tool ≤200 LOC TypeScript
 3. **Forgiving** — never throw on malformed input; return `{valid: false, errors: []}` instead
-4. **Self-describing** — `xrai.tool_info()` returns the tool schema for discovery
+4. **Self-describing** — `xrai.tool_info()` returns the tool schema for discovery <!-- skip-cite-check: design-spec API, not yet implemented -->
 5. **Stateless** — server holds no graph state; clients pass full graphs. Persistence is a separate concern (see `xrai-cloud` plan)
 
 ## MCP protocol conformance

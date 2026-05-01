@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>session replay · x-ray · xra1.com</title>
+<link rel="stylesheet" href="styles/brand.css">
+<style>
+  body{margin:0;background:#08090c;color:#F7FFA8;font:13px/1.45 ui-monospace,"SF Mono",Menlo,monospace;}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 24px 80px;}
+  h1{font-size:18px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;margin:0 0 4px;}
+  .sub{opacity:.55;font-size:11px;margin-bottom:24px;}
+  .nav{margin-bottom:18px;font-size:11px;}
+  .nav a{color:rgba(247,255,168,0.55);text-decoration:none;margin-right:14px;}
+  .nav a:hover{color:#F7FFA8;}
+  .drop{border:2px dashed rgba(247,255,168,0.35);border-radius:10px;padding:36px;text-align:center;color:rgba(247,255,168,0.65);transition:background .15s,border-color .15s;cursor:pointer;}
+  .drop.over{background:rgba(247,255,168,0.08);border-color:#F7FFA8;}
+  .drop b{color:#F7FFA8;}
+  .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:18px 0;}
+  .stat{background:rgba(247,255,168,0.06);border:1px solid rgba(247,255,168,0.18);border-radius:8px;padding:10px 12px;}
+  .stat .n{font-size:20px;color:#F7FFA8;font-weight:500;}
+  .stat .l{opacity:.55;font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-top:2px;}
+  .filter{margin:8px 0 14px;}
+  .filter input{width:100%;padding:6px 10px;background:rgba(0,0,0,0.4);border:1px solid rgba(247,255,168,0.18);color:#F7FFA8;border-radius:6px;font:inherit;font-size:11px;}
+  .turn{margin:6px 0;padding:8px 10px;border-radius:6px;border-left:3px solid;}
+  .turn.user{background:rgba(247,255,168,0.07);border-left-color:#F7FFA8;}
+  .turn.asst{background:rgba(168,224,255,0.05);border-left-color:#A8E0FF;}
+  .turn.tool{background:rgba(94,255,138,0.05);border-left-color:#5eff8a;}
+  .turn.err {background:rgba(255,138,138,0.07);border-left-color:#ff8a8a;}
+  .turn .role{font-size:9px;letter-spacing:.08em;text-transform:uppercase;opacity:.55;margin-bottom:2px;}
+  .turn .body{font-size:11px;white-space:pre-wrap;overflow-wrap:anywhere;}
+  .turn .meta{font-size:9px;opacity:.45;margin-top:4px;}
+  .truncated{font-style:italic;opacity:.55;}
+  details summary{cursor:pointer;color:#F7FFA8;}
+  code{background:rgba(0,0,0,0.4);padding:1px 5px;border-radius:3px;font-size:11px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav">
+    <a href="jarvis.html">← jarvis</a>
+    <a href="dev.html">dev x-ray</a>
+    <a href="priorities.html">priorities</a>
+  </div>
+  <h1>session replay · x-ray</h1>
+  <div class="sub">drop a Claude Code <code>sessionId.jsonl</code> from <code>~/.claude/projects/&lt;proj&gt;/</code> · everything stays local in your browser</div>
+
+  <div class="drop" id="drop">drop a <b>.jsonl</b> session file here<br/><span style="font-size:11px;opacity:.6;">or click to pick · file: protocol works (no upload)</span><input type="file" id="picker" accept=".jsonl,application/x-ndjson" style="display:none;"/></div>
+
+  <div id="stats" class="stats" style="display:none;"></div>
+  <div id="filter" class="filter" style="display:none;"><input id="q" placeholder="filter (e.g. commit · gemini · grep · revert)"/></div>
+  <div id="flow"></div>
+</div>
+
+<script>
+const drop = document.getElementById('drop');
+const picker = document.getElementById('picker');
+drop.addEventListener('click', () => picker.click());
+['dragenter','dragover'].forEach(e => drop.addEventListener(e, ev=>{ev.preventDefault();drop.classList.add('over');}));
+['dragleave','drop'].forEach(e => drop.addEventListener(e, ev=>{ev.preventDefault();drop.classList.remove('over');}));
+drop.addEventListener('drop', e => loadFile(e.dataTransfer.files[0]));
+picker.addEventListener('change', e => loadFile(e.target.files[0]));
+
+let allTurns = [];
+
+async function loadFile(f) {
+  if (!f) return;
+  const txt = await f.text();
+  const turns = [];
+  let user=0, asst=0, tools=0, errs=0;
+  for (const line of txt.split('\n')) {
+    if (!line.trim()) continue;
+    let r; try { r = JSON.parse(line); } catch { continue; }
+    const role = r.message?.role || r.type || 'unknown';
+    const ts = r.timestamp || r.message?.timestamp;
+    if (role === 'user') user++;
+    else if (role === 'assistant') asst++;
+    if (r.toolUseResult || r.message?.content?.some?.(c => c.type === 'tool_use')) tools++;
+    if (r.isError || /error/i.test(JSON.stringify(r).slice(0, 500))) errs++;
+    turns.push(extract(r, ts, role));
+  }
+  allTurns = turns;
+  document.getElementById('stats').style.display = 'grid';
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="n">${turns.length}</div><div class="l">turns</div></div>
+    <div class="stat"><div class="n">${user}</div><div class="l">user</div></div>
+    <div class="stat"><div class="n">${asst}</div><div class="l">assistant</div></div>
+    <div class="stat"><div class="n">${tools}</div><div class="l">tool calls</div></div>
+    <div class="stat"><div class="n" style="color:${errs?'#ff8a8a':'#F7FFA8'}">${errs}</div><div class="l">errors</div></div>
+  `;
+  document.getElementById('filter').style.display = 'block';
+  document.getElementById('q').addEventListener('input', e => paint(e.target.value));
+  paint();
+  drop.style.display = 'none';
+}
+
+function extract(r, ts, role) {
+  let body = ''; let kind = role;
+  const msg = r.message;
+  if (typeof msg?.content === 'string') body = msg.content;
+  else if (Array.isArray(msg?.content)) {
+    for (const c of msg.content) {
+      if (c.type === 'text') body += c.text + '\n';
+      else if (c.type === 'tool_use') { kind='tool'; body += `▸ ${c.name}(${JSON.stringify(c.input).slice(0,180)})\n`; }
+      else if (c.type === 'tool_result') { kind='tool'; body += `← ${(typeof c.content==='string'?c.content:JSON.stringify(c.content)).slice(0,300)}\n`; }
+    }
+  }
+  if (r.toolUseResult && !body) body = JSON.stringify(r.toolUseResult).slice(0, 300);
+  if (r.isError) kind='err';
+  return { ts, role:kind, body: (body||'').slice(0, 1400) };
+}
+
+function paint(q='') {
+  const flow = document.getElementById('flow'); flow.innerHTML='';
+  const f = q.toLowerCase();
+  let n = 0;
+  for (const t of allTurns) {
+    if (f && !(t.body.toLowerCase().includes(f))) continue;
+    const tag = ({user:'user',assistant:'asst',tool:'tool',err:'err'}[t.role] || 'asst');
+    flow.insertAdjacentHTML('beforeend',`<div class="turn ${tag}"><div class="role">${esc(t.role)}${t.ts?' · '+t.ts.slice(11,19):''}</div><div class="body">${esc(t.body)}</div></div>`);
+    if (++n >= 200) { flow.insertAdjacentHTML('beforeend',`<div class="truncated">… ${allTurns.length-n} more turns (refine filter)</div>`); break; }
+  }
+}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+</script>
+</body>
+</html>

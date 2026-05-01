@@ -1,0 +1,75 @@
+{
+  "xrai_version": "1.0",
+  "id": "00000000-0000-4000-a000-000000000010",
+  "created_at": "2026-04-23T00:00:00Z",
+  "author": {"type": "agent", "id": "claude-opus-4-7@portals-v4"},
+  "origin": {"app": "portals", "version": "v4", "scene": "ProjectMap"},
+  "metadata": {
+    "description": "Whole-project XRAI map: essence triad (Portals / XRAI / jARvis) + five pillars + code roots + external endpoints + paper + patent. A zoom-out of the system.",
+    "self_reference": "xrai://graph/project-map",
+    "viewer_hint": "force-graph",
+    "ontology_facets": {"A1": "system", "A3": "structured", "A4": "hypergraph", "A5": "repo", "A6": "schema", "A18": "strongly-emergent"}
+  },
+  "scene": {
+    "anchors": [
+      {"id": "anchor_repo", "type": "ar.virtual", "metadata": {"space": "portals_v4_monorepo"}}
+    ],
+    "entities": [
+      {"id": "triad_portals", "type": "object.primitive", "model_id": 0, "transform": {"position": [-1.5, 0, 0], "rotation":[0,0,0,1], "scale":[0.7, 0.7, 0.7]}, "material": {"color": "red", "preset": "neon"}, "metadata": {"role": "essence.system", "concept": "Portals = the system"}},
+      {"id": "triad_xrai", "type": "object.primitive", "model_id": 0, "transform": {"position": [0, 0, 0], "rotation":[0,0,0,1], "scale":[0.8, 0.8, 0.8]}, "material": {"color": "gold", "preset": "glass"}, "metadata": {"role": "essence.format", "concept": "XRAI = semantic DNA / interchange"}},
+      {"id": "triad_jarvis", "type": "object.primitive", "model_id": 0, "transform": {"position": [1.5, 0, 0], "rotation":[0,0,0,1], "scale":[0.7, 0.7, 0.7]}, "material": {"color": "cyan", "preset": "neon"}, "metadata": {"role": "essence.agent", "concept": "jARvis = continuous runtime agent"}},
+      {"id": "pillar_edge", "type": "object.primitive", "model_id": 0, "transform": {"position": [-2.5, -1.2, 0], "rotation":[0,0,0,1], "scale":[0.35,0.35,0.35]}, "material": {"color": "cyan", "preset": "neon"}, "metadata": {"pillar": 1, "concept": "Edge intelligence: local voice, on-device ML, low-latency"}},
+      {"id": "pillar_agent", "type": "object.primitive", "model_id": 0, "transform": {"position": [-1.2, -1.2, 0], "rotation":[0,0,0,1], "scale":[0.35,0.35,0.35]}, "material": {"color": "cyan", "preset": "neon"}, "metadata": {"pillar": 2, "concept": "Agentic jARvis: soul + tools + rules + memory"}},
+      {"id": "pillar_format", "type": "object.primitive", "model_id": 0, "transform": {"position": [0, -1.2, 0], "rotation":[0,0,0,1], "scale":[0.4,0.4,0.4]}, "material": {"color": "gold", "preset": "glass"}, "metadata": {"pillar": 3, "concept": "XRAI substrate: RFC 0009 SSE, 0010 archetypes, 0011 blueprints, 0012 decoders, 0013 master ontology"}},
+      {"id": "pillar_multi", "type": "object.primitive", "model_id": 0, "transform": {"position": [1.2, -1.2, 0], "rotation":[0,0,0,1], "scale":[0.35,0.35,0.35]}, "material": {"color": "magenta", "preset": "neon"}, "metadata": {"pillar": 4, "concept": "Multiplayer LiveKit; shared spatial canvas across continents"}},
+      {"id": "pillar_auth", "type": "object.primitive", "model_id": 0, "transform": {"position": [2.5, -1.2, 0], "rotation":[0,0,0,1], "scale":[0.35,0.35,0.35]}, "material": {"color": "cyan", "preset": "neon"}, "metadata": {"pillar": 5, "concept": "User authorship: voice → intent → scene → remix / save / share"}},
+      {"id": "code_ios", "type": "object.primitive", "model_id": 0, "transform": {"position": [-2.3, -2.4, 0.6], "rotation":[0,0,0,1], "scale":[0.3,0.3,0.3]}, "material": {"color": "cyan", "preset": "neon"}, "metadata": {"root": "ios/", "concept": "Native iOS shell + UAAL Unity library"}},
+      {"id": "code_rn", "type": "object.primitive", "model_id": 0, "transform": {"position": [-1.2, -2.4, 0.6], "rotation":[0,0,0,1], "scale":[0.3,0.3,0.3]}, "material": {"color": "cyan", "preset": "neon"}, "metadata": {"root": "src/", "concept": "React Native app: voice, bridge, state, services"}},
+      {"id": "code_unity", "type": "object.primitive", "model_id": 0, "transform": {"position": [0, -2.4, 0.6], "rotation":[0,0,0,1], "scale":[0.4,0.4,0.4]}, "material": {"color": "magenta", "preset": "neon"}, "metadata": {"root": "unity/", "concept": "Unity 6000.2: VFX Graph, bridge handlers, hologram pipeline"}},
+      {"id": "code_specs", "type": "object.primitive", "model_id": 0, "transform": {"position": [1.2, -2.4, 0.6], "rotation":[0,0,0,1], "scale":[0.3,0.3,0.3]}, "material": {"color": "gold", "preset": "glass"}, "metadata": {"root": "specs/", "concept": "27 specs + constitution + XRAI format spec v2 + RFCs"}},
+      {"id": "code_web", "type": "object.primitive", "model_id": 0, "transform": {"position": [2.3, -2.4, 0.6], "rotation":[0,0,0,1], "scale":[0.3,0.3,0.3]}, "material": {"color": "white", "preset": "neon"}, "metadata": {"root": "specs/XXX-zero-to-one/xrai-website/", "concept": "xra1.com source: SPEC, RFCs, runtimes, examples, MCP, jarvis"}},
+      {"id": "code_scripts", "type": "object.primitive", "model_id": 0, "transform": {"position": [-2.3, -2.4, -0.6], "rotation":[0,0,0,1], "scale":[0.25,0.25,0.25]}, "material": {"color": "white", "preset": "neon"}, "metadata": {"root": "scripts/", "concept": "Build + test + visual + deploy automation"}},
+      {"id": "code_tests", "type": "object.primitive", "model_id": 0, "transform": {"position": [-1.2, -2.4, -0.6], "rotation":[0,0,0,1], "scale":[0.3,0.3,0.3]}, "material": {"color": "green", "preset": "neon"}, "metadata": {"root": "src/__tests__/ + unity Editor tests", "concept": "Jest + PlayMode + visual regression (85 tests)"}},
+      {"id": "code_docs", "type": "object.primitive", "model_id": 0, "transform": {"position": [0, -2.4, -0.6], "rotation":[0,0,0,1], "scale":[0.3,0.3,0.3]}, "material": {"color": "white", "preset": "neon"}, "metadata": {"root": "docs/", "concept": "Architecture, brand, risk register, incidents"}},
+      {"id": "code_kb", "type": "object.primitive", "model_id": 0, "transform": {"position": [1.2, -2.4, -0.6], "rotation":[0,0,0,1], "scale":[0.3,0.3,0.3]}, "material": {"color": "white", "preset": "neon"}, "metadata": {"root": ".xrai/KnowledgeBase/", "concept": "Persistent knowledge: patterns, research, CVPR learnings"}},
+      {"id": "code_claude", "type": "object.primitive", "model_id": 0, "transform": {"position": [2.3, -2.4, -0.6], "rotation":[0,0,0,1], "scale":[0.25,0.25,0.25]}, "material": {"color": "white", "preset": "neon"}, "metadata": {"root": ".claude/ + ~/.claude/", "concept": "Hooks, skills, memory, session stats, agents"}},
+      {"id": "ext_xra1", "type": "object.primitive", "model_id": 0, "transform": {"position": [0, -3.8, 1.2], "rotation":[0,0,0,1], "scale":[0.35,0.35,0.35]}, "material": {"color": "gold", "preset": "glass"}, "metadata": {"endpoint": "https://xra1.com", "concept": "Public XRAI site (renamed 2026-04-23 from xrai.dev)"}},
+      {"id": "ext_github", "type": "object.primitive", "model_id": 0, "transform": {"position": [-1.5, -3.8, 1.2], "rotation":[0,0,0,1], "scale":[0.3,0.3,0.3]}, "material": {"color": "white", "preset": "neon"}, "metadata": {"endpoint": "github.com/imclab/portals-v4 + github.com/portals-ai/xrai", "concept": "Private product repo + public XRAI spec repo"}},
+      {"id": "ext_testflight", "type": "object.primitive", "model_id": 0, "transform": {"position": [1.5, -3.8, 1.2], "rotation":[0,0,0,1], "scale":[0.3,0.3,0.3]}, "material": {"color": "cyan", "preset": "neon"}, "metadata": {"endpoint": "TestFlight com.h3m.portals", "concept": "iOS distribution channel"}},
+      {"id": "ext_livekit", "type": "object.primitive", "model_id": 0, "transform": {"position": [-1.5, -3.8, -1.2], "rotation":[0,0,0,1], "scale":[0.3,0.3,0.3]}, "material": {"color": "magenta", "preset": "neon"}, "metadata": {"endpoint": "wss://portals-dev.livekit.cloud", "concept": "LiveKit shared room transport (spec 010)"}},
+      {"id": "ext_paper", "type": "object.primitive", "model_id": 0, "transform": {"position": [0, -3.8, -1.2], "rotation":[0,0,0,1], "scale":[0.35,0.35,0.35]}, "material": {"color": "gold", "preset": "glass"}, "metadata": {"endpoint": "CVPR 2026 4D World Models workshop", "concept": "Paper ReGen4D-14 — submitted 2026-04-10, 3× Weak Accept"}},
+      {"id": "ext_patent", "type": "object.primitive", "model_id": 0, "transform": {"position": [1.5, -3.8, -1.2], "rotation":[0,0,0,1], "scale":[0.3,0.3,0.3]}, "material": {"color": "gold", "preset": "glass"}, "metadata": {"endpoint": "USPTO provisional", "concept": "Provisional patent filed 2026-04-08; spec 021-pthi"}},
+      {"id": "specs_map_ref", "type": "object.primitive", "model_id": 0, "transform": {"position": [2, -3.8, 0], "rotation":[0,0,0,1], "scale":[0.25,0.25,0.25]}, "material": {"color": "gold", "preset": "glass"}, "metadata": {"file": "09-specs-map.xrai.json", "concept": "Zoom-in: full 27-spec graph"}}
+    ],
+    "relations": [
+      {"id": "r_triad_1", "type": "wire-binds", "from": "triad_portals", "to": "triad_xrai", "props": {"role": "uses-format"}},
+      {"id": "r_triad_2", "type": "wire-binds", "from": "triad_portals", "to": "triad_jarvis", "props": {"role": "hosts-agent"}},
+      {"id": "r_triad_3", "type": "wire-binds", "from": "triad_jarvis", "to": "triad_xrai", "props": {"role": "reads-writes"}},
+      {"id": "r_p1", "type": "parent-of", "from": "triad_portals", "to": "pillar_edge", "props": {}},
+      {"id": "r_p2", "type": "parent-of", "from": "triad_portals", "to": "pillar_agent", "props": {}},
+      {"id": "r_p3", "type": "parent-of", "from": "triad_xrai", "to": "pillar_format", "props": {}},
+      {"id": "r_p4", "type": "parent-of", "from": "triad_portals", "to": "pillar_multi", "props": {}},
+      {"id": "r_p5", "type": "parent-of", "from": "triad_portals", "to": "pillar_auth", "props": {}},
+      {"id": "r_code_ios", "type": "parent-of", "from": "pillar_edge", "to": "code_ios", "props": {}},
+      {"id": "r_code_rn", "type": "parent-of", "from": "pillar_edge", "to": "code_rn", "props": {}},
+      {"id": "r_code_unity", "type": "parent-of", "from": "pillar_format", "to": "code_unity", "props": {}},
+      {"id": "r_code_specs", "type": "parent-of", "from": "pillar_format", "to": "code_specs", "props": {}},
+      {"id": "r_code_web", "type": "parent-of", "from": "pillar_format", "to": "code_web", "props": {}},
+      {"id": "r_code_scripts", "type": "parent-of", "from": "pillar_edge", "to": "code_scripts", "props": {}},
+      {"id": "r_code_tests", "type": "parent-of", "from": "pillar_format", "to": "code_tests", "props": {}},
+      {"id": "r_code_docs", "type": "parent-of", "from": "pillar_format", "to": "code_docs", "props": {}},
+      {"id": "r_code_kb", "type": "parent-of", "from": "pillar_agent", "to": "code_kb", "props": {}},
+      {"id": "r_code_claude", "type": "parent-of", "from": "pillar_agent", "to": "code_claude", "props": {}},
+      {"id": "r_ext_xra1", "type": "wire-binds", "from": "code_web", "to": "ext_xra1", "props": {"role": "deploys-to"}},
+      {"id": "r_ext_gh", "type": "wire-binds", "from": "code_specs", "to": "ext_github", "props": {"role": "source-of-truth"}},
+      {"id": "r_ext_tf", "type": "wire-binds", "from": "code_ios", "to": "ext_testflight", "props": {"role": "distributes-to"}},
+      {"id": "r_ext_lk", "type": "wire-binds", "from": "pillar_multi", "to": "ext_livekit", "props": {"role": "transports-on"}},
+      {"id": "r_ext_paper", "type": "wire-binds", "from": "triad_xrai", "to": "ext_paper", "props": {"role": "published-as"}},
+      {"id": "r_ext_patent", "type": "wire-binds", "from": "triad_xrai", "to": "ext_patent", "props": {"role": "protected-by"}},
+      {"id": "r_zoom", "type": "wire-binds", "from": "code_specs", "to": "specs_map_ref", "props": {"role": "zoom-in"}}
+    ],
+    "events": [
+      {"id": "e_map_built", "t": "2026-04-23T00:00:00Z", "type": "xrai.map.built", "entity": null, "metadata": {"scope": "whole-project", "by": "claude-opus-4-7"}}
+    ]
+  }
+}

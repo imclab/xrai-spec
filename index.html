@@ -661,7 +661,13 @@
   <span class="topnav-sep"></span>
   <a href="configs.html" title="Pipelines · modules · hot-swap">pipelines</a>
   <span class="topnav-sep"></span>
+  <a href="jarvis.html" title="jARvis — lean local-first agent">agent</a>
+  <span class="topnav-sep"></span>
+  <a href="conf.html" title="Shared hologram demo · LiveKit">conf</a>
+  <span class="topnav-sep"></span>
   <a href="VIEWER_ARCHITECTURE.md" title="Hybrid viewer architecture">arch</a>
+  <span class="topnav-sep"></span>
+  <a href="RUNTIMES.md" title="Adapter scoreboard · 9 runtimes">runtimes</a>
   <span class="topnav-sep"></span>
   <a href="classic.html" title="Static text-only landing page">read</a>
   <span class="topnav-sep"></span>
@@ -1523,6 +1529,12 @@ document.addEventListener('jarvis:zoom', (e) => {
 document.addEventListener('jarvis:rotate', () => { userInteracted = false; });
 
 // ------- jARvis voice module wiring (always-listening + conversational) -------
+// Recommended UX: jARvis voice + hand tracking ON BY DEFAULT on first visit.
+// Persistent opt-out stored in localStorage; user can re-enable via the toggle buttons.
+const RECOMMENDED_DEFAULT = true;
+const jarvisOptOut = localStorage.getItem('xrai.jarvis.optout') === '1';
+const handsOptOut  = localStorage.getItem('xrai.hands.optout')  === '1';
+
 import('./js/jarvis-web.js').then(({ Jarvis }) => {
   window.__jarvis = new Jarvis({
     resolveQuery,
@@ -1533,6 +1545,23 @@ import('./js/jarvis-web.js').then(({ Jarvis }) => {
     onHudShow: hudShow,
   });
   window.__jarvis.wireToDOM();
+  if (RECOMMENDED_DEFAULT && !jarvisOptOut) {
+    // Auto-enable on first user gesture (browser autoplay/mic policies require gesture)
+    const autoEnable = () => {
+      window.__jarvis.enable();
+      showToast('jARvis on (recommended) — toggle off anytime', 4500);
+      window.removeEventListener('pointerdown', autoEnable);
+      window.removeEventListener('keydown', autoEnable);
+    };
+    window.addEventListener('pointerdown', autoEnable, { once: true });
+    window.addEventListener('keydown', autoEnable, { once: true });
+  }
+  // Persist opt-out when user disables explicitly
+  document.getElementById('jarvis-toggle')?.addEventListener('click', () => {
+    setTimeout(() => {
+      localStorage.setItem('xrai.jarvis.optout', window.__jarvis?.active ? '0' : '1');
+    }, 50);
+  });
 }).catch((e) => {
   console.warn('[jarvis-web] module load failed:', e);
   const btn = document.getElementById('jarvis-toggle');
@@ -1558,10 +1587,96 @@ import('./js/live-web.js').then(({ Live }) => {
   if (btn) { btn.textContent = 'live n/a'; btn.disabled = true; btn.title = 'Module load failed'; }
 });
 
-// ------- Hand navigation (optional — webcam / WebXR) -------
+// ------- Trace recorder (x-ray runtime flow) — load FIRST so subsequent modules can fire events -------
+import('./js/trace.js');
+
+// ------- Auth (Phase 6.36) — Firebase Google sign-in. No-op without firebase_config -------
+import('./js/auth-web.js');
+
+// ------- Google connectors (Phase 6.37) — Calendar/Gmail/Drive via OAuth scopes -------
+import('./js/google-connectors.js');
+
+// ------- Swarm-brain memory sync (Phase 6.40) — Firestore distilled facts per uid -------
+import('./js/memory-sync.js');
+
+// ------- Past CC sessions as memory tier (Phase 6.39) — read-only transcripts -------
+import('./js/sessions-connector.js');
+
+// ------- X-ray graph: live module nodes injected into ForceGraph + click→inspector -------
+Promise.all([
+  import('./js/xray-graph.js'),
+  import('./js/dimension-morph.js'),
+]).then(([{ attachXray }, { DimensionMorph }]) => {
+  attachXray({
+    Graph, nodes, links,
+    openInspectorForNode: async (node, moduleSpec) => {
+      const insp = window.__inspector;
+      if (!insp) return;
+      if (!insp.open) await insp.toggle(true);
+      // Module nodes route to stack tab + matching layer; other nodes route to essence tab
+      if (moduleSpec?.layerHint) {
+        if (insp.tab !== 'stack') await insp._switchTab('stack');
+        setTimeout(() => {
+          (insp.rowsEl?.querySelectorAll('.row .label') || []).forEach(labelEl => {
+            if (labelEl.textContent.toLowerCase().includes(moduleSpec.layerHint)) {
+              labelEl.closest('.row').classList.add('open');
+              labelEl.closest('.row').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          });
+        }, 180);
+      } else if (node.file) {
+        if (insp.tab !== 'essence') await insp._switchTab('essence');
+      }
+    },
+    distillForFile: async (file) => {
+      const insp = window.__inspector;
+      if (!insp) return;
+      if (!insp.open) await insp.toggle(true);
+      if (insp.tab !== 'essence') await insp._switchTab('essence');
+      // Pre-fill the path input
+      setTimeout(() => {
+        const inp = document.querySelector('#essence-path');
+        const btn = document.querySelector('#essence-go2');
+        if (inp && btn) { inp.value = file; btn.click(); }
+      }, 200);
+    },
+  });
+  const morph = new DimensionMorph({ Graph, THREE });
+  morph.init();
+  window.__dim = morph;
+}).catch(e => console.warn('[xray-graph/dim-morph] load failed:', e));
+
+// ------- Perceptual-frame keeper (always-on; doctrine § Perceptual Frame Invariant) -------
+import('./js/perceptual-frame.js').then(() => {
+  if (window.__perceptualFrame) {
+    window.__perceptualFrame.attach({ Graph, nodes });
+    console.log('[perceptual-frame] attached · refresh ~4Hz');
+  }
+}).catch(e => console.warn('[perceptual-frame] load failed:', e));
+
+// ------- Stack Inspector (under-the-hood drill-down · press `i`) -------
+import('./js/stack-inspector.js').catch(e => console.warn('[stack-inspector] load failed:', e));
+
+// ------- Hand navigation (recommended-on by default — webcam / WebXR) -------
+import('./js/reticle-web.js'); // visible feedback layer + gesture key (auto-init)
 import('./js/hands-web.js').then(({ Hands }) => {
   window.__hands = new Hands({ Graph, showToast });
   window.__hands.wireToDOM();
+  if (RECOMMENDED_DEFAULT && !handsOptOut) {
+    // Auto-enable on first user gesture (camera permission requires gesture)
+    const autoHandsEnable = () => {
+      window.__hands.enable();
+      window.removeEventListener('pointerdown', autoHandsEnable);
+      window.removeEventListener('keydown', autoHandsEnable);
+    };
+    window.addEventListener('pointerdown', autoHandsEnable, { once: true });
+    window.addEventListener('keydown', autoHandsEnable, { once: true });
+  }
+  document.getElementById('hands-toggle')?.addEventListener('click', () => {
+    setTimeout(() => {
+      localStorage.setItem('xrai.hands.optout', window.__hands?.active ? '0' : '1');
+    }, 50);
+  });
   // Hand click → raycast into nearest node by normalized screen coords
   document.addEventListener('hands:click', (e) => {
     const { x, y } = e.detail;

@@ -1,0 +1,74 @@
+{
+  "xrai_version": "1.0",
+  "id": "00000000-0000-4000-a000-000000000012",
+  "created_at": "2026-04-24T00:00:00Z",
+  "author": {"type": "agent", "id": "claude-opus-4-7@portals-v4"},
+  "origin": {"app": "portals", "version": "v4", "scene": "VoxelBurstFromPrompt"},
+
+  "metadata": {
+    "title": "Voxel burst — infinite complexity from one sparse prompt",
+    "subset": "jarvis_use_cases",
+    "thesis": "Voice prompt → goal codon → seeded voxel emitter → Keijiro-pattern GPU burst. KB-of-rules in, MB-of-rendered-pixels out. Same scene parses on Three.js, PlayCanvas, Unity VFX Graph.",
+    "voice_prompt": "explode a galaxy of cyan voxels around me",
+    "intent": {
+      "theme": "cosmic",
+      "primitive": "voxel",
+      "color": "cyan",
+      "behavior": "burst-then-drift",
+      "scope": "around-user"
+    },
+    "generation": {
+      "approach": "goal-oriented + seeded procedural",
+      "seed": 1024,
+      "voxel_count": 2048,
+      "burst_radius_m": 1.6,
+      "drift_velocity_m_s": 0.12,
+      "lifetime_s": 8,
+      "pattern_ref": "Keijiro Rcam2 voxel emitter family"
+    },
+    "alignment": {
+      "constitution": ["§ Wonder + Expressive Freedom", "§ XRAI Philosophy: The Code of Living Scenes (DNA → phenotype)"],
+      "doctrine_test": "≤ 1 KB JSON across the bridge → 60 FPS GPU burst at 2048 voxels = sparse intent → rich phenotype",
+      "patterns": ["Keijiro pattern 5 (build/run split)", "Keijiro pattern 6 (index-based data)", "Keijiro pattern 8 (traversal cap)"]
+    }
+  },
+
+  "scene": {
+    "anchors": [
+      {"id": "anchor_user", "type": "ar.world", "metadata": {"alignment": "world", "follow": "user-head"}}
+    ],
+    "entities": [
+      {"id": "voxel_burst",
+       "type": "object.emitter",
+       "model_id": null,
+       "transform": {"position": [0, 1.2, 0], "rotation": [0,0,0,1], "scale": [1,1,1]},
+       "components": [
+         {"type": "vfx.voxel_burst", "props": {
+           "preset": "keijiro_rcam2_burst",
+           "count": 2048,
+           "radius_m": 1.6,
+           "color": "cyan",
+           "color_jitter": 0.18,
+           "drift_velocity_m_s": 0.12,
+           "lifetime_s": 8,
+           "seed": 1024,
+           "loop": false
+         }},
+         {"type": "physics.swirl", "props": {"strength": 0.4, "axis": [0,1,0]}}
+       ],
+       "metadata": {"role": "phenotype.expressed"}},
+      {"id": "ambient_glow",
+       "type": "object.light",
+       "model_id": null,
+       "transform": {"position": [0, 1.4, 0], "rotation": [0,0,0,1], "scale": [1,1,1]},
+       "components": [{"type": "light.point", "props": {"color": "cyan", "intensity": 0.45, "range_m": 3}}]}
+    ],
+    "relations": [
+      {"id": "r_burst_anchor", "type": "tracks", "from": "voxel_burst", "to": "anchor_user", "props": {}},
+      {"id": "r_glow_burst",   "type": "parent-of", "from": "voxel_burst", "to": "ambient_glow", "props": {}}
+    ],
+    "events": [
+      {"id": "e_spawn", "t": "2026-04-24T00:00:00Z", "type": "burst.spawned", "entity": "voxel_burst", "metadata": {"by": "voice → intent → goal-codon → emitter"}}
+    ]
+  }
+}

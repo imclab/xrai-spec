@@ -1,0 +1,380 @@
+{
+  "xrai_version": "1.0",
+  "id": "00000000-0000-4000-a000-000000000011",
+  "created_at": "2026-04-24T00:00:00Z",
+  "author": {"type": "agent", "id": "claude-opus-4-7@portals-v4"},
+  "origin": {"app": "portals", "version": "v4", "scene": "JarvisSystemDNA"},
+
+  "metadata": {
+    "title": "Jarvis + XRAI — End-to-End System DNA (sparse, decodable)",
+    "thesis": "Sparse voice/vision intent → XRAI codons → rich VFX-graph world. One document, many runtimes, persistent + remixable + shared.",
+    "stack_assumed": "iOS native shell · React Native UI · Unity-as-library · LiveKit voice · ARKit body · Holokit hands · VFX Graph",
+    "principle": "DNA, not transcript. Send the smallest payload across the bridge that the runtime can fully decode into the optimal scene. Anything inferable on the Unity side never crosses the bridge.",
+
+    "encoding": {
+      "purpose": "Self-describing rules so any encoder/decoder (AI or human) can round-trip this doc without prior knowledge.",
+      "spec_refs": {
+        "schema":          "../SPEC.md",
+        "ontology":        "../rfcs/0013-master-ontology-faceted-learning.md",
+        "decoder_contract":"../rfcs/0012-decoder-contract.md",
+        "archetypes":      "../rfcs/0010-archetypes.md",
+        "blueprints":      "../rfcs/0011-blueprints.md",
+        "stream_ssE":      "../rfcs/0009-stream-ingestion-sparse-semantic-encoding.md"
+      },
+      "semantic_rules": [
+        "ENTITY = noun (a thing). RELATION = verb (a tie between two things). EVENT = moment (a t-stamped happening). ANCHOR = where (a frame of reference).",
+        "Every entity has stable {id, type, transform}. Type is a dotted slug from the v1.0 closed list (object.primitive | object.glb | object.hologram | object.light | object.emitter | object.wire-source).",
+        "Every relation has {from, to, type}. Type is a closed list (parent-of | wire-binds | reacts-to-audio | tracks). Add new relation kinds via RFC, not inline.",
+        "Every codon (entity used as DNA) carries metadata.codon_kind ∈ {intent | entity | relation | event | memory | predict} + metadata.schema describing its payload.",
+        "Cross-bridge payloads MUST be sparse: only fields the runtime cannot infer. Position MAY be omitted if anchor-relative defaults apply.",
+        "Unknown fields MUST be preserved on round-trip (Postel forward-compat, SPEC §Conformance §3)."
+      ],
+      "ontology_facets": {
+        "doc": "RFC 0013 — every codon SHOULD carry a faceted tag set; decoders dispatch on facets, not on string types.",
+        "this_doc_facets": {
+          "A1":  "system",
+          "A3":  "structured",
+          "A4":  "hypergraph",
+          "A6":  "schema",
+          "A12": "T2-partially-validated",
+          "A18": "strongly-emergent"
+        }
+      },
+      "encode_steps": [
+        "1. Pick author + origin + new UUID + ISO-8601 created_at.",
+        "2. List anchors (real-world or virtual reference frames).",
+        "3. For each thing → emit one entity codon with {id, type, transform, components[], metadata.codon_kind?}.",
+        "4. For each tie between things → emit one relation {from, to, type}.",
+        "5. For each happening → emit one event {t, type, entity?}.",
+        "6. Add metadata.encoding.ontology_facets[id] for any codon a downstream decoder must dispatch on.",
+        "7. Validate: run runtimes/_conformance/validate_fixtures.cjs (or any v1.0 validator)."
+      ],
+      "decode_steps": [
+        "1. Read xrai_version. If !== '1.0', look up compatible decoder per RFC 0012.",
+        "2. Build anchor table (anchor.id → frame).",
+        "3. Spawn entities in dependency order (parents before children via parent-of relations).",
+        "4. Wire components to runtime systems by component.type (e.g. vfx.particles → VFX Graph emitter; voice.livekit → LiveKit RN room).",
+        "5. Apply relations: parent-of → transform parenting; wire-binds → data channel; reacts-to-audio → audio analysis tap; tracks → anchor follow.",
+        "6. Subscribe to events stream; dispatch by event.type.",
+        "7. Persist updates back as XRAI deltas; broadcast over runtime.multiplayer if present."
+      ],
+      "round_trip_invariant": "decode(encode(scene)) === scene  (modulo float precision + unknown-field preservation per SPEC §Conformance)."
+    },
+
+    "decoding_rule": "Each codon entity's `type` + `props` is a contract. Runtimes implement the contract; producers MUST NOT inline the rendered result.",
+
+    "alignment": {
+      "constitution": {
+        "doc": "../../../constitution.md",
+        "sight_triad": {
+          "x_ray_vision":  "encoding.semantic_rules + ontology_facets make the dispatch path inspectable — no black box between intent and pixels.",
+          "gods_eye_view": "scene.relations form the topology layer — any decoder can render the whole graph at any zoom.",
+          "infinite_zoom": "codon.memory + codon.predict + scene.events span past/present/future on one substrate; LiveKit room federates across minds; A5 scale facets span molecule → cosmos."
+        },
+        "five_pillars": {
+          "edge":         "edge.voice + edge.vision.* + edge.intent + edge.tts run on-device first, cloud-augmented.",
+          "agent":        "triad.jarvis + agent.world_model + codon.memory carry tools, rules, tiered memory, prediction.",
+          "format":       "this whole document IS the XRAI substrate — sparse DNA, faceted ontology, decoder-pluggable.",
+          "multiplayer":  "runtime.multiplayer broadcasts XRAI deltas over LiveKit shared room.",
+          "authorship":   "voice → intent codon → entity codons → save/edit/remix as XRAI doc bound to anchor."
+        },
+        "north_star_clauses_addressed": [
+          "Recursive encode/decode/transcode symbols → ontologies (encode_steps + decode_steps + RFC 0013 facets)",
+          "Real-time reconstruction & generation of dynamic world models (agent.world_model + runtime.unity.world_gen)",
+          "N-dim hyper-graphs · layered compounding abstractions (relations + RFC 0002 hyperedges roadmap)",
+          "Thought · voice · gesture → action (edge.voice + edge.intent + edge.vision.holokit)"
+        ],
+        "bio_mimetic": "DNA = this XRAI doc · phenotype = Unity scene · epigenetics = codon.memory + anchor + room context (constitution § XRAI Philosophy: The Code of Living Scenes)."
+      },
+      "paper_cvpr2026": {
+        "id": "ReGen4D-14",
+        "venue": "CVPR 2026 4D World Models workshop",
+        "submitted": "2026-04-10",
+        "proofs_referenced": {
+          "Proof #1 — 360+ VFX at 60 FPS":         "runtime.unity.vfx components honor the 5-property Keijiro contract; perf budget preserved by sparse codon payloads (≤200 B intent, ≤4 KB bridge msg).",
+          "Proof #3 — composition pipeline":       "edge.intent → codon.intent → runtime.unity.world_gen IS the creator-facing reconstruction+generation bridge."
+        }
+      },
+      "patent_provisional": {
+        "id": "spec 021-pthi",
+        "office": "USPTO provisional",
+        "filed": "2026-04-08",
+        "claims_referenced": [
+          "Sparse-semantic encoding for spatial intent (codon.intent + RFC 0009 SSE)",
+          "Decoder contract for pluggable runtimes (RFC 0012; runtime.unity.* entities here)",
+          "Faceted ontology for cross-domain dispatch (RFC 0013; encoding.ontology_facets here)",
+          "User-owned, anchor-bound, remixable spatial documents (runtime.persistence + anchor_user_space)"
+        ]
+      }
+    },
+
+    "soundbites": {
+      "kid": ["Your world does magic with you.", "Your hands shape the world.", "See what you imagine."],
+      "vc":  ["Context is the next platform.", "One format, every runtime.", "Worlds that remember you."]
+    },
+
+    "acquisition_framing": {
+      "comparables": ["World Labs", "OpenClaw / 1X", "Manus"],
+      "targets":     ["Anthropic", "OpenAI", "Meta", "Apple", "Google", "NVIDIA"],
+      "moat":        "XRAI = open spatial DNA. Provisional patent filed. Edge-first. Cross-runtime. User-owned worlds + memory."
+    },
+
+    "twelve_hour_mvp_gate": [
+      "Voice → intent codon (≤200 bytes JSON)",
+      "Bridge sends intent codon to Unity (no rendered geometry)",
+      "Unity decodes codon → spawns VFX-graph entity",
+      "ARKit object classify → entity codon appended",
+      "XRAI doc saves to anchor + reloads on next session",
+      "LiveKit room broadcasts XRAI deltas to peers"
+    ]
+  },
+
+  "scene": {
+    "anchors": [
+      {"id": "anchor_user_space", "type": "ar.world", "metadata": {"alignment": "world", "persistent": true, "shared_via": "livekit-room"}}
+    ],
+
+    "entities": [
+      {"id": "triad.portals", "type": "object.primitive", "model_id": 0,
+       "transform": {"position": [-1.5, 0, 0], "rotation": [0,0,0,1], "scale": [0.7,0.7,0.7]},
+       "material": {"color": "red", "preset": "neon"},
+       "metadata": {"role": "essence.system", "decodes_to": "iOS shell hosting RN + Unity-as-library", "responsibility": "lifecycle, transport, persistence, sharing"}},
+
+      {"id": "triad.xrai", "type": "object.primitive", "model_id": 0,
+       "transform": {"position": [0, 0, 0], "rotation": [0,0,0,1], "scale": [0.85,0.85,0.85]},
+       "material": {"color": "gold", "preset": "glass"},
+       "metadata": {"role": "essence.format", "decodes_to": "Open spatial graph: anchors + entities + relations + events + memory + intent + predict codons", "license": "MIT spec, patent-pending implementation"}},
+
+      {"id": "triad.jarvis", "type": "object.primitive", "model_id": 0,
+       "transform": {"position": [1.5, 0, 0], "rotation": [0,0,0,1], "scale": [0.7,0.7,0.7]},
+       "material": {"color": "cyan", "preset": "neon"},
+       "metadata": {"role": "essence.agent", "decodes_to": "Continuous voice agent w/ tools + rules + tiered memory + intent extraction + prediction"}},
+
+      {"id": "edge.voice", "type": "object.wire-source",
+       "transform": {"position": [-2.4, -1.2, 0.8], "rotation": [0,0,0,1], "scale": [0.3,0.3,0.3]},
+       "components": [{"type": "voice.livekit", "props": {"transport": "wss", "room": "user.session", "in_codec": "opus"}}],
+       "metadata": {"role": "input.audio", "decodes_to": "LiveKit RN SDK; mic → LiveKit room → ASR (cloud Gemini Live OR local Whisper-tiny fallback)", "latency_target_ms": 250}},
+
+      {"id": "edge.tts", "type": "object.wire-source",
+       "transform": {"position": [-1.6, -1.2, 0.8], "rotation": [0,0,0,1], "scale": [0.25,0.25,0.25]},
+       "components": [{"type": "voice.tts", "props": {"primary": "gemini-live", "fallback": "piper"}}],
+       "metadata": {"role": "output.audio", "decodes_to": "Cloud TTS for natural voice; on-device Piper for offline degrade", "latency_target_ms": 200}},
+
+      {"id": "edge.vision.arkit", "type": "object.wire-source",
+       "transform": {"position": [-0.8, -1.2, 0.8], "rotation": [0,0,0,1], "scale": [0.3,0.3,0.3]},
+       "components": [{"type": "vision.arkit", "props": {"signals": ["body22", "object-classify", "plane", "mesh", "depth"]}}],
+       "metadata": {"role": "input.vision", "decodes_to": "ARKit full-body 22-joint + object labels + plane geometry; emits one entity codon per labeled object"}},
+
+      {"id": "edge.vision.holokit", "type": "object.wire-source",
+       "transform": {"position": [0, -1.2, 0.8], "rotation": [0,0,0,1], "scale": [0.25,0.25,0.25]},
+       "components": [{"type": "vision.holokit", "props": {"signals": ["hands26", "pose"]}}],
+       "metadata": {"role": "input.vision", "decodes_to": "Holokit hand tracking + pose detection; per-frame skeletal codon"}},
+
+      {"id": "edge.intent", "type": "object.wire-source",
+       "transform": {"position": [0.8, -1.2, 0.8], "rotation": [0,0,0,1], "scale": [0.3,0.3,0.3]},
+       "components": [{"type": "nlp.intent", "props": {"primary": "gemini-live", "local_fallback": ["compromise", "natural", "tfjs-mini"], "max_payload_bytes": 200}}],
+       "metadata": {"role": "transform.text2codon", "decodes_to": "Voice text → {theme, environment, mood, effects[]} codon. Sparse keys only.", "example_in": "a mystical forest with floating lights", "example_out": {"theme": "mystical", "environment": "forest", "effects": ["floating-lights"]}}},
+
+      {"id": "codon.intent", "type": "object.primitive", "model_id": 0,
+       "transform": {"position": [-1.6, -2.4, 0], "rotation": [0,0,0,1], "scale": [0.35,0.35,0.35]},
+       "material": {"color": "magenta", "preset": "neon"},
+       "metadata": {"codon_kind": "intent", "schema": {"theme": "string", "environment": "string", "mood": "string", "effects": "string[]"}, "max_bytes": 200, "decoder": "runtime.unity.world_gen"}},
+
+      {"id": "codon.entity", "type": "object.primitive", "model_id": 0,
+       "transform": {"position": [-0.8, -2.4, 0], "rotation": [0,0,0,1], "scale": [0.35,0.35,0.35]},
+       "material": {"color": "magenta", "preset": "neon"},
+       "metadata": {"codon_kind": "entity", "schema": {"id": "string", "type": "enum(object.primitive|object.glb|object.hologram|object.emitter|object.light|object.wire-source)", "transform": "PRS", "components": "Component[]"}, "decoder": "runtime.unity.spawner"}},
+
+      {"id": "codon.relation", "type": "object.primitive", "model_id": 0,
+       "transform": {"position": [0, -2.4, 0], "rotation": [0,0,0,1], "scale": [0.3,0.3,0.3]},
+       "material": {"color": "magenta", "preset": "neon"},
+       "metadata": {"codon_kind": "relation", "schema": {"from": "id", "to": "id", "type": "enum(parent-of|wire-binds|reacts-to-audio|tracks)"}, "decoder": "runtime.unity.wirer"}},
+
+      {"id": "codon.event", "type": "object.primitive", "model_id": 0,
+       "transform": {"position": [0.8, -2.4, 0], "rotation": [0,0,0,1], "scale": [0.3,0.3,0.3]},
+       "material": {"color": "magenta", "preset": "neon"},
+       "metadata": {"codon_kind": "event", "schema": {"t": "ISO-8601", "type": "string", "entity": "id?"}, "decoder": "runtime.unity.event_bus"}},
+
+      {"id": "codon.memory", "type": "object.primitive", "model_id": 0,
+       "transform": {"position": [1.6, -2.4, 0], "rotation": [0,0,0,1], "scale": [0.35,0.35,0.35]},
+       "material": {"color": "magenta", "preset": "neon"},
+       "metadata": {"codon_kind": "memory", "tiers": {"short": "ring-buffer (last 60s)", "medium": "session SQLite", "long": "distilled facts + preferences"}, "schema": {"key": "string", "value": "any", "tier": "short|medium|long", "ttl_s": "int?"}, "decoder": "agent.memory_store"}},
+
+      {"id": "codon.predict", "type": "object.primitive", "model_id": 0,
+       "transform": {"position": [2.4, -2.4, 0], "rotation": [0,0,0,1], "scale": [0.3,0.3,0.3]},
+       "material": {"color": "magenta", "preset": "neon"},
+       "metadata": {"codon_kind": "predict", "schema": {"trajectories": [{"action": "string", "p": "float", "horizon_s": "int"}]}, "decoder": "agent.world_model"}},
+
+      {"id": "agent.world_model", "type": "object.wire-source",
+       "transform": {"position": [2.0, -1.2, 0.8], "rotation": [0,0,0,1], "scale": [0.3,0.3,0.3]},
+       "components": [{"type": "ml.world_model", "props": {"runtime_options": ["unity-ml-agents", "onnx-mobile", "tinyml"], "scope": "user-local"}}],
+       "metadata": {"role": "predict", "decodes_to": "Per-user predictive substrate; consumes recent codons → emits codon.predict; trainable on-device"}},
+
+      {"id": "agent.comfort_loop", "type": "object.wire-source",
+       "transform": {"position": [2.8, -1.2, 0.8], "rotation": [0,0,0,1], "scale": [0.35,0.35,0.35]},
+       "components": [
+         {"type": "sense.behavioral",    "props": {"signals": ["gesture-retry-rate", "reverse-action-within-Ns", "dwell-then-bounce", "command-cancel-rate", "time-to-first-action"]}},
+         {"type": "sense.verbal",        "props": {"signals": ["transcript-prosody", "keyword-scorer", "cadence", "pause-length", "interruption-rate"]}},
+         {"type": "sense.physiological", "props": {"opt_in": true, "signals": ["mediapipe.facelandmarker.valence", "gaze-stability", "webxr-headpose-jitter"], "future": ["HR", "HRV", "skin-conductance"]}},
+         {"type": "respond.closed_loop", "props": {"frustration": "ghost-hand-demo+voice-alt", "discovery": "silent-particle-burst", "confusion": "modality-switch", "flow": "suppress-chrome"}},
+         {"type": "gesture.vocabulary", "props": {"pinch": "select", "open-palm-push-pull": "fly-fwd-back", "open-palm-tilt": "orbit", "two-hand-spread": "zoom", "closed-fist-hold": "back-cancel"}},
+         {"type": "gesture.velocity_semantics", "props": {"panel_style": "semi-transparent overlay (not opaque, present but not in-the-way)", "slow_swipe_v_lt_400px_s": "scroll-or-next-page", "medium_swipe_v_400_900": "scroll-or-next-page (faster)", "fast_swipe_v_gt_900px_s": "hide-or-peripheralize panel", "rationale": "swipe velocity is intent: slow=engage / fast=dismiss. Locked 2026-04-24.", "applies_to": ["xra1.com side panel", "future Unity/RN HUD pullouts"]}}
+       ],
+       "metadata": {"role": "auto_learn.intent", "load_bearing": true, "decodes_to": "Adaptive intent-sensing loop. Captures behavioral + verbal + (opt-in) physiological signals, scores user state (frustration / flow / discovery / confusion), dispatches closed-loop responses. Feeds codon.sentiment into codon.memory + agent.world_model. A/B testing on steroids, per-user, in-flight.", "constitution_ref": "§ Doing Without Doing — Adaptive Intent-Sensing Auto-Loop (load-bearing)", "spec_ref": "029-jarvis-2.0 §Architecture · RFC 0009 SSE · RFC 0013 ontology"}},
+
+      {"id": "codon.sentiment", "type": "object.primitive", "model_id": 0,
+       "transform": {"position": [3.2, -2.4, 0], "rotation": [0,0,0,1], "scale": [0.3,0.3,0.3]},
+       "material": {"color": "magenta", "preset": "neon"},
+       "metadata": {"codon_kind": "sentiment", "schema": {"valence": "float [-1,1]", "arousal": "float [0,1]", "state": "enum(frustration|flow|discovery|confusion|delight|neutral)", "confidence": "float [0,1]", "source_layer": "behavioral|verbal|physiological", "t": "ISO-8601"}, "decoder": "agent.comfort_loop · agent.world_model"}},
+
+      {"id": "codon.point_ray", "type": "object.primitive", "model_id": 0,
+       "transform": {"position": [3.6, -2.4, 0.5], "rotation": [0,0,0,1], "scale": [0.3,0.3,0.3]},
+       "material": {"color": "cyan", "preset": "neon"},
+       "metadata": {"codon_kind": "point_ray", "schema": {"hand": "L|R", "finger": "thumb|index|middle|ring|pinky", "origin_xyz": "vec3 (fingertip world)", "dir_xyz": "vec3 (PIP→tip normalized)", "hit_entity_id": "string?", "hit_xyz": "vec3?", "intent_score": "float [0,1] (steadiness × dwell)", "t": "ISO-8601"}, "rendered_as": "thin laser line + small reticle at hit (≤8px), per-finger color tint", "produced_by": ["edge.vision.holokit (iOS Holokit hand26)", "MediaPipe HandLandmarker (web 21 landmarks)", "WebXR XRHand (Quest/visionOS native)", "ARKit Face anchor (single-finger fallback)"], "privacy": "local-only by default; opt-in to share via runtime.multiplayer"}},
+
+      {"id": "codon.gaze_ray", "type": "object.primitive", "model_id": 0,
+       "transform": {"position": [4.0, -2.4, 0.5], "rotation": [0,0,0,1], "scale": [0.3,0.3,0.3]},
+       "material": {"color": "gold", "preset": "glass"},
+       "metadata": {"codon_kind": "gaze_ray", "schema": {"eye": "L|R|fused", "origin_xyz": "vec3 (cyclopean eye)", "dir_xyz": "vec3", "hit_entity_id": "string?", "hit_xyz": "vec3?", "dwell_ms": "int", "saccade_to_id": "string? (last entity gaze left)", "confidence": "float [0,1]", "t": "ISO-8601"}, "rendered_as": "soft halo (≤24px, low-alpha) at hit point — debug-only visible", "produced_by": ["ARKit Face anchor lookAtPoint + leftEyeTransform + rightEyeTransform (iOS, real gaze)", "MediaPipe FaceLandmarker iris landmarks (web, approximate)", "WebGazer.js (web, calibration-based, optional)", "visionOS gaze (system-mediated 'look at' hover ONLY — Apple privacy gate; raw vector NOT exposed)"], "privacy": "RAW GAZE is local-only and NEVER crosses the bridge unless explicit per-session opt-in. Aggregate dwell-on-entity may cross with consent."}},
+
+      {"id": "runtime.reticle", "type": "object.wire-source",
+       "transform": {"position": [3.6, -3.6, 0], "rotation": [0,0,0,1], "scale": [0.3,0.3,0.3]},
+       "components": [{"type": "render.pointing", "props": {"finger_reticle": "small radical (≤8px) at ray hit", "finger_beam": "thin line OR low-cone flashlight (user-toggleable, minimal)", "gaze_halo": "soft glow (≤24px, low-alpha, debug-only by default)", "user_controls": ["toggle finger ray viz", "pick reticle vs beam vs cone", "toggle gaze halo (debug)"]}}],
+       "metadata": {"role": "render.pointing", "decodes_to": "Renders codon.point_ray + codon.gaze_ray as the user-visible feedback layer. Default minimal; user-controllable."}},
+
+      {"id": "codon.perceptual_frame", "type": "object.primitive", "model_id": 0,
+       "transform": {"position": [4.4, -2.4, 0.5], "rotation": [0,0,0,1], "scale": [0.4,0.4,0.4]},
+       "material": {"color": "red", "preset": "neon"},
+       "metadata": {"codon_kind": "perceptual_frame", "load_bearing": true, "refresh_hz_min": 4, "refresh_hz_target": "per-frame", "schema": {"screen_focus": {"focused_entity_id": "string?", "visible_region": "rect", "active_panel": "string?", "open_modal": "string?", "selection_set": "string[]", "gaze_hit_id": "string?"}, "camera_frame_summary": {"objects_detected": "[{label, bbox, confidence}]", "faces_count": "int", "hands_count": "int", "scene_class": "string?", "lighting": "enum(dim|normal|bright)"}, "recent_history": "ring buffer (last 20 events)", "predicted_next": "[{action, p, horizon_s}] top-K (k=3-5)", "attention_distribution": "{entity_id: dwell_ms}", "session_arc": {"started_at": "ISO-8601", "time_on_task_s": "int", "active_goal": "string?", "completed_actions": "string[]", "abandoned_actions": "string[]"}, "t": "ISO-8601"}, "invariants": ["always-on (never empty during active session)", "always-current (>5s stale → pause agent)", "always-grounded (consult before any answer/action)", "always-feeding-prediction (appended to memory + agent.world_model)", "raw camera + raw gaze local-only; summaries only cross bridge with consent"], "decoder": "agent.perceptual_frame_keeper · jARvis answer pipeline"}},
+
+      {"id": "agent.perceptual_frame_keeper", "type": "object.wire-source",
+       "transform": {"position": [4.4, -1.2, 0.8], "rotation": [0,0,0,1], "scale": [0.4,0.4,0.4]},
+       "components": [
+         {"type": "watch.viewport",        "props": {"signals": ["focused-entity-id", "camera-position", "visible-bbox-set", "active-panel", "open-modal", "selection-set"]}},
+         {"type": "watch.camera",          "props": {"signals": ["mediapipe.facelandmarker", "mediapipe.handlandmarker", "object-classify", "scene-class"], "raw_pixels": "local-only NEVER cross bridge"}},
+         {"type": "watch.history",         "props": {"buffer_size": 20, "events": ["nav", "click", "voice", "gesture", "gaze-saccade"]}},
+         {"type": "watch.session_arc",     "props": {"tracks": ["session-start", "time-on-task", "active-goal", "completed-actions", "abandoned-actions"]}},
+         {"type": "predict.next",          "props": {"source": "agent.world_model", "k": 5, "min_confidence": 0.3}},
+         {"type": "respond.closed_loop",   "props": {"answer_from_screen": "if user asks about entity in screen_focus, answer from screen not from prebuilt index", "dwell_offer": "if dwell>3s on entity without action → proactive offer", "friction_suppress": "if user keeps backing out of destination → mark friction + suppress in predicted_next", "opportunistic_index": "new camera object-class → index with consent", "prewarm_high_confidence": "if predicted_next.p>0.7 and cost low → pre-warm fetch / scene preload"}}
+       ],
+       "metadata": {"role": "perceptual.always_on", "load_bearing": true, "decodes_to": "Live perceptual frame keeper. Maintains codon.perceptual_frame at ≥4 Hz. Feeds every agent answer + every prediction. Refusing 'I don't have X in my index' when X is in screen_focus or camera_frame_summary is a doctrine violation.", "constitution_ref": "§ Wonder + Expressive Freedom → Perceptual Frame Invariant (load-bearing — Paramount)", "spec_ref": "029-jarvis-2.0 tasks.md Phase 6.11+"}},
+
+      {"id": "agent.expressive_hands", "type": "object.wire-source",
+       "transform": {"position": [3.6, -1.2, 0.8], "rotation": [0,0,0,1], "scale": [0.35,0.35,0.35]},
+       "components": [
+         {"type": "gesture.multi_finger", "props": {
+           "air_piano":     "per-finger downward strike → trigger note/event keyed by finger id + velocity",
+           "conducting":    "open-hand arc + velocity → tempo / intensity envelope",
+           "sculpting":     "two-hand pinch + relative-motion → push/pull/smooth/twist on selected entity",
+           "spread_pinch":  "five-finger spread→open / pinch-all→close (group operation)",
+           "thumb_dial":    "thumb rotates against curled index → fine continuous parameter (volume/scale/hue)",
+           "two_finger_pen":"index+middle extended → freehand spatial draw"
+         }},
+         {"type": "gesture.combinable", "props": {"rule": "any vocabulary above is composable per hand and across hands; never restrict to single-finger mouse emulation"}}
+       ],
+       "metadata": {"role": "input.expressive", "decodes_to": "Multi-finger expressive vocabulary. Frees input from mouse paradigm. Each gesture emits codon.point_ray (per finger) + a gesture-class event. Air-piano / conducting / sculpting are first-class, not edge cases."}},
+
+      {"id": "runtime.unity.bridge", "type": "object.wire-source",
+       "transform": {"position": [-2.4, -3.6, 0], "rotation": [0,0,0,1], "scale": [0.35,0.35,0.35]},
+       "components": [{"type": "bridge.rn_unity", "props": {"format": "json", "max_msg_bytes": 4096, "channels": ["intent", "entity", "relation", "event", "memory.delta"]}}],
+       "metadata": {"role": "transport", "decodes_to": "RN ↔ Unity native module. ONLY codons cross this boundary. No GLBs, no textures, no rendered prose."}},
+
+      {"id": "runtime.unity.world_gen", "type": "object.wire-source",
+       "transform": {"position": [-1.2, -3.6, 0], "rotation": [0,0,0,1], "scale": [0.35,0.35,0.35]},
+       "components": [{"type": "gen.goal_oriented", "props": {"approaches": ["parameter", "template", "goal-oriented"], "primary": "goal-oriented", "library": "vfx-graph + glb + shader presets"}}],
+       "metadata": {"role": "decoder.intent", "decodes_to": "codon.intent → resolved set of entity codons via theme→preset map + procedural seeding"}},
+
+      {"id": "runtime.unity.vfx", "type": "object.wire-source",
+       "transform": {"position": [0, -3.6, 0], "rotation": [0,0,0,1], "scale": [0.4,0.4,0.4]},
+       "components": [{"type": "vfx.graph_library", "props": {"presets": "Keijiro-validated patterns", "rule": "5-property contract per emitter"}}],
+       "metadata": {"role": "render.fx", "decodes_to": "Spawns + tunes VFX Graph emitters from entity.components[type=vfx.*]"}},
+
+      {"id": "runtime.persistence", "type": "object.wire-source",
+       "transform": {"position": [1.2, -3.6, 0], "rotation": [0,0,0,1], "scale": [0.3,0.3,0.3]},
+       "components": [{"type": "store.xrai", "props": {"local": "filesystem + SQLite", "remote": "user-owned object store", "anchor_binding": "ARKit world anchor UUID"}}],
+       "metadata": {"role": "save_load_remix", "decodes_to": "Whole XRAI doc save/load keyed by anchor; supports diff + remix + fork"}},
+
+      {"id": "runtime.multiplayer", "type": "object.wire-source",
+       "transform": {"position": [2.4, -3.6, 0], "rotation": [0,0,0,1], "scale": [0.35,0.35,0.35]},
+       "components": [{"type": "transport.livekit_room", "props": {"channel": "xrai.deltas", "conflict": "last-writer-wins+CRDT-roadmap"}}],
+       "metadata": {"role": "share", "decodes_to": "Peers in room receive append-only XRAI deltas; volumetric video of presenters wired as object.hologram entities"}}
+    ],
+
+    "relations": [
+      {"id": "r.t.format", "type": "wire-binds", "from": "triad.portals", "to": "triad.xrai", "props": {"role": "uses-as-DNA"}},
+      {"id": "r.t.agent",  "type": "wire-binds", "from": "triad.portals", "to": "triad.jarvis", "props": {"role": "hosts"}},
+      {"id": "r.j.codons", "type": "wire-binds", "from": "triad.jarvis", "to": "triad.xrai", "props": {"role": "reads-writes"}},
+
+      {"id": "r.voice2intent",  "type": "wire-binds", "from": "edge.voice",  "to": "edge.intent",   "props": {"channel": "asr.text"}},
+      {"id": "r.intent2codon",  "type": "wire-binds", "from": "edge.intent", "to": "codon.intent",  "props": {"channel": "transform"}},
+      {"id": "r.vision2entity", "type": "wire-binds", "from": "edge.vision.arkit",   "to": "codon.entity", "props": {"channel": "object-classify→entity"}},
+      {"id": "r.hands2entity",  "type": "wire-binds", "from": "edge.vision.holokit", "to": "codon.entity", "props": {"channel": "hands→entity.skeletal"}},
+
+      {"id": "r.codon.bridge.intent", "type": "wire-binds", "from": "codon.intent",   "to": "runtime.unity.bridge", "props": {"channel": "intent"}},
+      {"id": "r.codon.bridge.entity", "type": "wire-binds", "from": "codon.entity",   "to": "runtime.unity.bridge", "props": {"channel": "entity"}},
+      {"id": "r.codon.bridge.rel",    "type": "wire-binds", "from": "codon.relation", "to": "runtime.unity.bridge", "props": {"channel": "relation"}},
+      {"id": "r.codon.bridge.evt",    "type": "wire-binds", "from": "codon.event",    "to": "runtime.unity.bridge", "props": {"channel": "event"}},
+
+      {"id": "r.bridge2gen",  "type": "wire-binds", "from": "runtime.unity.bridge",   "to": "runtime.unity.world_gen", "props": {"role": "decoder.intent"}},
+      {"id": "r.gen2vfx",     "type": "wire-binds", "from": "runtime.unity.world_gen","to": "runtime.unity.vfx",       "props": {"role": "spawn"}},
+      {"id": "r.vfx2anchor",  "type": "tracks",     "from": "runtime.unity.vfx",      "to": "anchor_user_space",       "props": {}},
+
+      {"id": "r.persist.in",   "type": "wire-binds", "from": "runtime.unity.bridge", "to": "runtime.persistence", "props": {"channel": "doc.write"}},
+      {"id": "r.persist.out",  "type": "wire-binds", "from": "runtime.persistence",  "to": "runtime.unity.bridge","props": {"channel": "doc.read"}},
+      {"id": "r.persist.anchor","type": "tracks",    "from": "runtime.persistence",  "to": "anchor_user_space",  "props": {}},
+
+      {"id": "r.share.broadcast", "type": "wire-binds", "from": "runtime.persistence", "to": "runtime.multiplayer", "props": {"channel": "delta.tx"}},
+      {"id": "r.share.recv",      "type": "wire-binds", "from": "runtime.multiplayer", "to": "runtime.persistence", "props": {"channel": "delta.rx"}},
+
+      {"id": "r.mem.in",  "type": "wire-binds", "from": "edge.intent",  "to": "codon.memory",   "props": {"tier": "medium"}},
+      {"id": "r.mem.out", "type": "wire-binds", "from": "codon.memory", "to": "agent.world_model", "props": {"role": "context"}},
+      {"id": "r.predict", "type": "wire-binds", "from": "agent.world_model", "to": "codon.predict", "props": {"channel": "trajectories"}},
+      {"id": "r.predict.gen", "type": "wire-binds", "from": "codon.predict", "to": "runtime.unity.world_gen", "props": {"role": "pre-spawn-hint"}},
+
+      {"id": "r.comfort.from.voice",   "type": "wire-binds", "from": "edge.voice",          "to": "agent.comfort_loop", "props": {"channel": "verbal-prosody"}},
+      {"id": "r.comfort.from.intent",  "type": "wire-binds", "from": "edge.intent",         "to": "agent.comfort_loop", "props": {"channel": "verbal-keyword"}},
+      {"id": "r.comfort.from.holokit", "type": "wire-binds", "from": "edge.vision.holokit", "to": "agent.comfort_loop", "props": {"channel": "behavioral-gesture"}},
+      {"id": "r.comfort.from.arkit",   "type": "wire-binds", "from": "edge.vision.arkit",   "to": "agent.comfort_loop", "props": {"channel": "physiological-face"}},
+      {"id": "r.comfort.codon",        "type": "wire-binds", "from": "agent.comfort_loop",  "to": "codon.sentiment",    "props": {"channel": "score"}},
+      {"id": "r.comfort.memory",       "type": "wire-binds", "from": "codon.sentiment",     "to": "codon.memory",       "props": {"tier": "medium-then-distill"}},
+      {"id": "r.comfort.predict",      "type": "wire-binds", "from": "codon.sentiment",     "to": "agent.world_model",  "props": {"role": "context"}},
+      {"id": "r.comfort.respond",      "type": "wire-binds", "from": "agent.comfort_loop",  "to": "runtime.unity.bridge","props": {"channel": "ui-hint"}},
+
+      {"id": "r.point.from.holokit",  "type": "wire-binds", "from": "edge.vision.holokit",   "to": "codon.point_ray",       "props": {"channel": "per-finger ray"}},
+      {"id": "r.gaze.from.arkit",     "type": "wire-binds", "from": "edge.vision.arkit",     "to": "codon.gaze_ray",        "props": {"channel": "eye transforms (privacy: local-only)"}},
+      {"id": "r.point.render",        "type": "wire-binds", "from": "codon.point_ray",       "to": "runtime.reticle",       "props": {"channel": "draw"}},
+      {"id": "r.gaze.render",         "type": "wire-binds", "from": "codon.gaze_ray",        "to": "runtime.reticle",       "props": {"channel": "draw (debug-only default)"}},
+      {"id": "r.point.intent",        "type": "wire-binds", "from": "codon.point_ray",       "to": "agent.comfort_loop",    "props": {"channel": "behavioral-precision"}},
+      {"id": "r.gaze.intent",         "type": "wire-binds", "from": "codon.gaze_ray",        "to": "agent.comfort_loop",    "props": {"channel": "physiological-attention"}},
+      {"id": "r.expressive.from.holokit","type": "wire-binds", "from": "edge.vision.holokit","to": "agent.expressive_hands","props": {"channel": "multi-finger"}},
+      {"id": "r.expressive.point",    "type": "wire-binds", "from": "agent.expressive_hands","to": "codon.point_ray",       "props": {"channel": "per-finger emit"}},
+
+      {"id": "r.frame.viewport",       "type": "wire-binds", "from": "runtime.unity.bridge",      "to": "agent.perceptual_frame_keeper", "props": {"channel": "viewport-state"}},
+      {"id": "r.frame.camera.arkit",   "type": "wire-binds", "from": "edge.vision.arkit",         "to": "agent.perceptual_frame_keeper", "props": {"channel": "camera-summary"}},
+      {"id": "r.frame.camera.holokit", "type": "wire-binds", "from": "edge.vision.holokit",       "to": "agent.perceptual_frame_keeper", "props": {"channel": "camera-summary"}},
+      {"id": "r.frame.gaze",           "type": "wire-binds", "from": "codon.gaze_ray",            "to": "agent.perceptual_frame_keeper", "props": {"channel": "attention"}},
+      {"id": "r.frame.point",          "type": "wire-binds", "from": "codon.point_ray",           "to": "agent.perceptual_frame_keeper", "props": {"channel": "attention"}},
+      {"id": "r.frame.intent",         "type": "wire-binds", "from": "codon.intent",              "to": "agent.perceptual_frame_keeper", "props": {"channel": "session-arc.active-goal"}},
+      {"id": "r.frame.predict",        "type": "wire-binds", "from": "agent.world_model",         "to": "agent.perceptual_frame_keeper", "props": {"channel": "predicted-next"}},
+      {"id": "r.frame.emit",           "type": "wire-binds", "from": "agent.perceptual_frame_keeper","to": "codon.perceptual_frame",     "props": {"channel": "snapshot ≥4Hz"}},
+      {"id": "r.frame.memory",         "type": "wire-binds", "from": "codon.perceptual_frame",    "to": "codon.memory",                  "props": {"tier": "short-then-distill"}},
+      {"id": "r.frame.predict.feed",   "type": "wire-binds", "from": "codon.perceptual_frame",    "to": "agent.world_model",             "props": {"channel": "training-context"}},
+      {"id": "r.frame.answer",         "type": "wire-binds", "from": "codon.perceptual_frame",    "to": "edge.intent",                   "props": {"channel": "ground-every-answer", "rule": "consult before responding"}}
+    ],
+
+    "events": [
+      {"id": "step.01", "t": "2026-04-24T00:00:01Z", "type": "build.step", "entity": "edge.voice",          "metadata": {"hour": 1,  "do": "wire LiveKit RN SDK; mic→room; cloud ASR primary"}},
+      {"id": "step.02", "t": "2026-04-24T00:00:02Z", "type": "build.step", "entity": "edge.intent",         "metadata": {"hour": 2,  "do": "ASR text → codon.intent (≤200 bytes)"}},
+      {"id": "step.03", "t": "2026-04-24T00:00:03Z", "type": "build.step", "entity": "runtime.unity.bridge","metadata": {"hour": 3,  "do": "Add JSON channel `intent`; bridge codon to Unity"}},
+      {"id": "step.04", "t": "2026-04-24T00:00:04Z", "type": "build.step", "entity": "runtime.unity.world_gen","metadata": {"hour": 4,"do": "Theme→preset map; spawn 1-3 entity codons per intent"}},
+      {"id": "step.05", "t": "2026-04-24T00:00:05Z", "type": "build.step", "entity": "runtime.unity.vfx",   "metadata": {"hour": 5,  "do": "Bind entity.components[vfx.*] → VFX Graph emitter (5-prop contract)"}},
+      {"id": "step.06", "t": "2026-04-24T00:00:06Z", "type": "build.step", "entity": "edge.vision.arkit",   "metadata": {"hour": 6,  "do": "ARKit object classify → emit codon.entity per labeled object"}},
+      {"id": "step.07", "t": "2026-04-24T00:00:07Z", "type": "build.step", "entity": "codon.memory",        "metadata": {"hour": 7,  "do": "Ring buffer (60s) + SQLite session table; distill long-term facts on Stop"}},
+      {"id": "step.08", "t": "2026-04-24T00:00:08Z", "type": "build.step", "entity": "runtime.persistence", "metadata": {"hour": 8,  "do": "Save XRAI doc per ARKit anchor UUID; reload on session start"}},
+      {"id": "step.09", "t": "2026-04-24T00:00:09Z", "type": "build.step", "entity": "runtime.multiplayer", "metadata": {"hour": 9,  "do": "LiveKit data channel `xrai.deltas`; broadcast on persist.write"}},
+      {"id": "step.10", "t": "2026-04-24T00:00:10Z", "type": "build.step", "entity": "edge.tts",            "metadata": {"hour": 10, "do": "Cloud TTS reply; on-device Piper fallback"}},
+      {"id": "step.11", "t": "2026-04-24T00:00:11Z", "type": "build.step", "entity": "agent.world_model",   "metadata": {"hour": 11, "do": "ONNX mini-model on recent codons → codon.predict; pre-spawn hints"}},
+      {"id": "step.12", "t": "2026-04-24T00:00:12Z", "type": "verify",     "entity": null,                  "metadata": {"hour": 12, "do": "Device verify: voice→world in ≤500ms, save/reload roundtrip, peer sees delta"}}
+    ]
+  }
+}

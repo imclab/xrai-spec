@@ -1,0 +1,49 @@
+{
+  "xrai_version": "1.0",
+  "id": "00000000-0000-4000-a000-000000000006",
+  "created_at": "2026-04-23T00:00:00Z",
+  "author": {"type": "human", "id": "example"},
+  "origin": {"app": "portals", "version": "v4", "scene": "SimpleAR"},
+  "metadata": {
+    "description": "ARKit full-body tracking + Holokit hand tracking driving VFX. Pinch emits sparks; palm-open summons a trail.",
+    "sources": ["arkit-v1#ARBodyAnchor", "holokit-v1#HandPose", "mediapipe-pose-v1"]
+  },
+  "scene": {
+    "anchors": [
+      {"id": "anchor_body", "type": "ar.body", "metadata": {"source": "arkit", "tracking": "full-skeleton"}},
+      {"id": "anchor_hand_l", "type": "ar.hand", "metadata": {"source": "holokit", "handedness": "left"}},
+      {"id": "anchor_hand_r", "type": "ar.hand", "metadata": {"source": "holokit", "handedness": "right"}}
+    ],
+    "entities": [
+      {
+        "id": "body_aura",
+        "type": "object.emitter",
+        "model_id": null,
+        "transform": {"position": [0, 0, 0], "rotation": [0, 0, 0, 1], "scale": [1, 1, 1]},
+        "components": [{"type": "vfx.aura", "props": {"preset": "body_silhouette", "intensity": 0.7}}]
+      },
+      {
+        "id": "spark_l",
+        "type": "object.emitter",
+        "model_id": null,
+        "transform": {"position": [0, 0, 0], "rotation": [0, 0, 0, 1], "scale": [1, 1, 1]},
+        "components": [{"type": "vfx.particles", "props": {"preset": "pinch_sparks", "trigger": "gesture.pinch"}}]
+      },
+      {
+        "id": "trail_r",
+        "type": "object.emitter",
+        "model_id": null,
+        "transform": {"position": [0, 0, 0], "rotation": [0, 0, 0, 1], "scale": [1, 1, 1]},
+        "components": [{"type": "vfx.ribbon", "props": {"preset": "palm_trail", "trigger": "gesture.palm_open"}}]
+      }
+    ],
+    "relations": [
+      {"id": "r_aura", "type": "tracks", "from": "body_aura", "to": "anchor_body", "props": {}},
+      {"id": "r_spark", "type": "tracks", "from": "spark_l", "to": "anchor_hand_l", "props": {"offset": [0, 0, 0]}},
+      {"id": "r_trail", "type": "tracks", "from": "trail_r", "to": "anchor_hand_r", "props": {"offset": [0, 0, 0]}}
+    ],
+    "events": [
+      {"id": "e_pinch", "t": "2026-04-23T00:00:01Z", "type": "gesture.pinch", "entity": "anchor_hand_l", "metadata": {"confidence": 0.92}}
+    ]
+  }
+}

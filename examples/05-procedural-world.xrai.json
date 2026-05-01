@@ -1,0 +1,68 @@
+{
+  "xrai_version": "1.0",
+  "id": "00000000-0000-4000-a000-000000000005",
+  "created_at": "2026-04-23T00:00:00Z",
+  "author": {"type": "llm", "id": "claude-opus-4-7"},
+  "origin": {"app": "portals", "version": "v4", "scene": "SimpleAR"},
+  "metadata": {
+    "voice_prompt": "a mystical forest with floating lights",
+    "intent": {
+      "theme": "mystical",
+      "environment": "forest",
+      "mood": "ethereal",
+      "effects": ["floating-lights", "volumetric-fog"]
+    },
+    "generation": {
+      "approach": "goal-oriented",
+      "seed": 424242,
+      "complexity": "sparse"
+    }
+  },
+  "scene": {
+    "anchors": [
+      {"id": "anchor_floor", "type": "ar.plane", "metadata": {"alignment": "horizontal"}}
+    ],
+    "entities": [
+      {
+        "id": "env_forest",
+        "type": "object.emitter",
+        "model_id": null,
+        "transform": {
+          "position": [0, 0, 0],
+          "rotation": [0, 0, 0, 1],
+          "scale": [4, 4, 4]
+        },
+        "components": [
+          {"type": "vfx.procedural", "props": {"preset": "forest_canopy", "density": 0.6, "biome": "mystical"}}
+        ]
+      },
+      {
+        "id": "lights_floating",
+        "type": "object.emitter",
+        "model_id": null,
+        "transform": {
+          "position": [0, 1.2, -1.5],
+          "rotation": [0, 0, 0, 1],
+          "scale": [1, 1, 1]
+        },
+        "components": [
+          {"type": "vfx.particles", "props": {"preset": "floating_lights", "count": 120, "drift": 0.3, "color": "warm_amber"}}
+        ]
+      },
+      {
+        "id": "fog_layer",
+        "type": "object.emitter",
+        "model_id": null,
+        "transform": {"position": [0, 0.1, 0], "rotation": [0, 0, 0, 1], "scale": [5, 1, 5]},
+        "components": [
+          {"type": "vfx.volumetric", "props": {"preset": "low_fog", "density": 0.25}}
+        ]
+      }
+    ],
+    "relations": [
+      {"id": "r_env_floor", "type": "tracks", "from": "env_forest", "to": "anchor_floor", "props": {}},
+      {"id": "r_fog_floor", "type": "tracks", "from": "fog_layer", "to": "anchor_floor", "props": {}}
+    ],
+    "events": []
+  }
+}

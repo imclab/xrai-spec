@@ -72,7 +72,7 @@ Types in v1.0: `object.primitive` (cube/sphere/cylinder/capsule/plane/quad), `ob
 }
 ```
 
-Relation types in v1.0: `parent-of`, `wire-binds`, `reacts-to-audio`, `tracks`.
+Relation types declared for v1.0: `parent-of`, `wire-binds`, `reacts-to-audio`, `tracks`. Runtime pass-through + renderer wiring ships in the reference implementation (see [RFC-0004 — Relation types + runtime semantics](./rfcs/0004-relation-types.md) for status). Conformance clause §4 "Preserves unknown fields on round-trip" covers forward-compat while runtime adopters catch up.
 
 ### Event (v1.0 stub — fuller schema in v1.1)
 

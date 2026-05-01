@@ -1,0 +1,59 @@
+{
+  "xrai_version": "1.0",
+  "id": "00000000-0000-4000-a000-000000000008",
+  "created_at": "2026-04-23T00:00:00Z",
+  "author": {"type": "human", "id": "example"},
+  "origin": {"app": "portals", "version": "v4", "scene": "SimpleAR"},
+  "metadata": {
+    "description": "Shared persistent immersive experience across devices + continents. Two live participants, one hologram feed, co-located virtual object.",
+    "transport": {
+      "livekit_room": "wss://portals-dev.livekit.cloud#room_nyc_tokyo",
+      "topics": ["xrai-delta", "presence", "voice", "hologram"]
+    }
+  },
+  "scene": {
+    "anchors": [
+      {"id": "anchor_room", "type": "ar.worldmap", "metadata": {"map_uri": "portals://worldmap/shared_room_42"}}
+    ],
+    "entities": [
+      {
+        "id": "participant_nyc",
+        "type": "object.hologram",
+        "model_id": null,
+        "transform": {"position": [-0.8, 0, -1.2], "rotation": [0, 0.3, 0, 0.95], "scale": [1, 1, 1]},
+        "components": [
+          {"type": "vfx.hologram", "props": {"preset": "lifelike_hologram", "feed": "livekit://room/track_nyc_rgbd"}}
+        ],
+        "metadata": {"user_id": "james@portals.app", "region": "nyc"}
+      },
+      {
+        "id": "participant_tokyo",
+        "type": "object.hologram",
+        "model_id": null,
+        "transform": {"position": [0.8, 0, -1.2], "rotation": [0, -0.3, 0, 0.95], "scale": [1, 1, 1]},
+        "components": [
+          {"type": "vfx.hologram", "props": {"preset": "lifelike_hologram", "feed": "livekit://room/track_tokyo_rgbd"}}
+        ],
+        "metadata": {"user_id": "yuki@portals.app", "region": "tokyo"}
+      },
+      {
+        "id": "shared_sculpture",
+        "type": "object.primitive",
+        "model_id": 1,
+        "transform": {"position": [0, 0.5, -1.0], "rotation": [0, 0.7071, 0, 0.7071], "scale": [0.4, 0.4, 0.4]},
+        "material": {"color": "gold", "preset": "glass"},
+        "metadata": {"collaborative": true, "lock_owner": null}
+      }
+    ],
+    "relations": [
+      {"id": "r_nyc", "type": "tracks", "from": "participant_nyc", "to": "anchor_room", "props": {}},
+      {"id": "r_tokyo", "type": "tracks", "from": "participant_tokyo", "to": "anchor_room", "props": {}},
+      {"id": "r_sculpt", "type": "tracks", "from": "shared_sculpture", "to": "anchor_room", "props": {}}
+    ],
+    "events": [
+      {"id": "e_nyc_join", "t": "2026-04-23T00:00:00Z", "type": "presence.join", "entity": "participant_nyc"},
+      {"id": "e_tokyo_join", "t": "2026-04-23T00:00:02Z", "type": "presence.join", "entity": "participant_tokyo"},
+      {"id": "e_edit", "t": "2026-04-23T00:00:15Z", "type": "scene.edited", "entity": "shared_sculpture", "metadata": {"by": "yuki@portals.app", "field": "transform.rotation"}}
+    ]
+  }
+}

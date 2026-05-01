@@ -94,7 +94,7 @@ Flat AI chat is dying. Users want context that persists, space that remembers, a
 Someone will define the format that AI agents use to describe and share 3D / 4D / n-dimensional cognition. **The question is whether it will be open or captured.** Every major format has gone one way or the other:
 
 - HTML open → WWW flourished
-- USDZ captured by Apple → locked to Apple hardware
+- USDZ Apple-gated → ecosystem captured by default (USD itself is open; the authoring + distribution paths are Apple-shaped)
 - Wikidata open → Wikipedia powers half the internet
 - Meta's social graph closed → walled gardens
 

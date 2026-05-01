@@ -1,0 +1,62 @@
+{
+  "xrai_version": "1.0",
+  "id": "00000000-0000-4000-a000-000000000013",
+  "created_at": "2026-04-24T00:00:00Z",
+  "author": {"type": "agent", "id": "claude-opus-4-7@portals-v4"},
+  "origin": {"app": "portals", "version": "v4", "scene": "ConductingOrchestration"},
+
+  "metadata": {
+    "title": "Conducting orchestration — multi-finger as creative input",
+    "subset": "jarvis_use_cases",
+    "thesis": "Per-finger pointing rays + open-hand arc + tempo envelope drive a generative VFX swarm. No mouse, no menu — every finger is a magic wand. Wonder + Expressive Freedom doctrine in one runnable scene.",
+    "voice_prompt": "let me conduct the swarm",
+    "intent": {
+      "mode": "expressive_orchestration",
+      "vocabulary": ["air-piano", "conducting", "thumb-dial"],
+      "audio_cue": "subtle harp pluck per active finger (off by default)"
+    },
+    "alignment": {
+      "constitution": ["§ Wonder + Expressive Freedom (Expression Triad)", "§ Doing Without Doing → Pointing/Gaze/Expressive Multi-Finger addendum"],
+      "doctrine_tests_passed": ["3+ simultaneous expression channels (voice · 10 fingers · gaze)", "per-finger first-class (not aggregated)", "discovery → silent reinforcement (particle burst per first new gesture)", "no instructions required (gesture key fades in then out)"],
+      "anti_patterns_avoided": ["single-finger mouse emulation", "modal dialog blocking canvas", "telemetry without paired closed-loop response"]
+    }
+  },
+
+  "scene": {
+    "anchors": [
+      {"id": "anchor_user", "type": "ar.world", "metadata": {"alignment": "world"}}
+    ],
+    "entities": [
+      {"id": "swarm",
+       "type": "object.emitter",
+       "model_id": null,
+       "transform": {"position": [0, 1.4, -1.2], "rotation": [0,0,0,1], "scale": [2,2,2]},
+       "components": [
+         {"type": "vfx.particles", "props": {"preset": "agent_swarm", "count": 1200, "color": "warm_amber", "tempo_envelope_source": "conducting.tempo"}},
+         {"type": "react.tempo",  "props": {"input": "agent.expressive_hands.conducting", "param": "speed", "min": 0.4, "max": 2.4}}
+       ],
+       "metadata": {"role": "expressed.swarm"}},
+      {"id": "finger_lasers_L",
+       "type": "object.wire-source",
+       "transform": {"position": [-0.3, 1.2, 0], "rotation": [0,0,0,1], "scale": [1,1,1]},
+       "components": [{"type": "render.point_rays", "props": {"hand": "L", "fingers": ["thumb","index","middle","ring","pinky"], "style": "thin laser line + reticle ≤8px", "per_finger_color": true}}]},
+      {"id": "finger_lasers_R",
+       "type": "object.wire-source",
+       "transform": {"position": [0.3, 1.2, 0], "rotation": [0,0,0,1], "scale": [1,1,1]},
+       "components": [{"type": "render.point_rays", "props": {"hand": "R", "fingers": ["thumb","index","middle","ring","pinky"], "style": "thin laser line + reticle ≤8px", "per_finger_color": true}}]},
+      {"id": "harp_layer",
+       "type": "object.wire-source",
+       "transform": {"position": [0, 1.4, -1.2], "rotation": [0,0,0,1], "scale": [1,1,1]},
+       "components": [{"type": "audio.symphonic_cue", "props": {"sample_bank": "harp_pluck_C_major", "trigger": "agent.expressive_hands.air_piano.per_finger_strike", "default_off": true, "richness_scales_with_active_finger_count": true}}]}
+    ],
+    "relations": [
+      {"id": "r_swarm_anchor",  "type": "tracks",          "from": "swarm",            "to": "anchor_user", "props": {}},
+      {"id": "r_swarm_audio",   "type": "reacts-to-audio", "from": "swarm",            "to": "harp_layer",  "props": {"channel": "amplitude"}},
+      {"id": "r_lasers_L_user", "type": "tracks",          "from": "finger_lasers_L",  "to": "anchor_user", "props": {}},
+      {"id": "r_lasers_R_user", "type": "tracks",          "from": "finger_lasers_R",  "to": "anchor_user", "props": {}}
+    ],
+    "events": [
+      {"id": "e_session", "t": "2026-04-24T00:00:00Z", "type": "session.start", "entity": null, "metadata": {"vocabulary": "air-piano + conducting + thumb-dial"}}
+    ]
+  }
+}

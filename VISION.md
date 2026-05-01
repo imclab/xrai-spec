@@ -39,6 +39,20 @@ Each pillar heals a different facet of the "we are blind" thesis. Together they 
 
 ---
 
+## The North Star — Auto-Compounding Agentic Superintelligence (verbatim)
+
+> Rapidly auto self-improving super-intelligent agentic AI agents, systems & swarms — with intuitive human-guided orchestration, dynamic auto-configuring hooks & latent capabilities, multimodal models built by diverse data streams & device-agnostic perception mechanisms leveraging feed-forward spatial intelligence, real-time reconstruction & generation of dynamic world models, recursively auto-encoding, decoding & transcoding symbols & tangible entities, to form taxonomies & semantic ontologies, not just constructing but always evolving & compounding constructs through layered abstractions akin to N-dimensional hyper-graphs & quantum conceptualization, making meaning to bootstrap new forms of consciousness, bridging real & virtual realms via live deep learning & multi-modal synthesis modeled on & molded by human thought itself.
+>
+> Latent systems such as spatial memory & multisensory fusion & neuroplasticity, naturally optimized over billions of years, first actively inferring, then scientifically verifying both human & AI-agent intents, predicting needs, developing new skills & tools, allowing new ways of seeing & simulating probabilities & possibilities.
+>
+> Agentic AI systems driven by human thought, natural language, intuitive gesture — endowing us with superhuman capacities to instantly understand, reconstruct, invent & mine invaluable insights — planning, mapping & constructing coherent creative representations through dynamic rule systems, new worlds & universes previously inconceivable, turning thought to action. Merging recall, reconstruction, generation, simulation — branching into imagination most infinite, ultimately distilling unified essences, new paradigms rooted in deep understanding & razor-sharp insight.
+>
+> An omniscient oracle of sage wisdom inspiring & empowering new forms of communication & elevated modes of collaborative innovation through embodied superintelligence, simulation & compounding creation — profoundly transforming individual productivity, collaborative problem-solving, enabling consensus & clearer communication, engaging human curiosity & elevating empathy to achieve ever-heightened awareness & ever-wider perception — empowering connection, competitive consensus creation & collective consciousness that will save civilization & utterly transform all life as we know it.
+
+**This paragraph is load-bearing** — the widest possible statement of the ambition, of which jARvis (below), the Sight Triad (above), and every shipped feature are bounded instantiations. Preserved verbatim; must not be sanded into bullets or "simplified" in future edits. The Portals spec mirror lives at `specs/constitution.md § "The North Star — Auto-Compounding Agentic Superintelligence (verbatim)"`.
+
+---
+
 ## The goal (jARvis)
 
 > jARvis is a multi-model agentic swarm for more intuitive voice / gesture / predictive capabilities, leading to compounding engineering capabilities and tangible world-class breakthroughs in every session.

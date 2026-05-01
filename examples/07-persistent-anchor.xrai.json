@@ -1,0 +1,50 @@
+{
+  "xrai_version": "1.0",
+  "id": "00000000-0000-4000-a000-000000000007",
+  "created_at": "2026-04-23T00:00:00Z",
+  "author": {"type": "human", "id": "example"},
+  "origin": {"app": "portals", "version": "v4", "scene": "SimpleAR"},
+  "metadata": {
+    "description": "Persistent location-based scene. Anchored to a world map point, reloadable across sessions + devices.",
+    "persistence": {
+      "provider": "arkit.worldmap",
+      "fallback": "google.cloud-anchor",
+      "geolocation": {"lat": 40.7128, "lon": -74.0060, "alt_m": 10, "accuracy_m": 2.0}
+    }
+  },
+  "scene": {
+    "anchors": [
+      {
+        "id": "anchor_persistent",
+        "type": "ar.worldmap",
+        "metadata": {
+          "map_uri": "portals://worldmap/abc123",
+          "created_by": "user_42",
+          "created_at": "2026-04-20T14:00:00Z",
+          "resolved_confidence": 0.88
+        }
+      }
+    ],
+    "entities": [
+      {
+        "id": "monument_cube",
+        "type": "object.primitive",
+        "model_id": 0,
+        "transform": {
+          "position": [0, 0.25, -1.5],
+          "rotation": [0, 0, 0, 1],
+          "scale": [0.5, 0.5, 0.5]
+        },
+        "material": {"color": "cyan", "preset": "neon"},
+        "metadata": {"editable": true, "remixable": true}
+      }
+    ],
+    "relations": [
+      {"id": "r_mon_anchor", "type": "tracks", "from": "monument_cube", "to": "anchor_persistent", "props": {}}
+    ],
+    "events": [
+      {"id": "e_save", "t": "2026-04-20T14:00:00Z", "type": "scene.saved", "entity": null, "metadata": {"by": "user_42"}},
+      {"id": "e_load", "t": "2026-04-23T00:00:00Z", "type": "scene.loaded", "entity": null, "metadata": {"by": "example", "relocalized": true}}
+    ]
+  }
+}

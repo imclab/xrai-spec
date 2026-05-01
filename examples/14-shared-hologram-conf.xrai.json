@@ -1,0 +1,123 @@
+{
+  "xrai_version": "1.0",
+  "id": "00000000-0000-4000-a000-000000000014",
+  "created_at": "2026-04-24T00:00:00Z",
+  "author": {"type": "agent", "id": "claude-opus-4-7@portals-v4"},
+  "origin": {"app": "portals", "version": "v4", "scene": "SharedHologramConference"},
+
+  "metadata": {
+    "title": "Shared hologram video conferencing — seating template + per-participant RGBD tiles",
+    "subset": "jarvis_use_cases",
+    "thesis": "Multi-user spatial canvas where each participant is rendered as their own RGBD/volumetric persona, anchored by a seating template. Same XRAI document syncs across web (Three.js) + iOS (Unity) + visionOS (RealityKit) via the same LiveKit room. Each participant's pose + audio + RGBD frames cross as compact codons; raw camera bytes never federate.",
+    "voice_prompt": "let's meet — bring my team into this scene",
+    "alignment": {
+      "constitution": ["§ Sight Triad → infinite zoom (across minds)", "§ Wonder + Expressive Freedom → Perceptual Frame Invariant"],
+      "doctrine_tests_passed": [
+        "3+ simultaneous expression channels (voice + multi-finger + gaze, per participant)",
+        "per-participant first-class (not collapsed into avatar)",
+        "privacy: raw camera/gaze stay local; RGBD reconstruction crosses only with consent"
+      ]
+    },
+    "references": {
+      "apple_groupactivities_spatial_persona_doc": "https://developer.apple.com/documentation/groupactivities/adding-spatial-persona-support-to-an-activity (page returned no body via WebFetch 2026-04-24; Apple docs site is client-rendered)",
+      "apple_groupactivities_guessing_game": "https://developer.apple.com/documentation/groupactivities/building-a-guessing-game-for-visionos (NO CONTENT via WebFetch 2026-04-24)",
+      "apple_wwdc24_session_10201_VERIFIED": "https://developer.apple.com/videos/play/wwdc2024/10201/ — 'Customize spatial Persona templates in SharePlay'. Verified API surface (cited verbatim from session): SpatialTemplate · SpatialTemplateRole · SystemCoordinator · SpatialTemplateSeatElement · GroupSessionMessenger · systemCoordinator.configuration.spatialTemplatePreference = .custom(...) · systemCoordinator.configuration.supportsGroupImmersiveSpace = true · systemCoordinator.assignRole(...) / resignRole() · .seat(position:, direction:, role:) builder · directions: .lookingAt(...) / .alignedWith(appAxis:) / .rotatedBy(.degrees(...)) · positions: .app.offsetBy(x:z:). System template called .sideBySide. Design constraints: seat per persona up to FaceTime max · ≥1m spacing · sequence intentionally · use roles sparingly · minimize transitions.",
+      "local_prior_art": [
+        "specs/XXX-zero-to-one/xrai-website/js/live-web.js (v0 LiveKit + DataChannel)",
+        "specs/XXX-zero-to-one/xrai-website/js/live-web.js header v1 plan (RGBD hologram via RGBDPointCloud + HueDepthCodec)",
+        "unity/Assets/Imported/MetavidoLiveARKit/Runtime/LiveARKitFeeder.cs (iOS Record3D-style RGBD feeder)",
+        "unity/Assets/Imported/MetavidoLiveARKit/Runtime/LiveVFXBinder.cs (Unity VFX from streamed RGBD)",
+        "unity/Assets/Scripts/Hologram/ARDepthSource.cs (depth source abstraction)",
+        "Reference patterns also in: Needle multiplayer · PlayCanvas collaboration · Record3D"
+      ],
+      "transport": "wss://portals-dev.livekit.cloud (already provisioned, same server as iOS app)",
+      "adjacent_refs_2026-04-24": {
+        "_note": "Added per user 2026-04-24. URLs cited verbatim, NOT WebFetched in this session. Verify each against primary source before implementation. Grouped by purpose.",
+        "depth_estimation_oss_on_device": [
+          "https://github.com/fabio-sim/Depth-Anything-ONNX",
+          "https://github.com/DepthAnything/Depth-Anything-V2",
+          "https://huggingface.co/apple/coreml-depth-anything-small",
+          "https://github.com/DepthAnything/Depth-Anything-V2/tree/main/metric_depth"
+        ],
+        "apple_ml_intelligence_action": [
+          "https://developer.apple.com/documentation/createml/detecting-human-actions-in-a-live-video-feed",
+          "https://developer.apple.com/documentation/technologyoverviews/apple-intelligence",
+          "https://developer.apple.com/documentation/technologyoverviews/machine-learning"
+        ],
+        "visionos_hig_inputs_and_design": [
+          "https://developer.apple.com/design/human-interface-guidelines/designing-for-visionos",
+          "https://developer.apple.com/design/human-interface-guidelines/eyes",
+          "https://developer.apple.com/design/human-interface-guidelines/gestures#visionOS",
+          "https://developer.apple.com/design/human-interface-guidelines/focus-and-selection",
+          "https://developer.apple.com/design/human-interface-guidelines/gestures#Specifications",
+          "https://developer.apple.com/design/human-interface-guidelines/nearby-interactions"
+        ],
+        "spatial_photo_and_video_formats": [
+          "https://developer.apple.com/documentation/ImageIO/Creating-spatial-photos-and-videos-with-spatial-metadata",
+          "https://developer.apple.com/documentation/imageio/writing-spatial-photos",
+          "https://developer.apple.com/documentation/AVFoundation/converting-side-by-side-3d-video-to-multiview-hevc-and-spatial-video",
+          "https://developer.apple.com/av-foundation/Stereo-Video-ISOBMFF-Extensions.pdf",
+          "https://developer.apple.com/videos/play/wwdc2020/10011/",
+          "https://developer.apple.com/documentation/avfoundation/reading-multiview-3d-video-files",
+          "https://developer.apple.com/av-foundation/HEVC-Stereo-Video-Profile.pdf"
+        ],
+        "implementation_notes": {
+          "depth_estimation": "Depth-Anything-V2 + CoreML-Depth-Anything-Small are leading 2024-2025 OSS depth estimators. CoreML variant is on-device viable on iPhone/iPad/visionOS — pair with HueDepthCodec to encode predicted depth into the RGBD pipeline. Metric_depth subdir is critical when meshing across participants (relative depth alone won't align scales).",
+          "apple_ml": "CreateML action detection complements the per-finger pointing rays + Holokit hand tracking — gives gesture vocabulary a temporal dimension (e.g. wave / clap / point-and-hold). Apple Intelligence + on-device ML overviews inform the on-device fallback story when cloud LLM is unavailable.",
+          "visionos_hig": "Visual-design source of truth for the visionOS Spatial Persona adapter (Phase 6.45). Eyes guidance constrains the gaze halo; gestures specifications constrain the multi-finger vocabulary; focus-and-selection constrains how a participant 'targets' shared canvas elements; nearby-interactions guides hand-off + device-pairing flows.",
+          "spatial_media": "ISOBMFF + HEVC stereo video extensions + AVFoundation MV-HEVC describe how to STORE the captured hologram conference (record + replay locally). Spatial photo writers are the simpler entry point for capturing a single shared moment as a forwardable artifact. WWDC20 session 10011 is the older anchor for stereoscopic pipeline patterns."
+        }
+      }
+    },
+    "privacy_invariants": [
+      "Raw camera bytes NEVER cross the bridge; RGBD reconstructions cross only with explicit per-session consent",
+      "Per-participant pose + voice are ephemeral by default; persisted to memory only with consent",
+      "Spatial persona height/scale is the participant's choice — no overrides across sessions"
+    ]
+  },
+
+  "scene": {
+    "anchors": [
+      {"id": "anchor_room", "type": "ar.world", "metadata": {"alignment": "world", "shared_via": "livekit-room", "room_id_param": "?room=<uuid>"}},
+      {"id": "anchor_seating_template", "type": "ar.virtual", "metadata": {"template": "conversational-circle", "fallback": "side-by-side", "rationale": "Apple SharePlay-style seating arrangement; participants positioned as ring around shared content"}}
+    ],
+    "entities": [
+      {"id": "participant_local",
+       "type": "object.hologram",
+       "model_id": null,
+       "transform": {"position": [0, 0, 0], "rotation": [0,0,0,1], "scale": [1,1,1]},
+       "components": [
+         {"type": "rgbd.source", "props": {"codec": "HueDepthCodec", "resolution": "640x480", "fps": 30, "source": "device-camera"}},
+         {"type": "audio.source", "props": {"codec": "opus", "sampleRate": 48000}},
+         {"type": "pose.source", "props": {"head": true, "hands": "if-available", "body": "if-available"}}
+       ],
+       "metadata": {"role": "self", "label": "you"}},
+      {"id": "participant_remote_template",
+       "type": "object.hologram",
+       "model_id": null,
+       "transform": {"position": [0, 0, -1.5], "rotation": [0,0,0,1], "scale": [1,1,1]},
+       "components": [
+         {"type": "rgbd.sink", "props": {"codec": "HueDepthCodec", "render": "billboard-or-pointcloud", "fallback": "video-tile"}},
+         {"type": "audio.sink", "props": {"spatial": true, "rolloff": "linear", "max_distance_m": 6}},
+         {"type": "pose.sink", "props": {"smoothing_ms": 80}}
+       ],
+       "metadata": {"role": "remote-template", "note": "instantiated per joining participant; transform set by seating template"}},
+      {"id": "shared_canvas",
+       "type": "object.emitter",
+       "model_id": null,
+       "transform": {"position": [0, 1.0, -1.5], "rotation": [0,0,0,1], "scale": [1.5,1,1]},
+       "components": [{"type": "vfx.shared_canvas", "props": {"sync": "xrai-deltas-via-datachannel", "conflict": "last-writer-wins+CRDT-roadmap"}}],
+       "metadata": {"role": "shared-content", "decodes_to": "any XRAI scene authored collaboratively (voxel burst · conducting · etc) renders here"}}
+    ],
+    "relations": [
+      {"id": "r_local_anchor",      "type": "tracks",     "from": "participant_local",            "to": "anchor_room",             "props": {}},
+      {"id": "r_remote_seating",    "type": "tracks",     "from": "participant_remote_template",  "to": "anchor_seating_template", "props": {"role": "seat-by-template"}},
+      {"id": "r_canvas_anchor",     "type": "tracks",     "from": "shared_canvas",                "to": "anchor_room",             "props": {}},
+      {"id": "r_local_to_canvas",   "type": "wire-binds", "from": "participant_local",            "to": "shared_canvas",           "props": {"channel": "edits"}},
+      {"id": "r_remote_to_canvas",  "type": "wire-binds", "from": "participant_remote_template",  "to": "shared_canvas",           "props": {"channel": "remote-edits"}}
+    ],
+    "events": [
+      {"id": "e_join", "t": "2026-04-24T00:00:00Z", "type": "session.start", "entity": null, "metadata": {"room": "?room=<uuid>", "seating": "conversational-circle"}}
+    ]
+  }
+}

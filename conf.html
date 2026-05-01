@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>conf · shared hologram · xra1.com</title>
+<link rel="stylesheet" href="styles/brand.css">
+<style>
+  body{margin:0;background:#08090c;color:#F7FFA8;font:13px/1.45 ui-monospace,"SF Mono",Menlo,monospace;overflow:hidden;}
+  .top{position:fixed;top:14px;left:14px;right:14px;z-index:10;display:flex;gap:10px;align-items:center;}
+  .top a{color:rgba(247,255,168,0.55);text-decoration:none;font-size:11px;}
+  .top a:hover{color:#F7FFA8;}
+  .pill{background:rgba(8,10,14,0.7);backdrop-filter:blur(10px);border:1px solid rgba(247,255,168,0.25);border-radius:16px;padding:5px 12px;font-size:11px;color:#F7FFA8;}
+  #stage{position:fixed;inset:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;padding:60px 16px 96px;align-content:start;align-items:start;justify-items:stretch;}
+  .seat{position:relative;background:rgba(247,255,168,0.04);border:1px solid rgba(247,255,168,0.18);border-radius:10px;aspect-ratio:4/3;overflow:hidden;}
+  .seat.local{border-color:rgba(247,255,168,0.55);}
+  .seat video{width:100%;height:100%;object-fit:cover;background:#000;}
+  .seat .label{position:absolute;left:8px;bottom:8px;background:rgba(0,0,0,0.55);padding:2px 8px;border-radius:4px;font-size:10px;color:#F7FFA8;}
+  .seat .empty{display:flex;align-items:center;justify-content:center;height:100%;opacity:.45;font-size:11px;text-align:center;padding:14px;}
+  #panel{position:fixed;bottom:14px;left:14px;right:14px;background:rgba(8,10,14,0.8);backdrop-filter:blur(12px);border:1px solid rgba(247,255,168,0.25);border-radius:10px;padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;z-index:10;}
+  #panel button,#panel input{appearance:none;background:transparent;border:1px solid rgba(247,255,168,0.3);color:#F7FFA8;border-radius:6px;padding:5px 12px;font:inherit;font-size:11px;cursor:pointer;}
+  #panel button:hover{background:rgba(247,255,168,0.1);}
+  #panel input{flex:1;cursor:text;background:rgba(0,0,0,0.4);}
+  #panel .grow{flex:1;}
+  #status{font-size:10px;opacity:.65;}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#444;margin-right:6px;vertical-align:middle;box-shadow:0 0 4px currentColor;color:#444;}
+  .dot.on{background:#5eff8a;color:#5eff8a;}
+  .dot.warn{background:#F7FFA8;color:#F7FFA8;}
+</style>
+</head>
+<body>
+<div class="top">
+  <a href="jarvis.html">← jarvis</a>
+  <span class="pill">/conf · shared hologram</span>
+  <span class="pill" id="roomPill">room: —</span>
+  <span class="pill"><span class="dot" id="connDot"></span><span id="connText">offline</span></span>
+  <span style="flex:1;"></span>
+  <a href="examples/14-shared-hologram-conf.xrai.json">doc 14 ↗</a>
+</div>
+
+<div id="stage">
+  <div class="seat local"><div class="empty" id="localEmpty">camera off — click <b>publish</b> below</div><video id="localVid" autoplay muted playsinline style="display:none;"></video><div class="label">you</div></div>
+</div>
+
+<div id="panel">
+  <button id="join">join room</button>
+  <button id="publish" disabled>publish cam+mic</button>
+  <button id="leave" disabled>leave</button>
+  <input id="tokenInput" placeholder="(optional) paste LiveKit JWT — leave blank to fetch /api/livekit-token"/>
+  <span class="grow"></span>
+  <span id="status">drop a token or set ?room=&lt;id&gt;&amp;token=&lt;jwt&gt; in URL</span>
+</div>
+
+<script type="module">
+const params = new URLSearchParams(location.search);
+const room = params.get('room') || crypto.randomUUID().slice(0, 8);
+document.getElementById('roomPill').textContent = `room: ${room}`;
+history.replaceState(null, '', `?room=${room}`);
+
+const $ = s => document.querySelector(s);
+const setConn = (state, text) => { const d = $('#connDot'); d.classList.remove('on','warn'); if(state)d.classList.add(state); $('#connText').textContent = text; };
+const status = m => $('#status').textContent = m;
+
+let LK, lkRoom, localTracks = [];
+
+async function ensureLK() {
+  if (LK) return LK;
+  status('loading livekit-client@2.7.0…');
+  LK = await import('https://esm.sh/livekit-client@2.7.0');
+  return LK;
+}
+
+async function getToken() {
+  const fromInput = $('#tokenInput').value.trim();
+  if (fromInput) return fromInput;
+  const fromUrl = params.get('token');
+  if (fromUrl) return fromUrl;
+  // Try the stub endpoint (Cloudflare worker) — will fail on plain http.server
+  try {
+    const r = await fetch(`/api/livekit-token?room=${encodeURIComponent(room)}&identity=${encodeURIComponent('web-' + Math.random().toString(36).slice(2,7))}`);
+    if (r.ok) { const j = await r.json(); return j.token; }
+  } catch {}
+  throw new Error('no token — paste a JWT or pass ?token=… in URL');
+}
+
+function addRemoteSeat(participant) {
+  const seat = document.createElement('div');
+  seat.className = 'seat'; seat.id = `seat-${participant.sid}`;
+  seat.innerHTML = `<div class="empty">${participant.identity || participant.sid}<br/><span style="font-size:9px;opacity:.55;">awaiting media…</span></div><div class="label">${participant.identity || 'remote'}</div>`;
+  $('#stage').appendChild(seat);
+}
+function attachRemoteTrack(participant, track) {
+  const seat = document.getElementById(`seat-${participant.sid}`); if (!seat) return;
+  if (track.kind === 'video') {
+    const v = document.createElement('video'); v.autoplay = true; v.playsInline = true;
+    track.attach(v); seat.querySelector('.empty')?.remove(); seat.insertBefore(v, seat.firstChild);
+  } else if (track.kind === 'audio') {
+    const a = document.createElement('audio'); a.autoplay = true; track.attach(a); seat.appendChild(a);
+  }
+}
+function removeSeat(participant) { document.getElementById(`seat-${participant.sid}`)?.remove(); }
+
+$('#join').addEventListener('click', async () => {
+  try {
+    const lk = await ensureLK();
+    const token = await getToken();
+    const url = 'wss://portals-dev.livekit.cloud';
+    setConn('warn', 'connecting…');
+    lkRoom = new lk.Room({ adaptiveStream: true, dynacast: true });
+    lkRoom.on(lk.RoomEvent.ParticipantConnected, addRemoteSeat);
+    lkRoom.on(lk.RoomEvent.ParticipantDisconnected, removeSeat);
+    lkRoom.on(lk.RoomEvent.TrackSubscribed, (track, _pub, participant) => attachRemoteTrack(participant, track));
+    lkRoom.on(lk.RoomEvent.Disconnected, () => { setConn(null,'offline'); $('#publish').disabled = true; $('#leave').disabled = true; $('#join').disabled = false; });
+    await lkRoom.connect(url, token);
+    setConn('on', `connected · ${lkRoom.numParticipants} peer(s)`);
+    lkRoom.remoteParticipants.forEach(addRemoteSeat);
+    $('#join').disabled = true; $('#publish').disabled = false; $('#leave').disabled = false;
+    status(`joined room ${room} · share this URL: ${location.href}`);
+  } catch (e) { status(`join failed: ${e.message}`); setConn(null,'offline'); }
+});
+
+$('#publish').addEventListener('click', async () => {
+  try {
+    const lk = await ensureLK();
+    const tracks = await lk.createLocalTracks({ audio: true, video: { resolution: lk.VideoPresets.h360.resolution } });
+    for (const t of tracks) await lkRoom.localParticipant.publishTrack(t);
+    localTracks = tracks;
+    const v = $('#localVid'); $('#localEmpty').style.display = 'none'; v.style.display = 'block';
+    tracks.find(t => t.kind === 'video')?.attach(v);
+    status('publishing local cam + mic');
+  } catch (e) { status(`publish failed: ${e.message}`); }
+});
+
+$('#leave').addEventListener('click', async () => {
+  try { for (const t of localTracks) t.stop(); await lkRoom?.disconnect(); } catch {}
+});
+
+status('paste token below + click join · or set ?token=… in URL · or wire /api/livekit-token endpoint');
+</script>
+</body>
+</html>

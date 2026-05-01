@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>XRAI · jARvis — lightweight agent, edge / device / cloud</title>
+<meta name="description" content="jARvis: ~400 LOC platform-agnostic agent core. Offline-first with SQLite. Swappable backends. Runs on Mac, iOS (embedded), and cloud from one codebase." />
+
+<link rel="preconnect" href="https://api.fontshare.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="styles/brand.css">
+
+<style>
+  /* ─── page shell ─── */
+  body { padding: 0; overflow-x: hidden; }
+  main.hud { min-height: 100vh; padding: 24px 28px 96px; max-width: 1440px; margin: 0 auto; }
+
+  /* ─── top bar (UI-toolkit panel vibe) ─── */
+  .topbar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px; margin-bottom: 22px;
+    background: rgba(0,0,0,0.74);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+  }
+  .brand {
+    font-family: 'Satoshi', sans-serif; font-weight: 900;
+    font-size: 16px; letter-spacing: -0.05em; color: var(--fg);
+  }
+  .brand .accent { color: var(--accent); font-style: italic; }
+  .brand .sep { color: var(--muted); margin: 0 8px; font-style: normal; font-weight: 400; }
+  .brand .sub { color: var(--fg-dim); font-weight: 500; letter-spacing: -0.03em; }
+
+  .nav { display: flex; gap: 0; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; }
+  .nav a, .nav button { background: transparent; border: 0; color: var(--muted-soft);
+    padding: 6px 10px; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer;
+    font-family: inherit; font-size: inherit; text-decoration: none; transition: color var(--t-fast); }
+  .nav a:hover, .nav button:hover { color: var(--fg); }
+  .nav .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border-strong); margin: 0 2px; }
+
+  /* ─── hero: big declarative + deploy-mode selector ─── */
+  .hero { display: grid; grid-template-columns: 1fr auto; gap: 32px;
+    align-items: end; padding: 32px 8px 28px; }
+  .hero h1 {
+    font-family: 'Satoshi', sans-serif; font-weight: 900;
+    font-size: clamp(52px, 7vw, 104px);
+    letter-spacing: -0.05em; line-height: 0.86;
+  }
+  .hero h1 .accent { color: var(--accent); font-style: italic; }
+  .hero h1 .mono { font-family: 'JetBrains Mono', monospace;
+    font-weight: 500; font-size: 0.32em; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted); display: block;
+    margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .hero .lede {
+    font-size: 14px; color: var(--fg-dim); max-width: 460px;
+    line-height: 1.6; letter-spacing: -0.005em;
+    padding-bottom: 6px;
+  }
+  .hero .lede strong { color: var(--fg); font-weight: 600; }
+
+  /* ─── deploy mode segmented control ─── */
+  .mode-row { display: flex; flex-direction: column; gap: 10px;
+    margin: 22px 0 12px; }
+  .mode-row .label { font-family: 'JetBrains Mono', monospace; font-size: 9.5px;
+    text-transform: uppercase; letter-spacing: 0.22em; color: var(--muted); }
+  .mode-ctl { display: inline-flex; background: rgba(0,0,0,0.74);
+    border: 1px solid var(--border); border-radius: var(--r-sm); padding: 3px; gap: 2px; }
+  .mode-ctl button {
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    background: transparent; color: var(--muted-soft);
+    border: 0; padding: 8px 14px; cursor: pointer; border-radius: 2px;
+    transition: color var(--t-fast), background var(--t-fast);
+  }
+  .mode-ctl button:hover { color: var(--fg); }
+  .mode-ctl button.active { background: var(--accent); color: var(--bg); font-weight: 700; }
+
+  /* ─── HUD grid (3-col on desktop, stacked on mobile) ─── */
+  .grid {
+    display: grid;
+    grid-template-columns: 240px 1fr 300px;
+    gap: 14px;
+    margin-top: 32px;
+  }
+  @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+
+  /* ─── panel (Monitor.uss lineage) ─── */
+  .panel {
+    background: rgba(0,0,0,0.78);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    padding: 10px 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .panel-head {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.22em;
+    color: var(--muted);
+    padding-bottom: 8px; margin-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .panel-head .tag { color: rgb(100,160,255); font-weight: 700; letter-spacing: 0.18em; }
+  .panel-head .live { color: rgb(120,220,140); display: flex; align-items: center; gap: 5px; }
+  .panel-head .live::before { content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: rgb(120,220,140); animation: blink 1.4s ease-in-out infinite; }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  /* ─── telemetry readouts (left panel, Keijiro-density) ─── */
+  .readout { display: flex; justify-content: space-between; align-items: baseline;
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+    padding: 5px 0; border-bottom: 1px dashed var(--border);
+  }
+  .readout:last-child { border-bottom: 0; }
+  .readout .k { color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; font-size: 9.5px; }
+  .readout .v { color: var(--fg); font-weight: 500; font-variant-numeric: tabular-nums; }
+  .readout .v.up { color: rgb(120,220,140); }
+  .readout .v.warn { color: var(--warning, #FFCC00); }
+  .readout .v.accent { color: var(--accent); font-weight: 700; }
+
+  /* ─── signal flow (center panel SVG) ─── */
+  .flow-wrap { padding: 2px 0 0; }
+  #flow { width: 100%; height: 360px; display: block; }
+  #flow text { font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+    fill: var(--fg-dim); letter-spacing: 0.1em; text-transform: uppercase; }
+  #flow text.label { fill: var(--muted); font-size: 9px; letter-spacing: 0.2em; }
+  #flow .node rect { fill: rgba(0,0,0,0.85); stroke: var(--border-strong); stroke-width: 1; }
+  #flow .node.active rect { stroke: var(--accent); stroke-width: 1.4; }
+  #flow .node.active text { fill: var(--accent); }
+  #flow line.wire { stroke: var(--border-strong); stroke-width: 1; }
+  #flow line.wire.live { stroke: var(--accent); stroke-width: 1.4;
+    stroke-dasharray: 4 3; animation: dash 1.2s linear infinite; }
+  @keyframes dash { to { stroke-dashoffset: -14; } }
+  #flow .halo { fill: none; stroke: var(--accent); stroke-width: 1.2; opacity: 0; }
+  #flow .node.active .halo { opacity: 0.55; animation: pulse 1s ease-out infinite; }
+  @keyframes pulse { 0% { r: 10; opacity: 0.6; } 100% { r: 28; opacity: 0; } }
+
+  .flow-legend { display: flex; gap: 16px; margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.16em; }
+  .flow-legend b { color: var(--fg); font-weight: 500; letter-spacing: 0.12em; }
+
+  /* ─── tool log (right panel) ─── */
+  .log-wrap { height: 360px; overflow: hidden; position: relative; }
+  .log { font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+    line-height: 1.55; padding: 2px 0; }
+  .log-line { display: grid; grid-template-columns: 48px 68px 1fr; gap: 8px;
+    padding: 3px 2px; border-bottom: 1px dashed rgba(255,255,255,0.04);
+    animation: fadeIn 0.3s ease-out; }
+  .log-line .t { color: var(--muted); font-size: 9.5px; }
+  .log-line .kind { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
+  .log-line .msg { color: var(--fg-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .log-line.tool .kind { color: rgb(100,160,255); }
+  .log-line.result .kind { color: rgb(120,220,140); }
+  .log-line.think .kind { color: var(--secondary); }
+  .log-line.err .kind { color: var(--error, #CF6679); }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ─── backend row (below grid) ─── */
+  .backends {
+    margin-top: 22px;
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;
+  }
+  @media (max-width: 820px) { .backends { grid-template-columns: repeat(2, 1fr); } }
+  .backend {
+    background: rgba(0,0,0,0.74);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    padding: 10px 12px 12px;
+    cursor: pointer;
+    transition: border-color var(--t-fast), background var(--t-fast);
+    text-align: left;
+  }
+  .backend:hover { border-color: rgba(255,255,255,0.24); }
+  .backend.on { border-color: var(--accent); background: rgba(247,255,168,0.05); }
+  .backend .tag { font-family: 'JetBrains Mono', monospace; font-size: 9.5px;
+    text-transform: uppercase; letter-spacing: 0.22em; color: var(--muted);
+    margin-bottom: 6px; display: block; }
+  .backend.on .tag { color: var(--accent); }
+  .backend .name { font-family: 'Satoshi', sans-serif; font-weight: 700;
+    font-size: 13px; letter-spacing: -0.02em; color: var(--fg); margin-bottom: 3px; }
+  .backend .meta { font-family: 'JetBrains Mono', monospace; font-size: 9.5px;
+    color: var(--muted-soft); text-transform: uppercase; letter-spacing: 0.14em; }
+  .backend .meta.offline { color: rgb(120,220,140); }
+
+  /* ─── architecture cards (bottom section, configs.html lineage) ─── */
+  section.arch { margin-top: 72px; padding-top: 28px; border-top: 1px solid var(--border); }
+  section.arch h2 {
+    font-family: 'Satoshi', sans-serif; font-weight: 900;
+    font-size: clamp(28px, 3.6vw, 42px); letter-spacing: -0.035em;
+    margin-bottom: 6px;
+  }
+  section.arch h2 .accent { color: var(--accent); font-style: italic; }
+  section.arch .lede { color: var(--fg-dim); max-width: 640px; margin-bottom: 22px;
+    font-size: 14px; line-height: 1.6; }
+
+  .arch-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+  }
+  .arch-card {
+    border: 1px solid var(--border);
+    padding: 14px 16px 16px;
+    background: rgba(0,0,0,0.4);
+    transition: border-color var(--t-fast), transform var(--t-fast), background var(--t-fast);
+  }
+  .arch-card:hover { border-color: var(--accent); background: rgba(247,255,168,0.04); transform: translateY(-2px); }
+  .arch-card .kind { font-family: 'JetBrains Mono', monospace; font-size: 9.5px;
+    text-transform: uppercase; letter-spacing: 0.22em; color: var(--accent);
+    margin-bottom: 7px; }
+  .arch-card .name { font-family: 'Satoshi', sans-serif; font-weight: 700;
+    font-size: 15px; letter-spacing: -0.015em; margin-bottom: 4px; }
+  .arch-card .loc { font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--muted); margin-bottom: 6px; }
+  .arch-card .hint { font-size: 12.5px; color: var(--fg-dim); line-height: 1.5; }
+  .arch-card .hint code { background: rgba(255,255,255,0.06); padding: 0 4px;
+    font-size: 11px; color: var(--accent); }
+
+  /* ─── failure ledger (from KB prior art) ─── */
+  section.ledger { margin-top: 64px; padding-top: 28px; border-top: 1px solid var(--border); }
+  section.ledger h2 {
+    font-family: 'Satoshi', sans-serif; font-weight: 900;
+    font-size: clamp(28px, 3.6vw, 42px); letter-spacing: -0.035em;
+    margin-bottom: 6px;
+  }
+  section.ledger h2 .accent { color: var(--accent); font-style: italic; }
+  .ledger-rows {
+    margin-top: 22px;
+    border-top: 1px solid var(--border);
+  }
+  .ledger-row {
+    display: grid; grid-template-columns: 80px 1fr 1fr;
+    gap: 18px; padding: 14px 4px;
+    border-bottom: 1px solid var(--border);
+    align-items: start;
+  }
+  .ledger-row .num {
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.18em;
+  }
+  .ledger-row .what { font-weight: 600; color: var(--fg); font-size: 14.5px; letter-spacing: -0.01em; }
+  .ledger-row .fix { font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--fg-dim); line-height: 1.6; }
+  .ledger-row .fix b { color: var(--accent); font-weight: 500; }
+  @media (max-width: 820px) { .ledger-row { grid-template-columns: 1fr; gap: 4px; } }
+
+  /* ─── footer ─── */
+  footer.page-footer {
+    margin-top: 88px; padding-top: 18px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.18em;
+  }
+  footer.page-footer a { color: var(--muted-soft); text-decoration: none; }
+  footer.page-footer a:hover { color: var(--accent); }
+
+  /* ─── rise entrance ─── */
+  .rise { opacity: 0; transform: translateY(10px); animation: rise 0.7s var(--ease) both; }
+  .rise.d1 { animation-delay: 0.08s; } .rise.d2 { animation-delay: 0.16s; }
+  .rise.d3 { animation-delay: 0.24s; } .rise.d4 { animation-delay: 0.32s; }
+  .rise.d5 { animation-delay: 0.40s; } .rise.d6 { animation-delay: 0.48s; }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+
+<body class="scan-lines">
+
+<main class="hud">
+
+  <!-- ─── top bar ─── -->
+  <div class="topbar rise">
+    <div class="brand">xrai<span class="accent">.dev</span><span class="sep">/</span><span class="sub">jARvis</span></div>
+    <nav class="nav">
+      <a href="index.html">spec</a>
+      <span class="dot"></span>
+      <a href="configs.html">configs</a>
+      <span class="dot"></span>
+      <a href="MANIFESTO.md">manifesto</a>
+      <span class="dot"></span>
+      <a href="https://github.com/portals-ai/xrai">github</a>
+    </nav>
+  </div>
+
+  <!-- ─── hero ─── -->
+  <header class="hero rise d1">
+    <div>
+      <h1><span class="accent">jarvis</span>.<br>lean.<br>local‑first.
+        <span class="mono">~400 LOC · SQLite · swappable backends · edge / device / cloud</span>
+      </h1>
+    </div>
+    <div>
+      <p class="lede"><strong>One codebase, three deployments.</strong> ReAct loop, SOUL.md identity, markdown memory. Ships inside Portals on iOS, runs headless on a laptop, containerises for cloud. <strong>Works offline</strong> with a rules‑only backend when no LLM is reachable.</p>
+      <div class="mode-row">
+        <span class="label">deploy</span>
+        <div class="mode-ctl" role="tablist" id="mode-ctl">
+          <button data-mode="edge" class="active">edge · mac</button>
+          <button data-mode="device">device · iOS</button>
+          <button data-mode="cloud">cloud · Fly.io</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ─── HUD grid: telemetry · flow · log ─── -->
+  <div class="grid">
+
+    <!-- ─── LEFT: telemetry ─── -->
+    <aside class="panel rise d2">
+      <div class="panel-head">
+        <span class="tag">telemetry</span>
+        <span class="live">live</span>
+      </div>
+      <div class="readout"><span class="k">mode</span><span class="v accent" id="t-mode">edge · mac</span></div>
+      <div class="readout"><span class="k">backend</span><span class="v" id="t-backend">anthropic · opus 4.7</span></div>
+      <div class="readout"><span class="k">loop iter</span><span class="v" id="t-iter">0</span></div>
+      <div class="readout"><span class="k">context</span><span class="v up" id="t-ctx">0% / 200k</span></div>
+      <div class="readout"><span class="k">memory</span><span class="v" id="t-mem">0 KiB / SQLite</span></div>
+      <div class="readout"><span class="k">tools active</span><span class="v" id="t-tools">6 / 8 max</span></div>
+      <div class="readout"><span class="k">latency p50</span><span class="v" id="t-p50">—</span></div>
+      <div class="readout"><span class="k">latency p95</span><span class="v" id="t-p95">—</span></div>
+      <div class="readout"><span class="k">heartbeat</span><span class="v up" id="t-beat">0s ago</span></div>
+      <div class="readout"><span class="k">uptime</span><span class="v" id="t-up">0s</span></div>
+      <div class="readout"><span class="k">offline?</span><span class="v" id="t-offline">false</span></div>
+    </aside>
+
+    <!-- ─── CENTER: signal flow ─── -->
+    <div class="panel rise d3">
+      <div class="panel-head">
+        <span class="tag">signal flow</span>
+        <span class="live">observe → think → act</span>
+      </div>
+      <div class="flow-wrap">
+        <svg id="flow" viewBox="0 0 640 360" preserveAspectRatio="xMidYMid meet">
+          <!-- wires -->
+          <g id="wires">
+            <line class="wire" x1="110" y1="60"  x2="220" y2="180" data-from="user"    data-to="core"/>
+            <line class="wire" x1="300" y1="180" x2="420" y2="60"  data-from="core"    data-to="backend"/>
+            <line class="wire" x1="420" y1="100" x2="300" y2="180" data-from="backend" data-to="core"/>
+            <line class="wire" x1="300" y1="180" x2="420" y2="180" data-from="core"    data-to="tools"/>
+            <line class="wire" x1="420" y1="200" x2="300" y2="180" data-from="tools"   data-to="core"/>
+            <line class="wire" x1="300" y1="180" x2="420" y2="300" data-from="core"    data-to="memory"/>
+            <line class="wire" x1="420" y1="300" x2="300" y2="180" data-from="memory"  data-to="core"/>
+            <line class="wire" x1="300" y1="180" x2="540" y2="180" data-from="core"    data-to="out"/>
+          </g>
+
+          <!-- nodes -->
+          <g id="nodes">
+            <g class="node" id="n-user" transform="translate(30,30)">
+              <circle class="halo" cx="40" cy="30"/>
+              <rect x="0" y="0" width="80" height="60" rx="2"/>
+              <text x="40" y="26" text-anchor="middle">user</text>
+              <text class="label" x="40" y="46" text-anchor="middle">voice · text</text>
+            </g>
+            <g class="node active" id="n-core" transform="translate(220,150)">
+              <circle class="halo" cx="40" cy="30"/>
+              <rect x="0" y="0" width="80" height="60" rx="2"/>
+              <text x="40" y="26" text-anchor="middle">core</text>
+              <text class="label" x="40" y="46" text-anchor="middle">react loop</text>
+            </g>
+            <g class="node" id="n-backend" transform="translate(420,30)">
+              <circle class="halo" cx="40" cy="30"/>
+              <rect x="0" y="0" width="80" height="60" rx="2"/>
+              <text x="40" y="26" text-anchor="middle" id="n-backend-label">opus</text>
+              <text class="label" x="40" y="46" text-anchor="middle">stop_reason</text>
+            </g>
+            <g class="node" id="n-tools" transform="translate(420,150)">
+              <circle class="halo" cx="40" cy="30"/>
+              <rect x="0" y="0" width="80" height="60" rx="2"/>
+              <text x="40" y="26" text-anchor="middle">tools</text>
+              <text class="label" x="40" y="46" text-anchor="middle">bridge · notes</text>
+            </g>
+            <g class="node" id="n-memory" transform="translate(420,270)">
+              <circle class="halo" cx="40" cy="30"/>
+              <rect x="0" y="0" width="80" height="60" rx="2"/>
+              <text x="40" y="26" text-anchor="middle">memory</text>
+              <text class="label" x="40" y="46" text-anchor="middle">sqlite · soul</text>
+            </g>
+            <g class="node" id="n-out" transform="translate(540,150)">
+              <circle class="halo" cx="40" cy="30"/>
+              <rect x="0" y="0" width="80" height="60" rx="2"/>
+              <text x="40" y="26" text-anchor="middle">out</text>
+              <text class="label" x="40" y="46" text-anchor="middle">bridge · tts</text>
+            </g>
+          </g>
+        </svg>
+      </div>
+      <div class="flow-legend">
+        <span><b>solid</b> · idle wire</span>
+        <span><b>dashed</b> · live token</span>
+        <span><b>halo</b> · active node</span>
+      </div>
+    </div>
+
+    <!-- ─── RIGHT: tool-call log ─── -->
+    <aside class="panel rise d4">
+      <div class="panel-head">
+        <span class="tag">tool stream</span>
+        <span class="live">trace</span>
+      </div>
+      <div class="log-wrap"><div id="log" class="log"></div></div>
+    </aside>
+
+  </div>
+
+  <!-- ─── backend chooser ─── -->
+  <div class="backends rise d5">
+    <button class="backend on" data-be="anthropic" data-label="opus 4.7"    data-offline="false" data-lat="420">
+      <span class="tag">primary</span><div class="name">anthropic</div><div class="meta">opus · sonnet · haiku</div>
+    </button>
+    <button class="backend" data-be="openai" data-label="gpt-5"        data-offline="false" data-lat="480">
+      <span class="tag">api</span><div class="name">openai</div><div class="meta">gpt‑5 · o4</div>
+    </button>
+    <button class="backend" data-be="gemini" data-label="2.5 flash"    data-offline="false" data-lat="280">
+      <span class="tag">api</span><div class="name">gemini</div><div class="meta">2.5 flash · pro</div>
+    </button>
+    <button class="backend" data-be="ollama" data-label="llama 3.3"    data-offline="true"  data-lat="180">
+      <span class="tag">local</span><div class="name">ollama</div><div class="meta offline">on‑device · no net</div>
+    </button>
+    <button class="backend" data-be="apple"  data-label="foundation"   data-offline="true"  data-lat="120">
+      <span class="tag">ios 18+</span><div class="name">apple fm</div><div class="meta offline">a17 · on device</div>
+    </button>
+    <button class="backend" data-be="null"   data-label="rules only"   data-offline="true"  data-lat="5">
+      <span class="tag">fallback</span><div class="name">null</div><div class="meta offline">zero‑LLM · rules</div>
+    </button>
+  </div>
+
+  <!-- ─── architecture ─── -->
+  <section class="arch">
+    <h2><span class="accent">core</span>. four files.</h2>
+    <p class="lede">Pure TypeScript. No framework. Same source runs in Node, in Portals RN, and in a Fastify container. Platform differences live at the runner layer.</p>
+    <div class="arch-grid">
+      <article class="arch-card">
+        <div class="kind">loop.ts</div>
+        <div class="name">ReAct master loop</div>
+        <div class="loc">~120 LOC · proven pattern</div>
+        <div class="hint">One loop, one context, one thread. <code>stop_reason</code> is the only branch. No classifier, no router — the model decides.</div>
+      </article>
+      <article class="arch-card">
+        <div class="kind">memory.ts</div>
+        <div class="name">SQLite KV + log</div>
+        <div class="loc">~90 LOC · better‑sqlite3 / expo‑sqlite</div>
+        <div class="hint">One file, one schema. Replaces the 4‑tier dance. Markdown compaction at 90% ctx. No vector DB.</div>
+      </article>
+      <article class="arch-card">
+        <div class="kind">tools/</div>
+        <div class="name">pluggable registry</div>
+        <div class="loc">~80 LOC · max 8 active</div>
+        <div class="hint">Progressive disclosure. <code>bridge</code> → Unity/RN JSON, <code>notes</code>, <code>search</code>, <code>mcp‑proxy</code>. Overloading kills accuracy.</div>
+      </article>
+      <article class="arch-card">
+        <div class="kind">backends/</div>
+        <div class="name">swappable inference</div>
+        <div class="loc">~100 LOC shared · ~40 each</div>
+        <div class="hint">Single interface: <code>chat(sys,tools,msgs)→{stop,text,calls}</code>. <code>null.ts</code> rules‑only is mandatory — offline must still do useful work.</div>
+      </article>
+      <article class="arch-card">
+        <div class="kind">soul/</div>
+        <div class="name">SOUL.md identity</div>
+        <div class="loc">~500 tokens · human‑editable</div>
+        <div class="hint">Plain markdown. Version‑controlled. Inspired by Claude Code's base prompt pattern. No mega‑prompt.</div>
+      </article>
+      <article class="arch-card">
+        <div class="kind">runners/</div>
+        <div class="name">three thin wrappers</div>
+        <div class="loc">bin · rn · cloud</div>
+        <div class="hint"><code>bin/jarvis</code> Node CLI · <code>rn‑module</code> imports core directly · <code>apps/jarvis‑cloud</code> Fastify.</div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ─── failure ledger (KB-verified prior art) ─── -->
+  <section class="ledger">
+    <h2>seven <span class="accent">failure modes</span> · prevented by design</h2>
+    <p class="lede">From <code>_JARVIS_AGENT_ARCHITECTURE_PATTERNS.md</code> — hard‑won from Claude Code internals, OpenClaw, and the Mar 9 2026 experimental session.</p>
+    <div class="ledger-rows">
+      <div class="ledger-row"><div class="num">01</div><div class="what">Context stuffing → permanent per‑turn tax</div><div class="fix">→ append‑only, never mutate earlier context · compact at 90% · <b>markdown files for persistence, no vector DB</b></div></div>
+      <div class="ledger-row"><div class="num">02</div><div class="what">Mega‑prompts collapse · 95%⁵⁰ ≈ 8% success</div><div class="fix">→ SOUL.md stays under <b>500 tokens</b> · short, powerful, personality-defining</div></div>
+      <div class="ledger-row"><div class="num">03</div><div class="what">Tool overloading → hallucinated params</div><div class="fix">→ hard cap at <b>8 active tools</b> · progressive disclosure for the rest</div></div>
+      <div class="ledger-row"><div class="num">04</div><div class="what">Shared sub‑agent context → confusion + cost</div><div class="fix">→ sub‑agents share <b>results, not histories</b></div></div>
+      <div class="ledger-row"><div class="num">05</div><div class="what">Token exhaustion = primary failure mode</div><div class="fix">→ <b>dynamic model switching</b> Opus → Sonnet → Haiku → null · telemetry panel surfaces context% every loop</div></div>
+      <div class="ledger-row"><div class="num">06</div><div class="what">Device hop → personality death</div><div class="fix">→ SOUL.md + SQLite sync to one file · <b>same memory, every runtime</b></div></div>
+      <div class="ledger-row"><div class="num">07</div><div class="what">Compounding error on long debug sessions</div><div class="fix">→ reset context early · 3+ failed attempts triggers plan mode · never silently retry</div></div>
+    </div>
+  </section>
+
+  <!-- ─── nav · everything-from-here ─── -->
+  <section class="arch" style="padding-top:0;">
+    <h2><span class="accent">explore</span> · everything from here</h2>
+    <p class="lede">jARvis lives at the center of a living graph. Drill into any of these — each one is its own x-ray surface.</p>
+    <div class="arch-grid">
+      <a class="arch-card" href="index.html"><div class="kind">graph</div><div class="name">3D node graph + inspector</div><div class="loc">canonical viewer</div><div class="hint">Live module nodes · 4-tab x-ray (stack/trace/kb/essence) · 5-mode dimension morph (2D ↔ 2.5D ↔ 3D ↔ 4D ↔ hyper). Press <code>i</code>.</div></a>
+      <a class="arch-card" href="landing.html"><div class="kind">landing</div><div class="name">manifesto landing</div><div class="loc">visual essay</div><div class="hint">23-tier representation ladder · faceted ontology preview · Sight Triad in motion.</div></a>
+      <a class="arch-card" href="examples/README.md"><div class="kind">examples</div><div class="name">XRAI examples · master matrix</div><div class="loc">14 docs · 12/12 conformant</div><div class="hint">All XRAI documents authored in the monorepo, with status · constitution lens · paper/patent ties · decoder targets.</div></a>
+      <a class="arch-card" href="examples/INDEX.xrai.json"><div class="kind">index</div><div class="name">XRAI of XRAI · machine-readable</div><div class="loc">15 entities · 11 relations</div><div class="hint">The corpus encoded in its own format. Self-referential meta-document.</div></a>
+      <a class="arch-card" href="examples/11-jarvis-system-dna.xrai.json"><div class="kind">dna</div><div class="name">jARvis system DNA · doc 11</div><div class="loc">28 entities · 50 relations</div><div class="hint">End-to-end Jarvis + XRAI as sparse DNA codons. Self-describing encode/decode rules in <code>metadata.encoding</code>.</div></a>
+      <a class="arch-card" href="examples/12-voxel-burst-prompt.xrai.json"><div class="kind">use-case</div><div class="name">voxel burst from prompt</div><div class="loc">2048 voxels · 60 FPS</div><div class="hint">"explode a galaxy of cyan voxels around me" · sparse intent → Keijiro burst.</div></a>
+      <a class="arch-card" href="examples/13-conducting-orchestration.xrai.json"><div class="kind">use-case</div><div class="name">conducting orchestration</div><div class="loc">multi-finger swarm</div><div class="hint">Per-finger pointing rays + open-hand arc + tempo envelope drive a 1200-particle agent swarm.</div></a>
+      <a class="arch-card" href="examples/14-shared-hologram-conf.xrai.json"><div class="kind">use-case</div><div class="name">shared hologram conf</div><div class="loc">web · iOS · visionOS</div><div class="hint">Multiplayer holographic video conferencing — seating template + per-participant RGBD/Spatial Persona + shared canvas. Same XRAI doc, three runtimes (Three.js · Unity VFX-Graph · Apple Spatial Persona via WWDC24 10201 API).</div></a>
+      <a class="arch-card" href="jarvis/SOUL.md"><div class="kind">soul</div><div class="name">SOUL.md · jARvis identity</div><div class="loc">≤500 tokens · human-editable</div><div class="hint">Who I am · what drives me · how I behave · what I refuse · what I learn over time.</div></a>
+      <a class="arch-card" href="SPEC.md"><div class="kind">spec</div><div class="name">XRAI v1.0 specification</div><div class="loc">CC0 · MIT</div><div class="hint">Top-level schema · entity/relation/event primitives · MIME type · URI scheme · conformance.</div></a>
+      <a class="arch-card" href="MANIFESTO.md"><div class="kind">manifesto</div><div class="name">XRAI manifesto</div><div class="loc">long-form vision</div><div class="hint">Why this format. Why now. The bridge from "we are blind" to "we may see."</div></a>
+      <a class="arch-card" href="rfcs/"><div class="kind">rfcs</div><div class="name">RFCs · proposals + roadmap</div><div class="loc">0001 → 0013</div><div class="hint">Events · hyperedges · conformance · relations · stream ingestion · archetypes · blueprints · decoder contract · master ontology.</div></a>
+      <a class="arch-card" href="configs.html"><div class="kind">configs</div><div class="name">runtime configs</div><div class="loc">presets</div><div class="hint">Hot-swap candidates by layer · adapter manifests.</div></a>
+      <a class="arch-card" href="dev.html"><div class="kind">dev</div><div class="name">dev x-ray · last 7 days</div><div class="loc">commits · friction · sessions</div><div class="hint">Heatmap day×hour · friction events flagged red · 354 sessions · 570 commits · 23 friction events. Built from <code>~/.claude/session-stats/history.jsonl</code> + <code>git log</code>.</div></a>
+      <a class="arch-card" href="conf.html"><div class="kind">conf</div><div class="name">/conf · shared hologram demo</div><div class="loc">LiveKit · multi-seat</div><div class="hint">Open in 2 browsers → join same room → publish cam + mic → see each other as seated participants. Loads doc 14 contract. Paste a LiveKit JWT or wire <code>/api/livekit-token</code>.</div></a>
+      <a class="arch-card" href="replay.html"><div class="kind">replay</div><div class="name">session replay · drop a .jsonl</div><div class="loc">local-only · no upload</div><div class="hint">Drop any Claude Code session transcript from <code>~/.claude/projects/&lt;proj&gt;/</code> → see user/assistant/tool/error turns as a flow. Filter by keyword. Stays in your browser.</div></a>
+      <a class="arch-card" href="priorities.html"><div class="kind">priorities</div><div class="name">MVP priorities · bird's-eye</div><div class="loc">live from specs/INDEX.md</div><div class="hint">#1-#7 priorities cross-referenced to latest commit per id · stale > 7d flagged red · friction count from dev x-ray. Reads <code>specs/INDEX.md</code> NOW × <code>git log --grep</code>.</div></a>
+      <a class="arch-card" href="https://github.com/imclab/xra1"><div class="kind">repo</div><div class="name">github · imclab/xra1</div><div class="loc">MIT</div><div class="hint">Public spec mirror. Open issues, file RFCs, fork freely.</div></a>
+    </div>
+  </section>
+
+  <!-- ─── footer ─── -->
+  <footer class="page-footer">
+    <span>© 2026 · xra1.com/jARvis · MIT</span>
+    <span><a href="index.html">graph</a> · <a href="landing.html">landing</a> · <a href="examples/README.md">examples</a> · <a href="jarvis/SOUL.md">SOUL</a> · <a href="MANIFESTO.md">manifesto</a> · <a href="https://github.com/imclab/xra1">repo</a></span>
+  </footer>
+
+</main>
+
+<script>
+/* ─────────────────────────────────────────────────────────────
+   Interactive HUD — zero runtime deps, ~120 LOC.
+   Animates telemetry, signal-flow nodes, and tool-stream log.
+   Backend/mode selectors mutate local state, not network.
+   ───────────────────────────────────────────────────────────── */
+
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+
+const state = {
+  mode: 'edge',
+  backend: 'anthropic',
+  backendLabel: 'opus 4.7',
+  offline: false,
+  latMs: 420,
+  iter: 0,
+  ctxPct: 2,
+  memKib: 12,
+  toolsActive: 6,
+  latSamples: [],
+  started: Date.now(),
+  lastBeat: Date.now(),
+};
+
+/* ───── deploy mode selector ───── */
+$$('#mode-ctl button').forEach(b => b.addEventListener('click', () => {
+  $$('#mode-ctl button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  state.mode = b.dataset.mode;
+  $('#t-mode').textContent = b.textContent.toLowerCase();
+  addLog('think', `deploy → ${state.mode}`);
+}));
+
+/* ───── backend chooser ───── */
+$$('.backend').forEach(b => b.addEventListener('click', () => {
+  $$('.backend').forEach(x => x.classList.remove('on'));
+  b.classList.add('on');
+  state.backend = b.dataset.be;
+  state.backendLabel = b.dataset.label;
+  state.offline = b.dataset.offline === 'true';
+  state.latMs = +b.dataset.lat;
+  $('#t-backend').textContent = `${state.backend} · ${state.backendLabel}`;
+  $('#n-backend-label').textContent = state.backend === 'anthropic' ? 'opus'
+                                    : state.backend === 'openai'    ? 'gpt‑5'
+                                    : state.backend === 'gemini'    ? 'flash'
+                                    : state.backend === 'ollama'    ? 'llama'
+                                    : state.backend === 'apple'     ? 'fm'
+                                    : 'rules';
+  $('#t-offline').textContent = state.offline ? 'true' : 'false';
+  $('#t-offline').className = state.offline ? 'v up' : 'v';
+  addLog('think', `backend → ${state.backend} (${state.offline ? 'offline' : 'online'})`);
+}));
+
+/* ───── tool-call log ───── */
+const logEl = $('#log');
+const MAX_LINES = 14;
+function addLog(kind, msg) {
+  const d = new Date();
+  const t = `${String(d.getSeconds()).padStart(2,'0')}.${String(d.getMilliseconds()).padStart(3,'0').slice(0,2)}`;
+  const el = document.createElement('div');
+  el.className = `log-line ${kind}`;
+  el.innerHTML = `<span class="t">${t}</span><span class="kind">${kind}</span><span class="msg">${msg}</span>`;
+  logEl.insertBefore(el, logEl.firstChild);
+  while (logEl.children.length > MAX_LINES) logEl.removeChild(logEl.lastChild);
+}
+
+/* ───── simulated ReAct loop ───── */
+const tools = [
+  { n: 'bridge',  m: 'sendToUnity({type:"hologram_start"})' },
+  { n: 'memory',  m: 'write("last_intent","hologram")' },
+  { n: 'notes',   m: 'append("user wants subject tracking")' },
+  { n: 'search',  m: 'query("VFXBinderGate")' },
+  { n: 'bridge',  m: 'sendToUnity({type:"set_view_mode",mode:"hologram"})' },
+  { n: 'mcp',     m: 'unity.manage_scene(name:"SimpleAR")' },
+  { n: 'memory',  m: 'read("soul_constraints")' },
+];
+
+const flowSeq = ['n-user','n-core','n-backend','n-core','n-tools','n-core','n-memory','n-core','n-out'];
+let seqIdx = 0;
+
+function pulseNode(id) {
+  $$('.node').forEach(n => n.classList.remove('active'));
+  $('#' + id)?.classList.add('active');
+  const nodeName = id.replace('n-','');
+  $$('#wires line.wire').forEach(l => {
+    const live = (l.dataset.to === nodeName) || (l.dataset.from === nodeName);
+    l.classList.toggle('live', live);
+  });
+}
+
+function tick() {
+  state.iter++;
+  const target = flowSeq[seqIdx % flowSeq.length];
+  pulseNode(target);
+
+  if (target === 'n-backend') {
+    addLog('think', `llm call · ${state.backendLabel} · streaming`);
+    const jitter = state.latMs + (Math.random() * 80 - 40);
+    state.latSamples.push(jitter);
+    if (state.latSamples.length > 20) state.latSamples.shift();
+  } else if (target === 'n-tools') {
+    const t = tools[state.iter % tools.length];
+    addLog('tool', `${t.n} · ${t.m}`);
+  } else if (target === 'n-memory') {
+    addLog('think', 'sqlite · write kv');
+    state.memKib += Math.floor(Math.random() * 4);
+  } else if (target === 'n-out') {
+    addLog('result', 'stop_reason=end_turn · ack → bridge');
+  } else if (target === 'n-user') {
+    addLog('think', 'observe · new intent received');
+  }
+
+  state.ctxPct = Math.min(92, state.ctxPct + (Math.random() * 2 - 0.4));
+  state.lastBeat = Date.now();
+  seqIdx++;
+  refreshTelemetry();
+}
+
+function refreshTelemetry() {
+  const up = Math.floor((Date.now() - state.started) / 1000);
+  const samples = state.latSamples.length ? state.latSamples.slice().sort((a,b)=>a-b) : null;
+  const p50 = samples ? Math.round(samples[Math.floor(samples.length*0.5)]) : null;
+  const p95 = samples ? Math.round(samples[Math.floor(samples.length*0.95)]) : null;
+  $('#t-iter').textContent = String(state.iter);
+  $('#t-ctx').textContent = `${state.ctxPct.toFixed(1)}% / 200k`;
+  $('#t-ctx').className = state.ctxPct > 85 ? 'v warn' : 'v up';
+  $('#t-mem').textContent = `${state.memKib} KiB / SQLite`;
+  $('#t-tools').textContent = `${state.toolsActive} / 8 max`;
+  $('#t-p50').textContent = p50 ? `${p50} ms` : '—';
+  $('#t-p95').textContent = p95 ? `${p95} ms` : '—';
+  $('#t-beat').textContent = `${Math.max(0, Math.floor((Date.now()-state.lastBeat)/1000))}s ago`;
+  $('#t-up').textContent = up < 60 ? `${up}s` : `${Math.floor(up/60)}m ${up%60}s`;
+}
+
+setInterval(tick, 900);
+setInterval(refreshTelemetry, 1000);
+
+addLog('think', 'boot · loading SOUL.md (487 tokens)');
+addLog('result', 'memory ready · 12 KiB restored');
+addLog('tool', 'bridge · handshake → portals_ios');
+</script>
+
+<!-- ─── Live x-ray layer · ports the index.html inspector pattern into this page ─── -->
+<style>
+  .arch-card { position: relative; cursor: pointer; transition: transform .15s, border-color .15s; }
+  .arch-card:hover { transform: translateY(-2px); border-color: rgba(247,255,168,0.55); }
+  .arch-card .live-dot {
+    position: absolute; top: 8px; right: 8px;
+    width: 8px; height: 8px; border-radius: 50%; background: #444;
+    box-shadow: 0 0 4px currentColor; color: #444; transition: background .3s, color .3s;
+  }
+  .arch-card .live-dot.on   { background: #5eff8a; color: #5eff8a; }
+  .arch-card .live-dot.warn { background: #F7FFA8; color: #F7FFA8; }
+  .arch-card .live-dot.off  { background: #444;    color: #444; }
+  .arch-card .xray-hint { position: absolute; bottom: 8px; right: 10px; font-size: 9px; opacity: .35; letter-spacing: .08em; text-transform: uppercase; }
+  .ledger-row { transition: background .2s; }
+  .ledger-row.live-warn { background: rgba(247,255,168,0.06); }
+</style>
+
+<script type="module">
+  // Pull in the same x-ray modules that index.html uses
+  await Promise.all([
+    import('./js/trace.js'),
+    import('./js/perceptual-frame.js'),
+    import('./js/stack-inspector.js'),
+    // jarvis-web needs context (Graph/nodes/openNode); skip on this page — wake/STT runs but answer pipeline can fall through
+  ]);
+
+  // Map architecture cards → inspector layer id
+  const CARD_TO_LAYER = {
+    'loop.ts':    { layer: 'pipeline', tab: 'stack' },
+    'memory.ts':  { layer: 'memory',   tab: 'stack' },
+    'tools/':     { layer: null,       tab: 'trace' },
+    'backends/':  { layer: 'llm',      tab: 'stack' },
+    'soul/':      { layer: 'sysprompt',tab: 'stack' },
+    'runners/':   { layer: null,       tab: 'kb' },
+  };
+
+  // Decorate cards: live-status dot + click → open inspector → switch tab → expand layer
+  document.querySelectorAll('.arch-card').forEach(card => {
+    const kind = card.querySelector('.kind')?.textContent?.trim();
+    const map = CARD_TO_LAYER[kind];
+    const dot = document.createElement('span'); dot.className = 'live-dot off';
+    card.appendChild(dot);
+    const hint = document.createElement('span'); hint.className = 'xray-hint';
+    hint.textContent = map ? `xray → ${map.tab}` : 'xray';
+    card.appendChild(hint);
+    card.addEventListener('click', async () => {
+      const insp = window.__inspector;
+      if (!insp) return;
+      if (!insp.open) await insp.toggle(true);
+      if (map?.tab && insp.tab !== map.tab) await insp._switchTab(map.tab);
+      // Auto-expand the matching layer row in the stack tab
+      if (map?.layer && map.tab === 'stack') {
+        setTimeout(() => {
+          const rows = insp.rowsEl?.querySelectorAll('.row .label') || [];
+          for (const labelEl of rows) {
+            if (labelEl.textContent.toLowerCase().includes(map.layer)) {
+              labelEl.closest('.row').classList.add('open');
+              labelEl.closest('.row').scrollIntoView({ behavior: 'smooth', block: 'center' });
+              break;
+            }
+          }
+        }, 180);
+      }
+    });
+  });
+
+  // Live status polling — sets dot color from real runtime state every 1s
+  function pollLive() {
+    const J = window.__jarvis, P = window.__perceptualFrame;
+    const hasKey = (() => { try { return !!localStorage.getItem('gemini_key'); } catch { return false; } })();
+    const set = (kind, cls) => {
+      document.querySelectorAll('.arch-card').forEach(card => {
+        if (card.querySelector('.kind')?.textContent?.trim() === kind) {
+          const d = card.querySelector('.live-dot');
+          if (d) { d.classList.remove('on','warn','off'); d.classList.add(cls); }
+        }
+      });
+    };
+    set('loop.ts',   J?.active ? 'on' : 'off');
+    set('memory.ts', J ? 'on' : 'off');
+    set('tools/',    P ? 'on' : 'off');
+    set('backends/', hasKey ? 'on' : 'warn');  // warn = no key → falls through
+    set('soul/',     hasKey ? 'on' : 'off');   // sysprompt only built when LLM call fires
+    set('runners/',  'on');                    // this page IS a runner
+  }
+  pollLive(); setInterval(pollLive, 1000);
+
+  // Surface a one-line hint on first load
+  const tip = document.createElement('div');
+  tip.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(8,10,14,0.7);color:#F7FFA8;padding:8px 14px;border:1px solid rgba(247,255,168,0.35);border-radius:8px;font:11px/1.4 ui-monospace,Menlo,monospace;backdrop-filter:blur(10px);z-index:24;opacity:0;transition:opacity .5s;';
+  tip.innerHTML = 'click any architecture card → live x-ray · or press <b>i</b> · status dots show what\'s actually running';
+  document.body.appendChild(tip);
+  setTimeout(() => tip.style.opacity = '1', 600);
+  setTimeout(() => tip.style.opacity = '0', 7000);
+  setTimeout(() => tip.remove(), 8000);
+</script>
+
+</body>
+</html>

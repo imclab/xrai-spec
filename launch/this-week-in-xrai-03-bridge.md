@@ -30,7 +30,7 @@ interface AddObjectMessage {
 Three properties emerge from this:
 
 1. **XRAI-shaped on both sides.** Every bridge message is a subset of an XRAI mutation. `add_object` = "append an entity to scene.entities"; `set_animation` = "set entity.animation"; `save_scene` = "export the current XRAI doc"; etc. No translation layer.
-2. **Type guards at the edges.** `BridgeRouter.parseMessage()` is hand-rolled (allocation-free in Unity); TS side has `isAddObjectMessage()` discriminators. The 69 types can't silently drift.
+2. **Type guards at the edges.** `BridgeRouter.ExtractType()` + `ExtractString()` / `ExtractInt()` / `ExtractFloat()` family are hand-rolled (allocation-free in Unity); TS side has `isAddObjectMessage()` discriminators. The 69 types can't silently drift.
 3. **The MCP server is the third side of the triangle.** `paint_emit_stroke` and `compose_scene` (in `mcp-server/src/index.ts`) emit the same shapes that RN sends to Unity. Any MCP-compatible agent composes scenes through the same typed contract.
 
 ## Why this matters for anyone building an XRAI runtime

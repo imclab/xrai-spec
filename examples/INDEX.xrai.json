@@ -1,0 +1,68 @@
+{
+  "xrai_version": "1.0",
+  "id": "00000000-0000-4000-a000-0000000000ff",
+  "created_at": "2026-04-24T00:00:00Z",
+  "author": {"type": "agent", "id": "claude-opus-4-7@portals-v4"},
+  "origin": {"app": "portals", "version": "v4", "scene": "XraiMasterIndex"},
+
+  "metadata": {
+    "title": "XRAI of XRAI — master index of all .xrai.json documents in this monorepo",
+    "purpose": "Self-referential meta-document. Every authored XRAI doc appears as one entity codon here. Decoders that crawl the corpus dispatch on metadata.status / metadata.alignment to pick what to load.",
+    "ssot_human_form":   "./README.md",
+    "ssot_project_form": "../../../../docs/XRAI_INDEX.md",
+    "viewer_hint": "force-graph (group by metadata.status, color by metadata.alignment.pillar)",
+    "encoding": {
+      "spec_refs": {
+        "schema":           "../SPEC.md",
+        "ontology":         "../rfcs/0013-master-ontology-faceted-learning.md",
+        "decoder_contract": "../rfcs/0012-decoder-contract.md"
+      },
+      "ontology_facets": {"A1": "system", "A6": "schema", "A4": "graph", "A12": "T1-battle-tested-for-01-04"}
+    }
+  },
+
+  "scene": {
+    "anchors": [
+      {"id": "anchor_corpus", "type": "ar.virtual", "metadata": {"space": "xrai-website/examples"}}
+    ],
+
+    "entities": [
+      {"id": "ex.01.minimal",            "type": "object.primitive", "model_id": 0, "transform": {"position": [-2.5, 0,    0],   "rotation":[0,0,0,1], "scale":[0.3,0.3,0.3]}, "material": {"color":"white", "preset":"neon"},  "metadata": {"file":"01-minimal.xrai.json",            "status":"visualized-live",  "role":"single cube; smallest valid scene",                                          "lens":"sight.x_ray",         "ties":["RFC-0003 fixture #1"]}},
+      {"id": "ex.02.voice",              "type": "object.primitive", "model_id": 0, "transform": {"position": [-2.0, 0,    0],   "rotation":[0,0,0,1], "scale":[0.3,0.3,0.3]}, "material": {"color":"cyan",  "preset":"neon"},  "metadata": {"file":"02-voice-prompt.xrai.json",       "status":"visualized-live",  "role":"voice → scene; LLM-authored",                                                "lens":"pillar.authorship",   "ties":["paper.proof_3"]}},
+      {"id": "ex.03.wired",              "type": "object.primitive", "model_id": 0, "transform": {"position": [-1.5, 0,    0],   "rotation":[0,0,0,1], "scale":[0.3,0.3,0.3]}, "material": {"color":"magenta","preset":"neon"}, "metadata": {"file":"03-wired.xrai.json",              "status":"visualized-live",  "role":"audio-reactive: wire-binds + reacts-to-audio",                               "lens":"pillar.format",       "ties":["RFC-0004"]}},
+      {"id": "ex.04.hologram",           "type": "object.primitive", "model_id": 0, "transform": {"position": [-1.0, 0,    0],   "rotation":[0,0,0,1], "scale":[0.35,0.35,0.35]}, "material": {"color":"gold","preset":"glass"}, "metadata": {"file":"04-hologram.xrai.json",          "status":"visualized-live",  "role":"AR anchor + hologram emitter + depth-aware VFX",                             "lens":"pillar.edge",         "ties":["patent.021_pthi.anchor_bound"]}},
+      {"id": "ex.05.procedural",         "type": "object.primitive", "model_id": 0, "transform": {"position": [-0.5, 0,    0],   "rotation":[0,0,0,1], "scale":[0.3,0.3,0.3]}, "material": {"color":"green", "preset":"neon"}, "metadata": {"file":"05-procedural-world.xrai.json",   "status":"authored",         "role":"goal-oriented procedural gen from sparse intent",                            "lens":"sight.infinite_zoom", "ties":["paper.proof_1","patent.sse"]}},
+      {"id": "ex.06.body_hand",          "type": "object.primitive", "model_id": 0, "transform": {"position": [ 0.0, 0,    0],   "rotation":[0,0,0,1], "scale":[0.3,0.3,0.3]}, "material": {"color":"cyan",  "preset":"neon"},  "metadata": {"file":"06-ar-body-hand.xrai.json",       "status":"authored",         "role":"ARKit body22 + Holokit hands26 as entity codons",                            "lens":"pillar.edge",         "ties":["patent.streaming_pose"]}},
+      {"id": "ex.07.persistent",         "type": "object.primitive", "model_id": 0, "transform": {"position": [ 0.5, 0,    0],   "rotation":[0,0,0,1], "scale":[0.3,0.3,0.3]}, "material": {"color":"gold",  "preset":"glass"}, "metadata": {"file":"07-persistent-anchor.xrai.json",  "status":"authored",         "role":"save/reload XRAI keyed by ARKit anchor UUID",                                "lens":"pillar.authorship",   "ties":["patent.user_owned_anchor_doc"]}},
+      {"id": "ex.08.shared",             "type": "object.primitive", "model_id": 0, "transform": {"position": [ 1.0, 0,    0],   "rotation":[0,0,0,1], "scale":[0.3,0.3,0.3]}, "material": {"color":"magenta","preset":"neon"}, "metadata": {"file":"08-shared-spatial.xrai.json",     "status":"authored",         "role":"LiveKit room broadcasts XRAI deltas to peers",                               "lens":"pillar.multiplayer",  "ties":["spec.010_livekit"]}},
+      {"id": "ex.09.specs_map",          "type": "object.primitive", "model_id": 0, "transform": {"position": [ 1.5, 0,    0],   "rotation":[0,0,0,1], "scale":[0.4, 0.4, 0.4]}, "material": {"color":"gold",  "preset":"glass"}, "metadata": {"file":"09-specs-map.xrai.json",          "status":"visualized-link",  "role":"self-referential XRAI of the 27-spec graph",                                 "lens":"sight.gods_eye",      "ties":["RFC-0013"]}},
+      {"id": "ex.10.project_map",        "type": "object.primitive", "model_id": 0, "transform": {"position": [ 2.0, 0,    0],   "rotation":[0,0,0,1], "scale":[0.45,0.45,0.45]}, "material": {"color":"red",  "preset":"neon"},  "metadata": {"file":"10-project-map.xrai.json",        "status":"visualized-link",  "role":"whole-project map: triad essence + 5 pillars + code roots + endpoints",      "lens":"constitution.mirror", "ties":["constitution.essence_triad","constitution.five_pillars"]}},
+      {"id": "ex.11.jarvis_dna",         "type": "object.primitive", "model_id": 0, "transform": {"position": [ 2.5, 0,    0],   "rotation":[0,0,0,1], "scale":[0.55,0.55,0.55]}, "material": {"color":"gold", "preset":"glass"}, "metadata": {"file":"11-jarvis-system-dna.xrai.json",  "status":"authored",         "role":"end-to-end Jarvis + XRAI system DNA; self-describing encode/decode rules; 28 entities/50 relations after 2026-04-24 doctrine lock-in",   "lens":"all_pillars+sight_triad+wonder+expressive_freedom+perceptual_frame", "ties":["paper.proof_1","paper.proof_3","patent.021_pthi.sse","patent.021_pthi.decoder_contract","patent.021_pthi.faceted_ontology","patent.021_pthi.anchor_bound","RFC-0009","RFC-0010","RFC-0011","RFC-0012","RFC-0013"]}},
+      {"id": "ex.12.voxel_burst",        "type": "object.primitive", "model_id": 0, "transform": {"position": [ 3.0, 0.6,  0],   "rotation":[0,0,0,1], "scale":[0.4,0.4,0.4]}, "material": {"color":"cyan", "preset":"neon"}, "metadata": {"file":"12-voxel-burst-prompt.xrai.json", "status":"authored",         "subset":"jarvis_use_cases", "role":"voice prompt → seeded Keijiro voxel burst; sparse intent → 2048 GPU voxels at 60 FPS", "lens":"xrai_philosophy.dna_to_phenotype+wonder", "ties":["paper.proof_1","patent.021_pthi.sse","keijiro.rcam2"]}},
+      {"id": "ex.13.conducting",         "type": "object.primitive", "model_id": 0, "transform": {"position": [ 3.0, -0.6, 0],   "rotation":[0,0,0,1], "scale":[0.4,0.4,0.4]}, "material": {"color":"gold", "preset":"glass"}, "metadata": {"file":"13-conducting-orchestration.xrai.json", "status":"authored",   "subset":"jarvis_use_cases", "role":"multi-finger conducting + air-piano + optional symphonic harp cue → 1200-particle agent swarm",   "lens":"wonder+expressive_freedom+pointing_gaze_expressive", "ties":["patent.021_pthi.streaming_pose","patent.021_pthi.decoder_contract"]}},
+      {"id": "ex.14.hologram_conf",      "type": "object.primitive", "model_id": 0, "transform": {"position": [ 3.5, 0,    0],   "rotation":[0,0,0,1], "scale":[0.45,0.45,0.45]}, "material": {"color":"magenta","preset":"neon"}, "metadata": {"file":"14-shared-hologram-conf.xrai.json", "status":"authored", "subset":"jarvis_use_cases", "role":"multiplayer holographic video conferencing — seating template + per-participant RGBD/Spatial-Persona + shared canvas; same XRAI doc renders web/iOS/visionOS", "lens":"sight.infinite_zoom_across_minds+perceptual_frame_invariant", "ties":["apple.wwdc24_10201_verified","spec.010_livekit","metavidolivearkit"]}},
+
+      {"id": "lg.format_bundle",         "type": "object.primitive", "model_id": 0, "transform": {"position": [-1.0, -1.5, 0],   "rotation":[0,0,0,1], "scale":[0.2,0.2,0.2]}, "material": {"color":"white","preset":"neon"}, "metadata": {"file":"../../../../.xrai/xrai_format_bundle/sample.xrai.json",         "status":"legacy", "role":"pre-v1.0 sample (format-bundle stage)"}},
+      {"id": "lg.spec_repo_final",       "type": "object.primitive", "model_id": 0, "transform": {"position": [ 1.0, -1.5, 0],   "rotation":[0,0,0,1], "scale":[0.2,0.2,0.2]}, "material": {"color":"white","preset":"neon"}, "metadata": {"file":"../../../../.xrai/xrai-spec-repo-final/examples/sample.xrai.json","status":"legacy", "role":"pre-v1.0 sample (spec-repo-final stage)"}}
+    ],
+
+    "relations": [
+      {"id": "r.viewer.live.01", "type": "wire-binds", "from": "ex.01.minimal",   "to": "ex.02.voice",       "props": {"role": "loaded-by index.html graph viewer (lines 774-777)"}},
+      {"id": "r.viewer.live.02", "type": "wire-binds", "from": "ex.02.voice",     "to": "ex.03.wired",       "props": {"role": "loaded-by index.html graph viewer"}},
+      {"id": "r.viewer.live.03", "type": "wire-binds", "from": "ex.03.wired",     "to": "ex.04.hologram",    "props": {"role": "loaded-by index.html graph viewer"}},
+      {"id": "r.viewer.link.09", "type": "wire-binds", "from": "ex.09.specs_map", "to": "ex.10.project_map", "props": {"role": "linked-from landing.html"}},
+      {"id": "r.dna.refs.05",    "type": "parent-of",  "from": "ex.11.jarvis_dna","to": "ex.05.procedural",  "props": {"role": "DNA cites procedural-world as decode example"}},
+      {"id": "r.dna.refs.06",    "type": "parent-of",  "from": "ex.11.jarvis_dna","to": "ex.06.body_hand",   "props": {"role": "DNA cites body+hand as edge.vision input"}},
+      {"id": "r.dna.refs.07",    "type": "parent-of",  "from": "ex.11.jarvis_dna","to": "ex.07.persistent",  "props": {"role": "DNA cites anchor-bound persistence"}},
+      {"id": "r.dna.refs.08",    "type": "parent-of",  "from": "ex.11.jarvis_dna","to": "ex.08.shared",      "props": {"role": "DNA cites shared LiveKit deltas"}},
+      {"id": "r.subset.12",      "type": "parent-of",  "from": "ex.11.jarvis_dna","to": "ex.12.voxel_burst", "props": {"subset": "jarvis_use_cases", "role": "DNA cites voxel-burst as procedural-gen example"}},
+      {"id": "r.subset.13",      "type": "parent-of",  "from": "ex.11.jarvis_dna","to": "ex.13.conducting",     "props": {"subset": "jarvis_use_cases", "role": "DNA cites conducting as expressive-multi-finger example"}},
+      {"id": "r.subset.14",      "type": "parent-of",  "from": "ex.11.jarvis_dna","to": "ex.14.hologram_conf",  "props": {"subset": "jarvis_use_cases", "role": "DNA cites hologram-conf as multi-user multi-runtime example"}},
+      {"id": "r.corpus.tracks",  "type": "tracks",     "from": "ex.11.jarvis_dna","to": "anchor_corpus",        "props": {}}
+    ],
+
+    "events": [
+      {"id": "e.index.created", "t": "2026-04-24T00:00:00Z", "type": "xrai.index.built", "entity": null, "metadata": {"by":"claude-opus-4-7","scope":"whole-corpus","next":"wire 05-08+11 into index.html graph viewer"}}
+    ]
+  }
+}
