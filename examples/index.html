@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>XRAI examples — load any decoder</title>
+<meta name="description" content="14 working v1.0 XRAI documents. Click to view raw, open in the force-graph viewer, or load in jARvis.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,200..700&family=IBM+Plex+Serif:wght@300;400;500&family=JetBrains+Mono:wght@300;400;500&display=swap">
+<style>
+:root{
+  --ink:#0B0F0C; --paper:#F3EFE5; --paper-dim:#D9D3C4;
+  --ph:#5EE387; --ph-dim:#2C7A46; --amber:#F5B040; --amber-dim:#8C5F1E;
+  --mute:#48564D; --mute-2:#6C7A71; --rule:rgba(94,227,135,.18);
+  --serif:"Fraunces","IBM Plex Serif",Georgia,serif;
+  --body:"IBM Plex Serif",Georgia,serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--ink);color:var(--paper);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body{background:radial-gradient(140% 80% at 15% 0%,rgba(94,227,135,.05),transparent 60%),linear-gradient(180deg,var(--ink) 0%,#070A08 100%);min-height:100vh}
+a{color:var(--amber);text-decoration:none;border-bottom:1px solid var(--amber-dim);transition:color .2s,border-color .2s}
+a:hover{color:var(--ph);border-color:var(--ph)}
+code,.mono{font-family:var(--mono);font-size:.92em;color:var(--ph)}
+header.chrome{position:sticky;top:0;z-index:30;backdrop-filter:blur(8px);background:rgba(11,15,12,.75);border-bottom:1px solid var(--rule)}
+.chrome-row{max-width:88rem;margin:0 auto;padding:.7rem 2rem;display:flex;gap:1.5rem;align-items:baseline;font-family:var(--mono);font-size:.78rem;letter-spacing:.12em;text-transform:uppercase}
+.brand{color:var(--ph);font-weight:500;letter-spacing:.3em}
+.chrome-nav{display:flex;gap:1.5rem;flex-wrap:wrap}
+.chrome-nav a{color:var(--mute-2);border:none}
+.chrome-nav a:hover{color:var(--ph)}
+.chrome-tail{margin-left:auto;color:var(--mute-2)}
+main{max-width:88rem;margin:0 auto;padding:3rem 2rem 6rem}
+.eyebrow{font-family:var(--mono);font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ph);margin-bottom:1rem}
+h1{font-family:var(--serif);font-weight:300;font-size:clamp(2.4rem,5vw,4rem);letter-spacing:-.025em;line-height:1;margin:0 0 1rem}
+h1 em{font-style:italic;color:var(--ph)}
+.lede{font-size:1.1rem;color:var(--paper-dim);max-width:62ch;margin:0 0 2rem}
+.legend{display:flex;flex-wrap:wrap;gap:.6rem 1.5rem;font-family:var(--mono);font-size:.74rem;letter-spacing:.1em;color:var(--mute-2);text-transform:uppercase;margin-bottom:2.5rem;padding:.9rem 1.1rem;border:1px solid var(--rule);background:rgba(11,15,12,.4)}
+.legend b{color:var(--ph);font-weight:500}
+table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.82rem}
+thead th{font-weight:500;text-transform:uppercase;letter-spacing:.14em;font-size:.7rem;color:var(--ph);text-align:left;padding:.8rem .6rem;border-bottom:1px solid var(--rule)}
+tbody td{padding:.85rem .6rem;border-bottom:1px solid rgba(94,227,135,.08);vertical-align:top}
+tbody tr:hover{background:rgba(94,227,135,.03)}
+td.n{color:var(--mute-2);font-weight:500;width:2.5rem}
+td.f{font-family:var(--mono);font-weight:500;width:23ch}
+td.f a{color:var(--ph);border-color:var(--ph-dim)}
+td.f a:hover{color:var(--amber);border-color:var(--amber)}
+td.r{color:var(--paper-dim);max-width:42ch;font-family:var(--body);font-size:.92rem;line-height:1.45}
+td.s{font-size:.72rem;color:var(--mute-2);width:14ch;letter-spacing:.06em}
+td.s.live{color:var(--ph)}
+td.s.link{color:var(--amber)}
+td.s.auth{color:var(--paper-dim)}
+td.actions{width:18ch;text-align:right;white-space:nowrap}
+.act{display:inline-block;font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;padding:.3rem .55rem;margin-left:.3rem;border:1px solid var(--ph-dim);color:var(--ph);background:transparent;border-radius:0;transition:all .15s}
+.act:hover{background:var(--ph);color:var(--ink);border-color:var(--ph)}
+.act.amber{border-color:var(--amber-dim);color:var(--amber)}
+.act.amber:hover{background:var(--amber);color:var(--ink);border-color:var(--amber)}
+@media(max-width:760px){
+  table,thead,tbody,th,td,tr{display:block}
+  thead{display:none}
+  tbody tr{padding:1rem 0;border-bottom:1px solid var(--rule)}
+  td{padding:.3rem 0;border:none;width:auto !important;max-width:none}
+  td.actions{text-align:left;margin-top:.5rem}
+}
+.note{margin-top:3rem;padding:1.5rem;border:1px solid var(--rule);background:rgba(11,15,12,.5);font-size:.92rem;color:var(--paper-dim)}
+.note h3{font-family:var(--mono);font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ph);margin:0 0 .8rem}
+.note code{display:inline-block;padding:.1rem .35rem;background:rgba(94,227,135,.08);border:1px solid var(--rule)}
+.note ul{margin:.5rem 0;padding-left:1.4rem}
+.note li{margin:.3rem 0}
+::selection{background:var(--ph);color:var(--ink)}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+</style>
+</head>
+<body>
+
+<header class="chrome">
+  <div class="chrome-row">
+    <a href="../landing.html" class="brand" style="border:none">XRAI</a>
+    <nav class="chrome-nav">
+      <a href="../landing.html">manifesto</a>
+      <a href="../SPEC.html">spec</a>
+      <a href="../rfcs/">rfcs</a>
+      <a href="./" aria-current="page" style="color:var(--ph)">examples</a>
+      <a href="../VIEWER_ARCHITECTURE.html">viewer</a>
+      <a href="../RUNTIMES.html">runtimes</a>
+    </nav>
+    <span class="chrome-tail">14 docs · v1.0 · cc0</span>
+  </div>
+</header>
+
+<main>
+  <div class="eyebrow">§ examples · click any row to load</div>
+  <h1>14 working <em>XRAI</em> documents.</h1>
+  <p class="lede">Each document is conformant v1.0 and reads on every reference decoder. Pick a row and open it raw, in the force-graph viewer, or hand it to jARvis as starter context. <strong style="color:var(--ph)">All three decoders read the same JSON</strong> &mdash; that is the whole point of the bus.</p>
+
+  <div class="legend">
+    <span><b>✅ live</b> &mdash; auto-loads in graph viewer</span>
+    <span><b>🔗 link</b> &mdash; clickable from landing</span>
+    <span><b>🟡 auth</b> &mdash; spec-conformant, viewer wiring pending</span>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>file</th>
+        <th>role</th>
+        <th>status</th>
+        <th style="text-align:right">load in</th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <div class="note">
+    <h3>How to load anywhere</h3>
+    <ul>
+      <li><b style="color:var(--ph)">Web force-graph</b> &middot; <code>../index.html?doc=examples/NN-slug.xrai.json</code> &mdash; opens any doc in the viewer that already auto-loads examples 01-04.</li>
+      <li><b style="color:var(--ph)">Web jARvis</b> &middot; <code>../jarvis.html?seed=examples/NN-slug.xrai.json</code> &mdash; agent reads the doc as starter context (param-handler in jarvis-web.js).</li>
+      <li><b style="color:var(--ph)">Web conf</b> &middot; <code>../conf.html?room=&doc=examples/14-shared-hologram-conf.xrai.json</code> &mdash; multi-user hologram template.</li>
+      <li><b style="color:var(--ph)">Portals iOS app</b> &middot; bridge message <code>{"type":"load_xrai_example","id":"04-hologram"}</code> &mdash; uses <code>XraiAdapter.xraiFromFile()</code> in <code>src/services/xrai/</code>. <em style="color:var(--amber)">Bridge handler shipped behind <code>JARVIS2_ENABLED</code> flag (S029) &mdash; UI selector pending.</em></li>
+      <li><b style="color:var(--ph)">Three.js CLI</b> &middot; <code>node ../runtimes/threejs/src/cli.js NN-slug.xrai.json</code> &mdash; renders to terminal-detected display.</li>
+      <li><b style="color:var(--ph)">Conformance gate</b> &middot; <code>node ../runtimes/_conformance/validate_fixtures.cjs</code> &mdash; lints all 14 against v1.0 schema.</li>
+    </ul>
+    <p style="margin-top:1rem;font-size:.85rem">Authoring rule: every new <code>.xrai.json</code> MUST add a row to the <a href="./README.md">master matrix README</a> in the same commit. Next available <code>NN</code> is <strong style="color:var(--ph)">15</strong>.</p>
+  </div>
+</main>
+
+<script>
+const docs = [
+  {n:"01",f:"01-minimal.xrai.json",r:"Single cube. Smallest valid v1.0 scene.",s:"live"},
+  {n:"02",f:"02-voice-prompt.xrai.json",r:"LLM-authored \"blue sphere over gold cube\" — voice→scene.",s:"live"},
+  {n:"03",f:"03-wired.xrai.json",r:"Audio-reactive: cube scale binds to mic bass via wire-binds + reacts-to-audio.",s:"live"},
+  {n:"04",f:"04-hologram.xrai.json",r:"AR anchor + object.hologram + depth-aware VFX.",s:"live"},
+  {n:"05",f:"05-procedural-world.xrai.json",r:"\"Mystical forest with floating lights\" — goal-oriented procedural gen.",s:"auth"},
+  {n:"06",f:"06-ar-body-hand.xrai.json",r:"ARKit body22 + Holokit hands26 streamed as entity codons.",s:"auth"},
+  {n:"07",f:"07-persistent-anchor.xrai.json",r:"Save/reload XRAI doc keyed by ARKit world-anchor UUID.",s:"auth"},
+  {n:"08",f:"08-shared-spatial.xrai.json",r:"LiveKit room broadcasts XRAI deltas; peers see remix in real time.",s:"auth"},
+  {n:"09",f:"09-specs-map.xrai.json",r:"Self-referential XRAI of the 27-spec graph.",s:"link"},
+  {n:"10",f:"10-project-map.xrai.json",r:"Whole-project map: triad essence + 5 pillars + code roots + endpoints.",s:"link"},
+  {n:"11",f:"11-jarvis-system-dna.xrai.json",r:"End-to-end Jarvis + XRAI as sparse DNA. 28 entities · 50 relations. Self-describing.",s:"auth"},
+  {n:"12",f:"12-voxel-burst-prompt.xrai.json",r:"\"Explode a galaxy of cyan voxels around me\" — sparse intent → 2048 GPU voxels at 60 FPS.",s:"auth"},
+  {n:"13",f:"13-conducting-orchestration.xrai.json",r:"Conduct a 1200-particle agent swarm with finger pointing rays + open-hand arc.",s:"auth"},
+  {n:"14",f:"14-shared-hologram-conf.xrai.json",r:"Multiplayer holographic video conferencing — same XRAI doc renders web + iOS + visionOS.",s:"auth"},
+];
+
+const rows = document.getElementById('rows');
+const statusLabel = {live:"✅ visualized-live", link:"🔗 visualized-link", auth:"🟡 authored"};
+
+docs.forEach(d => {
+  const tr = document.createElement('tr');
+  const slug = d.f.replace('.xrai.json','');
+  // Per-doc decoder targets: 14 → conf.html, 11/13 → jarvis.html (agent), all → graph viewer + raw
+  const isConf = d.n === '14';
+  const isJarvis = d.n === '11' || d.n === '13' || d.n === '12';
+  const targets = [
+    `<a class="act" href="./${d.f}" target="_blank" rel="noopener">raw</a>`,
+    `<a class="act" href="../index.html?doc=examples/${d.f}" title="open in force-graph viewer">graph</a>`,
+  ];
+  if (isJarvis) targets.push(`<a class="act amber" href="../jarvis.html?seed=examples/${d.f}" title="hand to jARvis as seed">jarvis</a>`);
+  if (isConf)   targets.push(`<a class="act amber" href="../conf.html?doc=examples/${d.f}" title="load in multi-user conf">conf</a>`);
+
+  tr.innerHTML = `
+    <td class="n">${d.n}</td>
+    <td class="f"><a href="./${d.f}">${d.f}</a></td>
+    <td class="r">${d.r}</td>
+    <td class="s ${d.s}">${statusLabel[d.s]}</td>
+    <td class="actions">${targets.join('')}</td>
+  `;
+  rows.appendChild(tr);
+});
+</script>
+</body>
+</html>

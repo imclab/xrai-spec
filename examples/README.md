@@ -57,7 +57,7 @@ node ../runtimes/threejs/src/cli.js 01-minimal.xrai.json
 
 ## Contribute
 
-1. Name: `NN-<slug>.xrai.json` (next available NN — currently 12).
+1. Name: `NN-<slug>.xrai.json` (next available NN — currently 15).
 2. Validate against v1.0 schema.
 3. **Add a row to the master matrix above in the same commit.**
 4. Add an entity to [`./INDEX.xrai.json`](./INDEX.xrai.json).

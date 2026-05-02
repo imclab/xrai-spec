@@ -1,0 +1,15 @@
+name = "xra1-livekit-token"
+main = "livekit-token.js"
+compatibility_date = "2025-09-01"
+
+# After deploy, set route to xra1.com/api/livekit-token in Cloudflare dashboard,
+# OR add here once domain is provisioned:
+# routes = [
+#   { pattern = "xra1.com/api/livekit-token*", zone_name = "xra1.com" }
+# ]
+
+# Secrets (set via `wrangler secret put <NAME>`):
+#   LIVEKIT_API_KEY
+#   LIVEKIT_API_SECRET
+#   LIVEKIT_URL              # e.g. wss://hologrm-0hxgauwz.livekit.cloud
+#   ALLOWED_ORIGIN           # optional — defaults to '*'

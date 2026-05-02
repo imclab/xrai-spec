@@ -31,6 +31,97 @@
 
 Each layer swaps independently. Changing the renderer doesn't change the data. Changing the transport doesn't change the layout.
 
+## Procedural worlds — DNA → polymorphic phenotype (new)
+
+**One XRAI document, infinite worlds, any platform, gets smarter every day.**
+
+200 bytes of rules expand into a 4D world. Same rules render as voxels in a browser, particles on iPhone, gaussians on Vision Pro. Save → share → re-render anywhere with byte-identical output. Every render contributes telemetry to the global rule library — tomorrow's worlds improve while everyone sleeps.
+
+```mermaid
+flowchart LR
+    subgraph DNA["DNA · 200B"]
+        A[XRAI document<br/>seed + archetype refs<br/>+ component params]
+    end
+    subgraph PHENOTYPE["PHENOTYPE · per-platform"]
+        B[Strategy Registry<br/>hot-swap pure fns]
+        C1[Unity VFX]
+        C2[Three.js voxels]
+        C3[Gaussian Splats]
+        C4[SDF / Shader]
+        C5[Icosa glb]
+        C6[ASCII / emoji]
+    end
+    subgraph LEARN["AUTO-IMPROVE · global"]
+        D[SSE telemetry<br/>RFC 0009 deltas]
+        E[RFC 0013<br/>continuous learning]
+        F[Rule library<br/>grows daily]
+    end
+    A --> B
+    B --> C1 & C2 & C3 & C4 & C5 & C6
+    C1 & C2 & C3 & C4 & C5 & C6 --> D
+    D --> E --> F --> A
+```
+
+### Canonical machinery (no reinvention)
+- **Rule library** = RFC 0010 archetype registry (`ProceduralTree`, `BiomeRainforest`, `LSystem`, `NoiseField`, `VoxelGrid`)
+- **Component vocabulary** = RFC 0013 master ontology entries (`procedural_seed`, `growth_rule`, `noise_params`, `biome_params`)
+- **Renderer plurality** = RFC 0012 decoder manifests + `capabilities[]` + tier ladder T0–T22
+- **Voice → world** = RFC 0009 SSE ingestion mappings (`procedural-tick-v1`, `l-system-v1`, `wfc-v1`)
+- **Multiplayer** = RFC 0005 LiveKit data-channel + RFC 0009 SSE deltas
+- **Auto-improvement** = RFC 0013 § "auto-alignment of unknown slugs"
+
+### Tier ladder (graceful degradation, RFC 0012:79–148)
+
+```mermaid
+flowchart LR
+    T0[T0 ID] --> T2[T2 ASCII] --> T3[T3 grammar] --> T4[T4 emoji 🌳]
+    T4 --> T8[T8 voxels] --> T11[T11 mesh]
+    T11 --> T16[T16 hologram] --> T19[T19 neural]
+```
+
+**T0–T6 are mandatory** (RFC 0012:109): every runtime ships these as zero-dep built-ins. Nothing ever shows nothing.
+
+### User journey — voice to magic in <100ms
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Mic as Voice/STT
+    participant SSE as XRAI SSE
+    participant Reg as Strategy Registry
+    participant View as Renderer
+
+    User->>Mic: "create a misty rainforest"
+    Mic->>SSE: archetype + seed (T0–T4 instant)
+    SSE-->>View: 🌳 emoji placeholder
+    View-->>User: visible <100ms ⚡
+    SSE-->>Reg: components stream (T8–T19)
+    Reg-->>View: voxels OR mesh OR GSplat by capability
+    View-->>User: full world materializes
+    View-->>SSE: telemetry (fps, dwell, latency)
+    Note over User,View: Next user's "rainforest" is smarter
+```
+
+### For developers: add a new world type in 10 lines
+
+```typescript
+// strategyRegistry.ts — drop-in, no other file touched
+export const STRATEGIES = {
+  voxel, vfx, gsplat, shader, icosa, hybrid,
+  fluid: (sse) => sse.components.fluid_params
+    ? expandFluidSim(sse.seed, sse.components.fluid_params)
+    : []  // ← T8 fallback
+};
+```
+
+Plus one decoder manifest declaring `consumes: ["FluidSim"]` + `produces.tier: [8, 11, 19]`. Same XRAI doc now renders as fluid on capable devices, falls back to voxel on others. Zero changes to engines, transports, or other adapters.
+
+### Live demo
+
+[`/voxel/`](./voxel/) — Voxel Plant Generator. 80+ asset types, Burst-style noise, LOD, wind sim. Demonstrates the **rule-library-as-data** pattern that the canonical machinery formalizes.
+
+Reference spec: [`specs/023-voxel-world-generator/PROCEDURAL_WORLDS_SPEC.md`](https://github.com/imclab/portals_v4/blob/main/specs/023-voxel-world-generator/PROCEDURAL_WORLDS_SPEC.md).
+
 ## Universal encode / decode (new)
 
 Ships at `js/xrai-core.js` + `js/adapters/`. 12 adapters today — every one is a single `async (input) → xrai doc`:

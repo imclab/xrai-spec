@@ -11,7 +11,7 @@
 1. **[`VISION.md`](./VISION.md)** 🌟 — load-bearing vision source. Problem (we are blind) + Solution (Sight Triad) + Goal (jARvis, verbatim) + Proof (Portals CVPR 2026 paper abstract). Every other file descends from this one.
 2. **[`MANIFESTO.md`](./MANIFESTO.md)** — 2-page long-form vision (Bush → Nelson → Berners-Lee → Hofstadter → Huxley → Kurzweil → XRAI lineage)
 3. **[`SPEC.md`](./SPEC.md)** — v1.0 draft (extracted from Portals codebase schema — whatever ships today IS v1.0)
-4. **[`examples/`](./examples/)** — 4 working v1.0 scenes (minimal / voice-prompt / wired / hologram). Valid JSON.
+4. **[`examples/`](./examples/)** — **14 working v1.0 scenes** + clickable [`examples/index.html`](./examples/index.html) hub (loads any in graph viewer / jarvis / conf decoders). Valid JSON, conformance-tested.
 
 **Reference:**
 - `index.html` — single-page landing (hero + Sight Triad + what-it-is + proof + 20 use cases + lineage + get-started + governance)
@@ -51,13 +51,20 @@
 **See [`LAUNCH_CHECKLIST.md`](./LAUNCH_CHECKLIST.md) for the canonical push-button checklist.** The short version:
 
 - [x] **Day 1:** `SPEC.md` v1.0 draft + `MANIFESTO.md` + `LICENSE` + `index.html` (this dir)
-- [x] **Day 1+:** CONTRIBUTING + CODE_OF_CONDUCT + CHANGELOG + .gitignore + launch posts + 4 examples
-- [ ] **Day 2 (HUMAN):** Create `github.com/imclab/xra1` org + repo, copy contents
+- [x] **Day 1+:** CONTRIBUTING + CODE_OF_CONDUCT + CHANGELOG + .gitignore + launch posts + **14 examples** (was 4 at Day-1 plant; expanded through 2026-04-25)
+- [x] **Day 2:** ✅ Repo live at `github.com/imclab/xra1` (deploys to `imclab.github.io/xra1`)
 - [ ] **Day 3 (HUMAN):** Register `xrai.dev`, point DNS
-- [ ] **Day 4:** Deploy landing page (Cloudflare Pages recommended — zero capture risk)
-- [ ] **Day 5:** Record jARvis demo v1 (see `demos/`)
-- [ ] **Day 6:** Post HN + X launch thread (copy from `launch/`)
+- [x] **Day 4:** ✅ Landing page deployed at `imclab.github.io/xra1/landing.html` (instrument-panel brutalism × scientific journal aesthetic, 1137 LOC single-file, CRT scanlines + 18-facet ontology + 23-tier ladder + 6 decoders + RFCs + live-decode demo + §07 LIVE deploy CTA row). GitHub Pages hosting (zero capture risk maintained).
+- [x] **Day 5:** ✅ jARvis demo v1 storyboards in [`demos/jarvis_demos.md`](./demos/jarvis_demos.md) (3 scripts: 60s "Garden of Intent" + 30s "Time Travel" + 15s "Ambient Expertise"); video capture pending physical iPhone trip per [`docs/SHIP_READY_QUEUE_2026-05-02.md`](../../../docs/SHIP_READY_QUEUE_2026-05-02.md)
+- [ ] **Day 6:** Post HN + X launch thread (copy from `launch/`) — gated on Day 5 video
 - [ ] **Day 7:** First "This Week in XRAI" public update (template in `launch/this-week-in-xrai-01.md`)
+
+**Beyond Day-7 (shipped 2026-04-22 → 2026-05-02):**
+- ✅ Paper SUBMITTED to CVPR 2026 4D World Models Workshop (2026-04-10) — ReGen4D-14
+- ✅ S029 jARvis 2.0 in-app code-complete (14 commits 2026-04-24); device verify queued
+- ✅ Web jarvis.html + conf.html + Playwright tests (25/25 PASS 2026-05-02)
+- ✅ RFC 0014 capture-stream extension (Phase 4 hologram record/play)
+- ✅ XRAI examples loadable in any decoder via `examples/index.html` hub (2026-05-02)
 
 ## Critical do-not-do list (XXX spec §5.3)
 

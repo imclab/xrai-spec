@@ -6,6 +6,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+### Site — public preview refresh — 2026-04-30
+
+- **Topnav**: surface `agent` (jarvis.html), `conf` (LiveKit hologram demo), `runtimes` (RUNTIMES.md scoreboard) — three buried pages now first-class.
+- **New pages live** on `imclab.github.io/xra1/`: `landing`, `dev`, `priorities`, `replay`, `conf`, plus 4 runtime stubs (`runtimes/{echarts,icosa,needle,playcanvas}/viewer.html`).
+- **Examples**: 10 new XRAI fixtures (05–14 + INDEX.xrai.json).
+- **RFCs**: 6 new (0004 relation types, 0009 stream ingestion, 0010 archetypes, 0011 blueprints, 0012 decoder contract, 0013 master ontology).
+- **JS modules**: 13 new (auth, gemini, jarvis, kb-browser, memory-sync, sessions-connector, stack-inspector, trace, xray-graph, dimension-morph, essence-distiller, perceptual-frame, reticle).
+- **Data privacy**: `data/*.json` snapshots replaced with sanitized public stubs (no session content, no internal priorities, no KB index). Real telemetry stays in the private monorepo only.
+- **Hygiene**: removed two `../../../` path-escapes (`jarvis.html` arch-cards) and one in `priorities.html`.
+- Spec content (SPEC.md, MANIFESTO.md, etc.) unchanged — still v1.0.0.
+
 ### Planned for v1.1
 - Event primitives beyond stub (temporal scheduling, triggers, reaction chains).
 - Conformance suite (`runtimes/_conformance/`) with minimum viable pass bar.

@@ -113,6 +113,29 @@ XRAI is our chance to ship an open one before a closed one takes the slot.
 9. **MCP-native** — any agent can read/write/query via standard tools
 10. **Self-referential** — the schema describes itself; the graph can describe its own structure
 
+## Anti-goals (what we refuse to build)
+
+The shape of this project is partly defined by what we will not do. Inherited from the Portals constitution `specs/constitution.md §Anti-Goals`:
+
+1. **No proprietary forks of the spec.** v1.0 is CC0; reference parsers are MIT. Anyone proposing a "Pro" or "Enterprise" XRAI dialect with paywalled features is not building XRAI.
+2. **No committee-driven governance before 1000+ external adopters.** RFCs first, foundation later. We have seen what a 200-person standards body does to a young format.
+3. **No silent versioning.** Every breaking change touches an RFC. Every RFC stays public, including rejected ones with a postscript explaining why.
+4. **No hidden state in the wire format.** If a decoder needs a fact to render, that fact appears in the SSE stream — never in a vendor cloud, never in a lookup table only one company holds.
+5. **No tracking, no telemetry, no auth gates on the spec text.** You can read, ship, and remix XRAI without ever pinging us.
+6. **No platform lock-in.** Reference runtimes ship for Unity, Three.js, PlayCanvas, WebXR/Needle, visionOS, MCP. If a major platform refuses to ship a decoder, we ship a third-party adapter for it. The bus is neutral.
+
+## Foundation principles (5+ year design)
+
+Inherited from Portals constitution `§Foundation Principles`. These outlive any RFC or release:
+
+1. **Platform agnostic** — runs everywhere XRAI runs. iOS, Android, Web, visionOS, Quest, Android XR, glasses. Any LLM backend. Any 3D-gen API. Any hardware form factor. The bus + format + MCP layer are the abstractions.
+2. **Minimal surface area** — fewer files, fewer bugs. Each new RFC justifies its own existence vs extending an existing one.
+3. **Boring technology** — stable, proven tools over newest releases. JSON not Cap'n Proto. WebGL not WebGPU-unless-we-need-it. MD over .docx, always.
+4. **Explicit over clever** — readable beats compact. Schema fields named for what they mean, not what saves bytes.
+5. **User-feedback-driven** — build what real adopters ask for; refuse to ship speculative kitchen-sink features.
+6. **Standards over proprietary** — glTF / OpenXR / MCP / OpenTelemetry / WebRTC. Compose with the open stack; never replace it.
+7. **Local-first over cloud** — AI on device, data with user. Cloud is a convenience accelerator, not a dependency.
+
 ## Governance
 
 Year 1: BDFL (benevolent dictator — James Tunick) maintains direction. Public RFC process for changes. Weekly public updates. No corporate sponsor controlling direction.
@@ -161,3 +184,7 @@ MIT for the spec text, reference parsers, runtimes, prompt libraries, and docume
 **Forever. Irreversibly. No take-backs.**
 
 — @jamestunick, IMC Lab + H3M Inc. — 2026-04-22
+
+---
+
+**Navigate:** [`VISION.md`](./VISION.md) · [`SPEC.md`](./SPEC.md) · [`landing.html`](./landing.html) · [`sitemap.html`](./sitemap.html) · [`examples/`](./examples/)

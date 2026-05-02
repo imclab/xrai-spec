@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>XRAI prototypes — what's working today, what's coming next</title>
+<meta name="description" content="Working internal prototypes that ship as XRAI decoders: voxel world gen, DynGsplat 4D, conducting orchestration, persistent anchors, MCP server. Honest status per /ship-status 3-gate criteria.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,200..700&family=IBM+Plex+Serif:wght@300;400;500&family=JetBrains+Mono:wght@300;400;500&display=swap">
+<style>
+:root{
+  --ink:#0B0F0C; --paper:#F3EFE5; --paper-dim:#D9D3C4;
+  --ph:#5EE387; --ph-dim:#2C7A46; --amber:#F5B040; --amber-dim:#8C5F1E;
+  --bleed:#E54B4B; --mute:#48564D; --mute-2:#6C7A71; --rule:rgba(94,227,135,.18);
+  --serif:"Fraunces","IBM Plex Serif",Georgia,serif;
+  --body:"IBM Plex Serif",Georgia,serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--ink);color:var(--paper);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body{background:radial-gradient(140% 80% at 15% 0%,rgba(94,227,135,.05),transparent 60%),linear-gradient(180deg,var(--ink) 0%,#070A08 100%);min-height:100vh}
+a{color:var(--amber);text-decoration:none;border-bottom:1px solid var(--amber-dim);transition:color .2s,border-color .2s}
+a:hover{color:var(--ph);border-color:var(--ph)}
+code,.mono{font-family:var(--mono);font-size:.92em;color:var(--ph)}
+header.chrome{position:sticky;top:0;z-index:30;backdrop-filter:blur(8px);background:rgba(11,15,12,.75);border-bottom:1px solid var(--rule)}
+.chrome-row{max-width:88rem;margin:0 auto;padding:.7rem 2rem;display:flex;gap:1.5rem;align-items:baseline;font-family:var(--mono);font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;flex-wrap:wrap}
+.brand{color:var(--ph);font-weight:500;letter-spacing:.3em;border:none}
+.chrome-nav{display:flex;gap:1.4rem;flex-wrap:wrap}
+.chrome-nav a{color:var(--mute-2);border:none}
+.chrome-nav a:hover{color:var(--ph)}
+.chrome-nav a[aria-current]{color:var(--ph)}
+.chrome-tail{margin-left:auto;color:var(--mute-2)}
+main{max-width:88rem;margin:0 auto;padding:3rem 2rem 6rem}
+.eyebrow{font-family:var(--mono);font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ph);margin-bottom:1rem}
+h1{font-family:var(--serif);font-weight:300;font-size:clamp(2.4rem,5vw,4rem);letter-spacing:-.025em;line-height:1;margin:0 0 1rem}
+h1 em{font-style:italic;color:var(--ph)}
+h2{font-family:var(--serif);font-weight:300;font-size:clamp(1.6rem,3vw,2.4rem);letter-spacing:-.02em;margin:3rem 0 .5rem;color:var(--paper)}
+h3{font-family:var(--mono);font-size:.82rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ph);margin:2rem 0 .8rem}
+.lede{font-size:1.1rem;color:var(--paper-dim);max-width:62ch;margin:0 0 2rem}
+.proto{margin:2.5rem 0;padding:1.6rem 1.8rem;border:1px solid var(--rule);background:rgba(11,15,12,.5)}
+.proto.ship{border-color:var(--ph-dim)}
+.proto.partial{border-color:var(--amber-dim)}
+.proto.queued{border-color:var(--mute);opacity:.92}
+.proto-head{display:flex;align-items:baseline;gap:1rem;flex-wrap:wrap;margin-bottom:.8rem}
+.proto-head h2{margin:0;flex:1}
+.badge{display:inline-block;font-family:var(--mono);font-size:.68rem;padding:.25rem .55rem;border:1px solid;letter-spacing:.14em;text-transform:uppercase}
+.badge.ship{color:var(--ph);border-color:var(--ph-dim);background:rgba(94,227,135,.06)}
+.badge.partial{color:var(--amber);border-color:var(--amber-dim);background:rgba(245,176,64,.06)}
+.badge.queued{color:var(--mute-2);border-color:var(--mute);background:rgba(108,122,113,.05)}
+.proto-meta{font-family:var(--mono);font-size:.74rem;color:var(--mute-2);letter-spacing:.06em;margin-bottom:1rem}
+.proto-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:1rem;margin-top:1rem}
+.proto-cell{padding:1rem;border-left:2px solid var(--rule);background:rgba(94,227,135,.02)}
+.proto-cell h4{font-family:var(--mono);font-size:.7rem;color:var(--ph);text-transform:uppercase;letter-spacing:.16em;margin:0 0 .5rem}
+.proto-cell p{margin:0;font-size:.92rem;color:var(--paper-dim);line-height:1.45}
+.proto-cell code{font-size:.82em;padding:.05rem .25rem;background:rgba(94,227,135,.06);border:1px solid var(--rule)}
+.actions{margin-top:1rem;display:flex;gap:.6rem;flex-wrap:wrap}
+.act{display:inline-block;font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;padding:.4rem .7rem;border:1px solid var(--ph-dim);color:var(--ph);background:transparent;border-radius:0;transition:all .15s}
+.act:hover{background:var(--ph);color:var(--ink);border-color:var(--ph)}
+.act.amber{border-color:var(--amber-dim);color:var(--amber)}
+.act.amber:hover{background:var(--amber);color:var(--ink);border-color:var(--amber)}
+.act.disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
+pre.snip{font-family:var(--mono);font-size:.78rem;color:var(--paper-dim);background:rgba(11,15,12,.6);border:1px solid var(--rule);padding:.9rem 1rem;margin:1rem 0;overflow-x:auto;white-space:pre;line-height:1.5}
+pre.snip .k{color:var(--ph)}
+pre.snip .s{color:var(--amber)}
+pre.snip .c{color:var(--mute-2)}
+.note{margin-top:3rem;padding:1.5rem;border:1px solid var(--rule);background:rgba(11,15,12,.5);font-size:.92rem;color:var(--paper-dim)}
+.note h3{margin-top:0}
+::selection{background:var(--ph);color:var(--ink)}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+</style>
+</head>
+<body>
+
+<header class="chrome">
+  <div class="chrome-row">
+    <a href="./landing.html" class="brand">XRAI</a>
+    <nav class="chrome-nav">
+      <a href="./landing.html">manifesto</a>
+      <a href="./SPEC.html">spec</a>
+      <a href="./rfcs/">rfcs</a>
+      <a href="./examples/">examples</a>
+      <a href="./jarvis.html">jarvis</a>
+      <a href="./conf.html">conf</a>
+      <a href="./index.html">graph</a>
+      <a href="./voxel/">voxel</a>
+      <a href="./prototypes.html" aria-current="page">prototypes</a>
+      <a href="./sitemap.html">sitemap</a>
+    </nav>
+    <span class="chrome-tail">prototypes · 5 surfaces · honest status</span>
+  </div>
+</header>
+
+<main>
+  <div class="eyebrow">§ prototypes · what's working · what's coming</div>
+  <h1>Five prototypes, honest <em>status</em>.</h1>
+  <p class="lede">Working internal artifacts that should ship as public XRAI decoders. Each one is graded by the same <strong style="color:var(--ph)">3-gate SHIP_READY</strong> criteria the rest of the project uses: G1 auto editor visual, G2 user step test, G3 local build / deploy. No item is marked SHIP unless all three pass.</p>
+
+  <!-- ─────────────────── Voxel ─────────────────── -->
+  <section class="proto ship">
+    <div class="proto-head">
+      <h2>1 · Voxel world generator</h2>
+      <span class="badge ship">SHIP</span>
+    </div>
+    <div class="proto-meta">spec 023 · Three.js + Vite · 655 KB gz=175 KB · deployed 2026-05-02</div>
+    <p>"Explode a galaxy of cyan voxels around me" &mdash; procedural voxel plant generator with LOD + wind simulation. Sparse intent &rarr; thousands of GPU voxels at 60 FPS via the Keijiro pattern. Same <a href="./examples/12-voxel-burst-prompt.xrai.json">XRAI doc 12</a> renders here in browser and on iPhone.</p>
+    <div class="proto-grid">
+      <div class="proto-cell"><h4>G1 · auto visual</h4><p>Vite build clean (640 ms), 25/25 Playwright PASS at deploy.</p></div>
+      <div class="proto-cell"><h4>G2 · user step</h4><p>Open the page, drag to orbit, observe wind on plants. <strong>Self-evident pass.</strong></p></div>
+      <div class="proto-cell"><h4>G3 · build/deploy</h4><p>Shipped at <code>imclab.github.io/xra1/voxel/</code>.</p></div>
+    </div>
+    <div class="actions">
+      <a class="act amber" href="./voxel/">open voxel decoder</a>
+      <a class="act" href="./examples/12-voxel-burst-prompt.xrai.json">view XRAI doc 12</a>
+      <a class="act" href="https://github.com/imclab/xra1/tree/main/specs/023-voxel-world-generator">spec 023 source</a>
+    </div>
+  </section>
+
+  <!-- ─────────────────── MCP ─────────────────── -->
+  <section class="proto ship">
+    <div class="proto-head">
+      <h2>2 · Spatial MCP server</h2>
+      <span class="badge ship">SHIP</span>
+    </div>
+    <div class="proto-meta">@h3m/spatial-intelligence-mcp · 8 of 11 tools live · stdio + http transport</div>
+    <p>Make XRAI readable/writable by any MCP-compatible AI agent &mdash; Claude Desktop, Cursor, Cline, OpenAI agents, Gemini-with-MCP-shim. Tool calls and chain-of-thought roll onto the bus as deltas; the agent consumes scene state and emits edits.</p>
+
+    <h3>Quickstart · Claude Desktop</h3>
+    <pre class="snip"><span class="c">// ~/Library/Application Support/Claude/claude_desktop_config.json</span>
+{
+  <span class="k">"mcpServers"</span>: {
+    <span class="k">"xrai"</span>: {
+      <span class="k">"command"</span>: <span class="s">"npx"</span>,
+      <span class="k">"args"</span>: [<span class="s">"-y"</span>, <span class="s">"@h3m/spatial-intelligence-mcp"</span>]
+    }
+  }
+}</pre>
+    <p>Restart Claude Desktop &rarr; the 8 tools (<code>compose_scene</code>, <code>add_object</code>, <code>query_scene</code>, <code>modify_object</code>, <code>export_xrai</code>, <code>get_capabilities</code>, <code>paint_emit_stroke</code>, <code>paint_emit_parametric</code>) appear in any conversation.</p>
+    <div class="proto-grid">
+      <div class="proto-cell"><h4>G1 · auto visual</h4><p>npm package builds + publishes; 8/11 tools tested in unit suite.</p></div>
+      <div class="proto-cell"><h4>G2 · user step</h4><p>Drop the JSON config, restart Claude Desktop, ask <em>"compose a campfire scene"</em> &rarr; bus emits valid XRAI.</p></div>
+      <div class="proto-cell"><h4>G3 · publish</h4><p>npm registry public; <a href="./mcp-server/">README + tool catalog</a>.</p></div>
+    </div>
+    <div class="actions">
+      <a class="act" href="./mcp-server/">read MCP server docs</a>
+      <a class="act amber" href="https://www.npmjs.com/package/@h3m/spatial-intelligence-mcp">npm package</a>
+      <a class="act" href="./rfcs/0012-decoder-contract.html">decoder contract (RFC 0012)</a>
+    </div>
+  </section>
+
+  <!-- ─────────────────── DynGsplat ─────────────────── -->
+  <section class="proto partial">
+    <div class="proto-head">
+      <h2>3 · DynGsplat 4D viewer</h2>
+      <span class="badge partial">PARTIAL · web stub</span>
+    </div>
+    <div class="proto-meta">spec GSPLAT_LOD_2026-04-04 · gated on Phase 3 iOS Metal device verify (INDEX #4)</div>
+    <p>Render published 4D Gaussian datasets (DyNeRF / Plenoptic Video / D-NeRF / MEGA pretrained) live. Cross-platform: <code>gsplat-unity</code> (iOS app) + <code>GaussianSplats3D</code> (web) + <code>MetalSplatter</code> (visionOS). Niantic SPZ as interchange.</p>
+    <div class="proto-grid">
+      <div class="proto-cell"><h4>G1 · auto visual</h4><p>Unity Editor renders static splats today. 4D temporal sequencing untested headless.</p></div>
+      <div class="proto-cell"><h4>G2 · user step</h4><p>Awaits physical iPhone trip per <a href="../../docs/SHIP_READY_QUEUE_2026-05-02.md">device queue</a>.</p></div>
+      <div class="proto-cell"><h4>G3 · publish</h4><p>Web wrapper waits on dataset selection + GaussianSplats3D wiring (~2 h).</p></div>
+    </div>
+    <div class="actions">
+      <a class="act amber" href="https://github.com/mkkellogg/GaussianSplats3D">GaussianSplats3D source</a>
+      <a class="act" href="https://github.com/wuyize25/gsplat-unity">gsplat-unity (Unity)</a>
+      <a class="act disabled">web demo · queued</a>
+    </div>
+  </section>
+
+  <!-- ─────────────────── Conducting ─────────────────── -->
+  <section class="proto queued">
+    <div class="proto-head">
+      <h2>4 · Conducting orchestration (example 13)</h2>
+      <span class="badge queued">QUEUED</span>
+    </div>
+    <div class="proto-meta">XRAI doc 13 shipped · web decoder pending · MediaPipe Hands + tone.js path open</div>
+    <p>"Let me conduct the swarm" &mdash; per-finger pointing rays + open-hand arc + tempo envelope drive a 1200-particle agent swarm. Optional symphonic harp cue. No mouse, no menu. <a href="./examples/13-conducting-orchestration.xrai.json">XRAI doc 13</a> already valid; web decoder needs WebXR hand-tracking surface (or MediaPipe webcam fallback).</p>
+    <div class="proto-grid">
+      <div class="proto-cell"><h4>G1 · auto visual</h4><p>Unity-side particle system shipped (HandVFXController).</p></div>
+      <div class="proto-cell"><h4>G2 · user step</h4><p>Awaits hand-tracking decoder; doc 13 Editor playback verified.</p></div>
+      <div class="proto-cell"><h4>G3 · publish</h4><p>Web decoder ~6 h: MediaPipe Hands + Three.js particle pool + tone.js audio cue.</p></div>
+    </div>
+    <div class="actions">
+      <a class="act" href="./examples/13-conducting-orchestration.xrai.json">view XRAI doc 13</a>
+      <a class="act" href="./examples/index.html#conducting">decoder hub</a>
+      <a class="act disabled">web decoder · queued</a>
+    </div>
+  </section>
+
+  <!-- ─────────────────── Persistent anchor ─────────────────── -->
+  <section class="proto queued">
+    <div class="proto-head">
+      <h2>5 · Persistent anchor (example 7)</h2>
+      <span class="badge queued">QUEUED</span>
+    </div>
+    <div class="proto-meta">XRAI doc 7 shipped · WebXR anchors API path open · localStorage stub viable as v1</div>
+    <p>Save/reload XRAI doc keyed by ARKit world-anchor UUID. Web equivalent uses WebXR <code>XRAnchor</code> API (Chrome Android + Quest browser today; iOS Safari pending). localStorage round-trip viable as a v1 demo &mdash; ships the <em>concept</em> while real WebXR anchors mature.</p>
+    <div class="proto-grid">
+      <div class="proto-cell"><h4>G1 · auto visual</h4><p>iOS Unity ARKit world-map anchor verified at <code>last-working-rec02=b1c1c56cc</code>.</p></div>
+      <div class="proto-cell"><h4>G2 · user step</h4><p>Awaits device trip + reopen-app round-trip.</p></div>
+      <div class="proto-cell"><h4>G3 · publish</h4><p>Web v1 decoder ~3 h: localStorage stub + Three.js scene reload demo.</p></div>
+    </div>
+    <div class="actions">
+      <a class="act" href="./examples/07-persistent-anchor.xrai.json">view XRAI doc 7</a>
+      <a class="act" href="https://immersive-web.github.io/anchors/">WebXR anchors spec</a>
+      <a class="act disabled">web decoder · queued</a>
+    </div>
+  </section>
+
+  <div class="note">
+    <h3>How to promote a prototype to SHIP</h3>
+    <p>Each card flips from <span class="badge queued" style="font-size:.6rem">QUEUED</span> &rarr; <span class="badge partial" style="font-size:.6rem">PARTIAL</span> &rarr; <span class="badge ship" style="font-size:.6rem">SHIP</span> by closing all three gates documented in <a href="../../.claude/commands/ship-status.md"><code>/ship-status</code></a>:</p>
+    <ul>
+      <li><strong style="color:var(--ph)">G1</strong> &mdash; an automated visual / Playwright test runs green and is part of the regression baseline.</li>
+      <li><strong style="color:var(--ph)">G2</strong> &mdash; a user has run the manual step test and recorded the confirmation in <a href="../../docs/SHIP_READY_QUEUE_2026-05-02.md"><code>SHIP_READY_QUEUE</code></a>.</li>
+      <li><strong style="color:var(--ph)">G3</strong> &mdash; a build artifact is hosted (xra1 site, npm, app store, or GitHub release).</li>
+    </ul>
+    <p>Code-complete is not shipped. A <code>feat()</code> commit alone fails G2 + G3.</p>
+  </div>
+
+</main>
+
+</body>
+</html>

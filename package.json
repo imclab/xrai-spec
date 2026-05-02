@@ -5,6 +5,13 @@
   "type": "module",
   "description": "XRAI v1.0 public site — loaded by imclab/xra1 GitHub Pages. This package.json's only role is declaring `type: module` so node can import xrai-core.js (ESM) without the TYPELESS_PACKAGE_JSON warning. The site itself has no build step.",
   "scripts": {
-    "conformance": "node runtimes/_conformance/validate_fixtures.cjs"
+    "conformance": "node runtimes/_conformance/validate_fixtures.cjs",
+    "test:browser": "playwright test --config=__tests__/playwright.config.cjs",
+    "test:browser:install": "playwright install chromium",
+    "lk:token": "node scripts/mint-livekit-token.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "livekit-server-sdk": "^2.9.0"
   }
 }

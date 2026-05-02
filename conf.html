@@ -2,139 +2,917 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>conf · shared hologram · xra1.com</title>
+<meta name="description" content="Live holographic web conferencing — RGBD point clouds + LiveKit + voice nav. Mac / iOS Safari / visionOS / Quest browser.">
 <link rel="stylesheet" href="styles/brand.css">
 <style>
-  body{margin:0;background:#08090c;color:#F7FFA8;font:13px/1.45 ui-monospace,"SF Mono",Menlo,monospace;overflow:hidden;}
-  .top{position:fixed;top:14px;left:14px;right:14px;z-index:10;display:flex;gap:10px;align-items:center;}
+  html,body{margin:0;background:#08090c;color:#F7FFA8;font:13px/1.45 ui-monospace,"SF Mono",Menlo,monospace;overflow:hidden;height:100%;}
+  #stage{position:fixed;inset:0;}
+  #stage canvas{display:block;width:100%;height:100%;}
+  .top{position:fixed;top:14px;left:14px;right:14px;z-index:10;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
   .top a{color:rgba(247,255,168,0.55);text-decoration:none;font-size:11px;}
   .top a:hover{color:#F7FFA8;}
   .pill{background:rgba(8,10,14,0.7);backdrop-filter:blur(10px);border:1px solid rgba(247,255,168,0.25);border-radius:16px;padding:5px 12px;font-size:11px;color:#F7FFA8;}
-  #stage{position:fixed;inset:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;padding:60px 16px 96px;align-content:start;align-items:start;justify-items:stretch;}
-  .seat{position:relative;background:rgba(247,255,168,0.04);border:1px solid rgba(247,255,168,0.18);border-radius:10px;aspect-ratio:4/3;overflow:hidden;}
-  .seat.local{border-color:rgba(247,255,168,0.55);}
-  .seat video{width:100%;height:100%;object-fit:cover;background:#000;}
-  .seat .label{position:absolute;left:8px;bottom:8px;background:rgba(0,0,0,0.55);padding:2px 8px;border-radius:4px;font-size:10px;color:#F7FFA8;}
-  .seat .empty{display:flex;align-items:center;justify-content:center;height:100%;opacity:.45;font-size:11px;text-align:center;padding:14px;}
-  #panel{position:fixed;bottom:14px;left:14px;right:14px;background:rgba(8,10,14,0.8);backdrop-filter:blur(12px);border:1px solid rgba(247,255,168,0.25);border-radius:10px;padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;z-index:10;}
+  #panel{position:fixed;bottom:14px;left:14px;right:14px;background:rgba(8,10,14,0.8);backdrop-filter:blur(12px);border:1px solid rgba(247,255,168,0.25);border-radius:10px;padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;z-index:10;}
   #panel button,#panel input{appearance:none;background:transparent;border:1px solid rgba(247,255,168,0.3);color:#F7FFA8;border-radius:6px;padding:5px 12px;font:inherit;font-size:11px;cursor:pointer;}
   #panel button:hover{background:rgba(247,255,168,0.1);}
-  #panel input{flex:1;cursor:text;background:rgba(0,0,0,0.4);}
+  #panel button:disabled{opacity:.4;cursor:not-allowed;}
+  #panel button.on{background:rgba(247,255,168,0.18);border-color:#F7FFA8;}
+  #panel input{flex:1;min-width:200px;cursor:text;background:rgba(0,0,0,0.4);}
   #panel .grow{flex:1;}
   #status{font-size:10px;opacity:.65;}
   .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#444;margin-right:6px;vertical-align:middle;box-shadow:0 0 4px currentColor;color:#444;}
   .dot.on{background:#5eff8a;color:#5eff8a;}
   .dot.warn{background:#F7FFA8;color:#F7FFA8;}
+  #self{position:fixed;bottom:62px;right:14px;width:160px;aspect-ratio:4/3;background:#000;border:1px solid rgba(247,255,168,0.45);border-radius:8px;overflow:hidden;z-index:9;}
+  #self video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
+  #self .label{position:absolute;left:6px;bottom:4px;background:rgba(0,0,0,0.55);padding:1px 6px;border-radius:3px;font-size:10px;}
+  #self.hidden{display:none;}
+  #hud{position:fixed;top:60px;right:14px;max-width:280px;background:rgba(8,10,14,0.82);backdrop-filter:blur(10px);border:1px solid rgba(247,255,168,0.22);border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.55;z-index:9;display:none;white-space:pre-wrap;}
 </style>
 </head>
 <body>
+<div id="stage"></div>
+<div id="self" class="hidden"><video id="localVid" autoplay muted playsinline></video><div class="label">you</div></div>
 <div class="top">
-  <a href="jarvis.html">← jarvis</a>
+  <a href="landing.html">← landing</a>
+  <a href="jarvis.html">jarvis</a>
+  <a href="examples/">examples</a>
+  <a href="sitemap.html">sitemap</a>
   <span class="pill">/conf · shared hologram</span>
   <span class="pill" id="roomPill">room: —</span>
   <span class="pill"><span class="dot" id="connDot"></span><span id="connText">offline</span></span>
+  <span class="pill" id="peerPill">peers: 0</span>
   <span style="flex:1;"></span>
   <a href="examples/14-shared-hologram-conf.xrai.json">doc 14 ↗</a>
 </div>
-
-<div id="stage">
-  <div class="seat local"><div class="empty" id="localEmpty">camera off — click <b>publish</b> below</div><video id="localVid" autoplay muted playsinline style="display:none;"></video><div class="label">you</div></div>
-</div>
-
 <div id="panel">
-  <button id="join">join room</button>
+  <button id="join">join</button>
   <button id="publish" disabled>publish cam+mic</button>
   <button id="leave" disabled>leave</button>
+  <button id="hologramBtn" disabled title="treat side-by-side video as RGBD point cloud">hologram</button>
+  <button id="screenBtn" disabled title="publish screen share">share screen</button>
+  <button id="paintBtn" disabled title="paint strokes in 3D — broadcasts as xrai deltas">paint</button>
+  <button id="muteAllBtn" disabled title="mute / unmute all remote seats locally">mute all</button>
+  <button id="saveBtn" title="export current scene as XRAI v1.0 JSON (download)">save xrai</button>
+  <button id="clearBtn" title="clear painted/added entities (broadcasts removes)">clear</button>
+  <button id="undoBtn" disabled title="undo last delta (Z)">undo</button>
+  <button id="redoBtn" disabled title="redo (shift-Z)">redo</button>
+  <input type="color" id="paintColor" value="#5eff8a" title="brush color" style="width:38px;height:24px;padding:0;border:1px solid rgba(247,255,168,0.3);background:transparent;border-radius:6px;cursor:pointer;"/>
+  <button id="jarvisToggle" title="voice nav">jarvis</button>
+  <button id="handsToggle" title="hand-tracking nav (webcam pinch / WebXR)">hands</button>
+  <button id="invite" disabled title="copy invite link">invite</button>
+  <button id="xrBtn" disabled title="enter immersive AR (WebXR)">xr</button>
+  <label class="docLoad" style="border:1px solid rgba(247,255,168,0.3);border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;color:#F7FFA8;">load xrai
+    <input id="docInput" type="file" accept=".json,.xrai,application/json,application/vnd.xrai+json" style="display:none;"/>
+  </label>
   <input id="tokenInput" placeholder="(optional) paste LiveKit JWT — leave blank to fetch /api/livekit-token"/>
   <span class="grow"></span>
-  <span id="status">drop a token or set ?room=&lt;id&gt;&amp;token=&lt;jwt&gt; in URL</span>
+  <span id="status">paste token + click join · or set ?token=&lt;jwt&gt; in URL</span>
 </div>
+<div id="hud"></div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://esm.sh/three@0.160.0",
+  "three/addons/": "https://esm.sh/three@0.160.0/examples/jsm/",
+  "livekit-client": "https://esm.sh/livekit-client@2.7.0"
+}}
+</script>
 
 <script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { TransformControls } from 'three/addons/controls/TransformControls.js';
+import { Line2 } from 'three/addons/lines/Line2.js';
+import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
+import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
+import { Room, RoomEvent, Track, VideoPresets, createLocalTracks } from 'livekit-client';
+
 const params = new URLSearchParams(location.search);
 const room = params.get('room') || crypto.randomUUID().slice(0, 8);
 document.getElementById('roomPill').textContent = `room: ${room}`;
 history.replaceState(null, '', `?room=${room}`);
-
 const $ = s => document.querySelector(s);
-const setConn = (state, text) => { const d = $('#connDot'); d.classList.remove('on','warn'); if(state)d.classList.add(state); $('#connText').textContent = text; };
-const status = m => $('#status').textContent = m;
+const setConn = (s, t) => { const d = $('#connDot'); d.classList.remove('on','warn'); if(s)d.classList.add(s); $('#connText').textContent = t; };
+const setStatus = m => $('#status').textContent = m;
+const setPeers = n => $('#peerPill').textContent = `peers: ${n}`;
+const showHud = (txt) => { const h=$('#hud'); if(!txt){h.style.display='none';return;} h.textContent=txt; h.style.display='block'; };
+const showToast = (m, ms=2400) => { setStatus(m); if(ms) setTimeout(()=> setStatus(`room ${room}`), ms); };
 
-let LK, lkRoom, localTracks = [];
+// ─── three.js scene ────────────────────────────────────────────────────────
+const stage = $('#stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(stage.clientWidth, stage.clientHeight);
+renderer.setClearColor(0x08090c, 1);
+stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(55, stage.clientWidth/stage.clientHeight, 0.05, 200);
+camera.position.set(0, 1.4, 3.2);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 1.0, 0);
+controls.enableDamping = true; controls.dampingFactor = 0.08;
+controls.minDistance = 0.6; controls.maxDistance = 20;
+controls.update();
 
-async function ensureLK() {
-  if (LK) return LK;
-  status('loading livekit-client@2.7.0…');
-  LK = await import('https://esm.sh/livekit-client@2.7.0');
-  return LK;
+// Spatial audio listener — drives PositionalAudio rolloff per seat (xrai doc 14
+// audio.sink {spatial:true, rolloff:linear, max_distance_m:6}). AudioContext
+// is gated by browser; resumed on first user gesture (join button click).
+const audioListener = new THREE.AudioListener();
+camera.add(audioListener);
+
+// shared canvas (xrai doc 14: shared_canvas at y=1.0) + seating ring
+const ring = new THREE.Mesh(new THREE.RingGeometry(1.42, 1.50, 64),
+  new THREE.MeshBasicMaterial({ color: 0xF7FFA8, side: THREE.DoubleSide, transparent: true, opacity: 0.18 }));
+ring.rotation.x = -Math.PI/2; scene.add(ring);
+const canvasPanel = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.0),
+  new THREE.MeshBasicMaterial({ color: 0x111418, transparent: true, opacity: 0.78 }));
+canvasPanel.position.set(0, 1.0, -0.05); scene.add(canvasPanel);
+scene.add(new THREE.LineSegments(new THREE.EdgesGeometry(canvasPanel.geometry),
+  new THREE.LineBasicMaterial({ color: 0xF7FFA8, transparent: true, opacity: 0.55 })).translateOnAxis(new THREE.Vector3(0,1,0), 1.0).translateOnAxis(new THREE.Vector3(0,0,1), -0.05));
+
+function seatPose(i, total) {
+  const r = 1.45; const a = (i / Math.max(total, 1)) * Math.PI*2 - Math.PI/2;
+  return { pos: new THREE.Vector3(Math.cos(a)*r, 1.1, Math.sin(a)*r), lookAt: new THREE.Vector3(0,1.0,0) };
 }
 
-async function getToken() {
-  const fromInput = $('#tokenInput').value.trim();
-  if (fromInput) return fromInput;
-  const fromUrl = params.get('token');
-  if (fromUrl) return fromUrl;
-  // Try the stub endpoint (Cloudflare worker) — will fail on plain http.server
+const seats = new Map(); // identity -> seat record
+function makeLabelTexture(text) {
+  const c = document.createElement('canvas'); c.width=256; c.height=64;
+  const g = c.getContext('2d');
+  g.fillStyle='rgba(0,0,0,0.55)'; g.fillRect(0,0,256,64);
+  g.fillStyle='#F7FFA8'; g.font='bold 28px ui-monospace,Menlo,monospace';
+  g.textAlign='center'; g.textBaseline='middle';
+  g.fillText(String(text).slice(0,14), 128, 34);
+  const tex = new THREE.CanvasTexture(c); tex.needsUpdate = true; return tex;
+}
+function layoutSeats() {
+  const list = [...seats.values()];
+  list.forEach((s, i) => { const { pos, lookAt } = seatPose(i, list.length); s.group.position.copy(pos); s.group.lookAt(lookAt); });
+}
+function createSeat(identity, label) {
+  if (seats.has(identity)) return seats.get(identity);
+  const group = new THREE.Group();
+  const placeholder = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.9),
+    new THREE.MeshBasicMaterial({ color: 0x1a1d22, transparent: true, opacity: 0.85 }));
+  group.add(placeholder);
+  const labelTex = makeLabelTexture(label || identity.slice(0, 8));
+  const labelMesh = new THREE.Sprite(new THREE.SpriteMaterial({ map: labelTex, transparent: true, depthWrite: false }));
+  labelMesh.scale.set(0.45, 0.11, 1); labelMesh.position.set(0, -0.55, 0); group.add(labelMesh);
+  scene.add(group);
+  const seat = { identity, label, group, placeholder, plane: null, points: null, video: null, params: null };
+  seats.set(identity, seat); layoutSeats(); return seat;
+}
+function destroySeat(identity) {
+  const s = seats.get(identity); if (!s) return;
+  scene.remove(s.group);
+  s.plane?.material.map?.dispose(); s.plane?.material.dispose();
+  s.points?.material.dispose(); s.points?.geometry.dispose();
+  if (s.audio) { try { s.audio.disconnect(); } catch {} s.group.remove(s.audio); }
+  seats.delete(identity); layoutSeats();
+}
+
+// Attach a remote LiveKit audio track as spatial audio anchored to the seat.
+// Falls back to non-spatial <audio> element if AudioContext / MediaStream path fails.
+function attachSpatialAudio(seat, track) {
   try {
-    const r = await fetch(`/api/livekit-token?room=${encodeURIComponent(room)}&identity=${encodeURIComponent('web-' + Math.random().toString(36).slice(2,7))}`);
+    const ms = track.mediaStreamTrack ? new MediaStream([track.mediaStreamTrack]) : null;
+    if (!ms) throw new Error('no mediaStreamTrack');
+    const pa = new THREE.PositionalAudio(audioListener);
+    pa.setMediaStreamSource(ms);
+    pa.setRefDistance(1.0);
+    pa.setRolloffFactor(1.0);
+    pa.setDistanceModel('linear');
+    pa.setMaxDistance(6.0); // xrai doc 14 props.max_distance_m
+    seat.group.add(pa);
+    seat.audio = pa;
+  } catch (e) {
+    const a = track.attach(); document.body.appendChild(a);
+    seat.audio = a;
+  }
+}
+
+// billboard mode (default — plain video on a plane)
+function attachBillboard(seat, video) {
+  const tex = new THREE.VideoTexture(video); tex.colorSpace = THREE.SRGBColorSpace;
+  const aspect = (video.videoWidth || 4) / (video.videoHeight || 3);
+  const h = 0.9; const w = h * Math.min(aspect, 1.6);
+  if (seat.plane) seat.group.remove(seat.plane);
+  if (seat.points) { seat.group.remove(seat.points); seat.points = null; }
+  seat.plane = new THREE.Mesh(new THREE.PlaneGeometry(w, h),
+    new THREE.MeshBasicMaterial({ map: tex, transparent: false }));
+  seat.group.add(seat.plane);
+  seat.placeholder.visible = false;
+  seat.video = video;
+}
+
+// RGBD point cloud mode (opt-in; side-by-side L=color R=depth — hue-encoded depth)
+const RGBD_VS = `
+  uniform sampler2D srcMap; uniform vec4 rayParams; uniform vec2 depthRange; uniform float pointSize; uniform float layout;
+  varying vec3 vColor; varying float vAlpha;
+  float rgb2hue(vec3 c){float mx=max(max(c.r,c.g),c.b);float mn=min(min(c.r,c.g),c.b);float d=mx-mn;
+    if(d<0.001)return 0.0; float h;
+    if(mx==c.r)h=mod((c.g-c.b)/d,6.0); else if(mx==c.g)h=(c.b-c.r)/d+2.0; else h=(c.r-c.g)/d+4.0;
+    h/=6.0; if(h<0.0)h+=1.0; return h;}
+  void main(){
+    float u = position.x; float v = 1.0 - position.y;
+    vec2 colorUV = (layout < 0.5) ? vec2(u*0.5, v) : vec2(u, v*0.5);
+    vec2 depthUV = (layout < 0.5) ? vec2(u*0.5 + 0.5, v) : vec2(u, v*0.5 + 0.5);
+    vec4 colS = texture2D(srcMap, colorUV);
+    vec4 dpS = texture2D(srcMap, depthUV);
+    float h = rgb2hue(dpS.rgb);
+    float depth = h * (depthRange.y - depthRange.x) + depthRange.x;
+    vAlpha = (depth > depthRange.x && depth < depthRange.y) ? 1.0 : 0.0;
+    vColor = colS.rgb;
+    float nx = (position.x - 0.5) * 2.0; float ny = (position.y - 0.5) * 2.0;
+    vec3 ray = vec3(nx, ny, 1.0); ray.xy = (ray.xy + rayParams.xy) * rayParams.zw;
+    vec3 worldPos = ray * depth;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(worldPos, 1.0);
+    gl_PointSize = pointSize / max(gl_Position.w, 0.05);
+  }`;
+const RGBD_FS = `
+  varying vec3 vColor; varying float vAlpha;
+  void main(){ if(vAlpha < 0.5) discard;
+    vec2 c = gl_PointCoord - 0.5; if (dot(c,c) > 0.25) discard;
+    gl_FragColor = vec4(vColor, 1.0); }`;
+function attachPointCloud(seat, video) {
+  const W = 192, H = 144;
+  const positions = new Float32Array(W*H*3);
+  for (let y=0;y<H;y++) for (let x=0;x<W;x++) { const i=(y*W+x)*3; positions[i]=x/W; positions[i+1]=y/H; positions[i+2]=0; }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const tex = new THREE.VideoTexture(video); tex.colorSpace = THREE.SRGBColorSpace;
+  const layout = ((video.videoWidth || 1) / (video.videoHeight || 1)) > 1.6 ? 0 : 1;
+  const mat = new THREE.ShaderMaterial({
+    vertexShader: RGBD_VS, fragmentShader: RGBD_FS,
+    uniforms: {
+      srcMap: { value: tex },
+      rayParams: { value: seat.params?.rayParams ? new THREE.Vector4(...seat.params.rayParams) : new THREE.Vector4(0, 0, 1.0, 0.75) },
+      depthRange: { value: seat.params?.depthRange ? new THREE.Vector2(...seat.params.depthRange) : new THREE.Vector2(0.3, 3.0) },
+      pointSize: { value: 6.0 }, layout: { value: layout }
+    }
+  });
+  if (seat.plane) { seat.group.remove(seat.plane); seat.plane = null; }
+  if (seat.points) seat.group.remove(seat.points);
+  seat.points = new THREE.Points(geo, mat);
+  seat.points.position.set(0, -0.1, 0.4);
+  seat.points.scale.set(0.7, 0.7, 0.7);
+  seat.group.add(seat.points);
+  seat.placeholder.visible = false;
+  seat.video = video;
+}
+
+// ─── LiveKit wiring ────────────────────────────────────────────────────────
+// `?url=wss://...` overrides the default — the mint script (scripts/mint-
+// livekit-token.mjs) bakes the right project URL from ~/.livekit/cli-config.yaml
+// into share links, so users on a different LK project can join the same room.
+const LK_URL = params.get('url') || 'wss://portals-dev.livekit.cloud';
+let lkRoom = null, hologramMode = false, localTracks = [];
+
+async function getToken() {
+  const fromInput = $('#tokenInput').value.trim(); if (fromInput) return fromInput;
+  const fromUrl = params.get('token'); if (fromUrl) return fromUrl;
+  try { const r = await fetch(`/api/livekit-token?room=${encodeURIComponent(room)}&identity=${encodeURIComponent('web-' + Math.random().toString(36).slice(2,7))}`);
     if (r.ok) { const j = await r.json(); return j.token; }
   } catch {}
   throw new Error('no token — paste a JWT or pass ?token=… in URL');
 }
-
-function addRemoteSeat(participant) {
-  const seat = document.createElement('div');
-  seat.className = 'seat'; seat.id = `seat-${participant.sid}`;
-  seat.innerHTML = `<div class="empty">${participant.identity || participant.sid}<br/><span style="font-size:9px;opacity:.55;">awaiting media…</span></div><div class="label">${participant.identity || 'remote'}</div>`;
-  $('#stage').appendChild(seat);
+function attachVideoForSeat(seat, track) {
+  const video = track.attach();
+  video.autoplay = true; video.playsInline = true; video.muted = true;
+  const apply = () => { if (hologramMode) attachPointCloud(seat, video); else attachBillboard(seat, video); };
+  if (video.readyState >= 1) apply(); else video.addEventListener('loadedmetadata', apply, { once: true });
 }
-function attachRemoteTrack(participant, track) {
-  const seat = document.getElementById(`seat-${participant.sid}`); if (!seat) return;
-  if (track.kind === 'video') {
-    const v = document.createElement('video'); v.autoplay = true; v.playsInline = true;
-    track.attach(v); seat.querySelector('.empty')?.remove(); seat.insertBefore(v, seat.firstChild);
-  } else if (track.kind === 'audio') {
-    const a = document.createElement('audio'); a.autoplay = true; track.attach(a); seat.appendChild(a);
-  }
+function notifyConn() {
+  if (!lkRoom) { setConn(null, 'offline'); setPeers(0); return; }
+  const n = (lkRoom.numParticipants || 1);
+  setPeers(n); setConn('on', `connected · ${n}`);
 }
-function removeSeat(participant) { document.getElementById(`seat-${participant.sid}`)?.remove(); }
 
 $('#join').addEventListener('click', async () => {
   try {
-    const lk = await ensureLK();
-    const token = await getToken();
-    const url = 'wss://portals-dev.livekit.cloud';
+    // Resume AudioContext on user gesture (browser autoplay policy)
+    try { await audioListener.context.resume(); } catch {}
     setConn('warn', 'connecting…');
-    lkRoom = new lk.Room({ adaptiveStream: true, dynacast: true });
-    lkRoom.on(lk.RoomEvent.ParticipantConnected, addRemoteSeat);
-    lkRoom.on(lk.RoomEvent.ParticipantDisconnected, removeSeat);
-    lkRoom.on(lk.RoomEvent.TrackSubscribed, (track, _pub, participant) => attachRemoteTrack(participant, track));
-    lkRoom.on(lk.RoomEvent.Disconnected, () => { setConn(null,'offline'); $('#publish').disabled = true; $('#leave').disabled = true; $('#join').disabled = false; });
-    await lkRoom.connect(url, token);
-    setConn('on', `connected · ${lkRoom.numParticipants} peer(s)`);
-    lkRoom.remoteParticipants.forEach(addRemoteSeat);
+    const token = await getToken();
+    lkRoom = new Room({ adaptiveStream: true, dynacast: true });
+    lkRoom.on(RoomEvent.ParticipantConnected, p => { createSeat(p.identity, p.identity); notifyConn(); });
+    lkRoom.on(RoomEvent.ParticipantDisconnected, p => { destroySeat(p.identity); notifyConn(); });
+    lkRoom.on(RoomEvent.TrackSubscribed, (track, _pub, p) => {
+      const seat = seats.get(p.identity) || createSeat(p.identity, p.identity);
+      if (track.kind === Track.Kind.Video) attachVideoForSeat(seat, track);
+      if (track.kind === Track.Kind.Audio) attachSpatialAudio(seat, track);
+    });
+    lkRoom.on(RoomEvent.DataReceived, (payload, p, _kind, topic) => {
+      const text = new TextDecoder().decode(payload);
+      if (topic === 'camera_params' && p) {
+        try { const cp = JSON.parse(text); const seat = seats.get(p.identity);
+          if (seat) { seat.params = cp;
+            if (seat.points) {
+              if (cp.rayParams) seat.points.material.uniforms.rayParams.value.set(...cp.rayParams);
+              if (cp.depthRange) seat.points.material.uniforms.depthRange.value.set(...cp.depthRange);
+            }
+          }
+        } catch {}
+      } else if (topic === 'xrai_doc') {
+        try { const msg = JSON.parse(text);
+          if (msg.kind === 'xrai_doc' && msg.doc) {
+            loadXraiScene(msg.doc, `(remote: ${p?.identity || 'peer'})`);
+          }
+        } catch {}
+      } else if (topic === 'xrai_delta') {
+        try { const msg = JSON.parse(text);
+          if (msg.kind === 'xrai_delta' && msg.delta) applyDelta(msg.delta);
+        } catch {}
+      }
+    });
+    lkRoom.on(RoomEvent.Disconnected, () => {
+      setConn(null, 'offline'); $('#publish').disabled = true; $('#leave').disabled = true;
+      $('#hologramBtn').disabled = true; $('#join').disabled = false; $('#invite').disabled = true;
+    });
+    await lkRoom.connect(LK_URL, token);
+    lkRoom.remoteParticipants.forEach(p => createSeat(p.identity, p.identity));
+    notifyConn();
     $('#join').disabled = true; $('#publish').disabled = false; $('#leave').disabled = false;
-    status(`joined room ${room} · share this URL: ${location.href}`);
-  } catch (e) { status(`join failed: ${e.message}`); setConn(null,'offline'); }
+    $('#hologramBtn').disabled = false; $('#invite').disabled = false;
+    $('#screenBtn').disabled = false; $('#paintBtn').disabled = false; $('#muteAllBtn').disabled = false;
+    showToast(`joined room ${room}`, 3500);
+  } catch (e) { setStatus(`join failed: ${e.message}`); setConn(null, 'offline'); }
 });
 
 $('#publish').addEventListener('click', async () => {
   try {
-    const lk = await ensureLK();
-    const tracks = await lk.createLocalTracks({ audio: true, video: { resolution: lk.VideoPresets.h360.resolution } });
+    const tracks = await createLocalTracks({ audio: true, video: { resolution: VideoPresets.h360.resolution } });
     for (const t of tracks) await lkRoom.localParticipant.publishTrack(t);
     localTracks = tracks;
-    const v = $('#localVid'); $('#localEmpty').style.display = 'none'; v.style.display = 'block';
+    const v = $('#localVid'); $('#self').classList.remove('hidden');
     tracks.find(t => t.kind === 'video')?.attach(v);
-    status('publishing local cam + mic');
-  } catch (e) { status(`publish failed: ${e.message}`); }
+    showToast('publishing local cam + mic', 2400);
+  } catch (e) { setStatus(`publish failed: ${e.message}`); }
 });
 
 $('#leave').addEventListener('click', async () => {
   try { for (const t of localTracks) t.stop(); await lkRoom?.disconnect(); } catch {}
+  for (const id of [...seats.keys()]) destroySeat(id);
+  $('#self').classList.add('hidden');
 });
 
-status('paste token below + click join · or set ?token=… in URL · or wire /api/livekit-token endpoint');
+$('#hologramBtn').addEventListener('click', () => {
+  hologramMode = !hologramMode;
+  $('#hologramBtn').classList.toggle('on', hologramMode);
+  for (const seat of seats.values()) {
+    if (!seat.video) continue;
+    if (hologramMode) attachPointCloud(seat, seat.video); else attachBillboard(seat, seat.video);
+  }
+  showToast(`hologram mode ${hologramMode ? 'on (side-by-side RGBD)' : 'off (billboards)'}`, 3000);
+});
+
+$('#invite').addEventListener('click', async () => {
+  const url = location.href;
+  try {
+    if (navigator.share) await navigator.share({ title: 'xrai conf', text: 'join my hologram room', url });
+    else { await navigator.clipboard.writeText(url); showToast(`invite copied · ${room}`, 3000); }
+  } catch { prompt('copy invite URL', url); }
+});
+
+// ─── jarvis (lazy) ─────────────────────────────────────────────────────────
+let jarvis = null;
+$('#jarvisToggle').addEventListener('click', async () => {
+  if (!jarvis) {
+    const mod = await import('./js/jarvis-web.js');
+    jarvis = new mod.Jarvis({
+      resolveQuery: () => null, openNode: () => {},
+      Graph: null, nodes: [], showToast,
+      onHudShow: (h) => showHud(h ? `${h.title}\n\n${h.body || ''}`.trim() : null),
+    });
+  }
+  if (jarvis.active) { jarvis.disable(); $('#jarvisToggle').classList.remove('on'); }
+  else { const ok = await jarvis.enable(); if (ok) $('#jarvisToggle').classList.add('on'); }
+});
+document.addEventListener('jarvis:zoom', (e) => {
+  const f = e.detail?.dir === 'in' ? 0.7 : 1.4;
+  const off = camera.position.clone().sub(controls.target);
+  off.multiplyScalar(f); camera.position.copy(controls.target).add(off);
+});
+document.addEventListener('jarvis:rotate', () => {
+  const off = camera.position.clone().sub(controls.target);
+  off.applyAxisAngle(new THREE.Vector3(0,1,0), Math.PI/6);
+  camera.position.copy(controls.target).add(off);
+});
+document.addEventListener('jarvis:close-panel', () => showHud(null));
+document.addEventListener('jarvis:wake', () => showHud('jARvis listening — say "zoom in", "rotate", "close"…'));
+
+// ─── hands gesture nav (lazy) ──────────────────────────────────────────────
+let hands = null;
+$('#handsToggle').addEventListener('click', async () => {
+  if (!hands) {
+    const mod = await import('./js/hands-web.js');
+    hands = new mod.Hands({ Graph: null, showToast });
+  }
+  if (hands.active) { hands.disable?.(); $('#handsToggle').classList.remove('on'); }
+  else { const supported = await hands.detectSupport();
+    if (supported === 'none') { showToast('hand-tracking not supported on this device', 3000); return; }
+    if (supported === 'webxr') hands._enableWebXR(); else hands._enableWebcam?.();
+    hands.active = true; $('#handsToggle').classList.add('on');
+  }
+});
+document.addEventListener('hands:zoom', (e) => {
+  const f = e.detail?.dir === 'in' ? 0.92 : 1.08;
+  const off = camera.position.clone().sub(controls.target);
+  off.multiplyScalar(f); camera.position.copy(controls.target).add(off);
+});
+document.addEventListener('hands:click', (e) => {
+  // pointer is normalized 0..1 → raycast into scene to focus nearest seat
+  const x = (e.detail?.x ?? 0.5) * 2 - 1; const y = -((e.detail?.y ?? 0.5) * 2 - 1);
+  const ray = new THREE.Raycaster(); ray.setFromCamera(new THREE.Vector2(x, y), camera);
+  const hits = ray.intersectObjects([...seats.values()].map(s => s.group), true);
+  const hit = hits[0];
+  if (!hit) return;
+  // walk up to find owning seat group
+  let g = hit.object; while (g && g.parent !== scene) g = g.parent;
+  if (g) { controls.target.copy(g.position); showToast(`focus ${[...seats.values()].find(s => s.group === g)?.label || ''}`, 1500); }
+});
+
+// ─── XRAI scene loader (renders alongside LiveKit personas) ────────────────
+// Entities → boxes at transform.position; anchors → wireframe spheres;
+// hologram entities are skipped (LiveKit RGBD seats own that channel).
+const xraiLayer = new THREE.Group(); xraiLayer.name = 'xrai-layer'; scene.add(xraiLayer);
+function clearXraiLayer() { while (xraiLayer.children.length) {
+  const c = xraiLayer.children.pop(); c.geometry?.dispose?.(); c.material?.dispose?.();
+} }
+function loadXraiScene(doc, label) {
+  clearXraiLayer();
+  if (!doc || !doc.xrai_version) { showToast('not an XRAI doc', 3000); return; }
+  const entities = doc.scene?.entities || [];
+  const anchors = doc.scene?.anchors || [];
+  const relations = doc.scene?.relations || [];
+  const idToPos = new Map();
+  // Anchors → wireframe spheres
+  for (const a of anchors) {
+    const m = new THREE.Mesh(
+      new THREE.SphereGeometry(0.08, 12, 8),
+      new THREE.MeshBasicMaterial({ color: 0xF7FFA8, wireframe: true, transparent: true, opacity: 0.55 })
+    );
+    const p = a.metadata?.position || [0, 0.05, 0];
+    m.position.set(p[0], p[1], p[2]); m.userData.id = a.id;
+    xraiLayer.add(m); idToPos.set(a.id, m.position.clone());
+  }
+  // Entities → boxes (skip hologram personas — LiveKit owns those)
+  let i = 0;
+  for (const e of entities) {
+    const isHologram = e.type === 'object.hologram' || (e.components || []).some(c => /rgbd\./.test(c.type));
+    if (isHologram) continue;
+    const isEmitter = e.type === 'object.emitter';
+    const p = e.transform?.position || [Math.cos(i*0.8)*0.6, 1.0, Math.sin(i*0.8)*0.6 - 1.2];
+    const s = e.transform?.scale || [0.15, 0.15, 0.15];
+    const geom = isEmitter
+      ? new THREE.IcosahedronGeometry(0.12, 0)
+      : new THREE.BoxGeometry(Math.max(s[0],0.08), Math.max(s[1],0.08), Math.max(s[2],0.08));
+    const col = e.material?.color || (isEmitter ? '#5eff8a' : '#F7FFA8');
+    const m = new THREE.Mesh(geom, new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.85, wireframe: isEmitter }));
+    m.position.set(p[0], p[1], p[2]); m.userData.id = e.id;
+    xraiLayer.add(m); idToPos.set(e.id, m.position.clone());
+    i++;
+  }
+  // Relations → line segments where both endpoints exist
+  const linePts = [];
+  for (const r of relations) {
+    const a = idToPos.get(r.from || r.participants?.[0]);
+    const b = idToPos.get(r.to || r.participants?.[1]);
+    if (a && b) linePts.push(a, b);
+  }
+  if (linePts.length) {
+    const lineGeo = new THREE.BufferGeometry().setFromPoints(linePts);
+    const lineMat = new THREE.LineBasicMaterial({ color: 0xF7FFA8, transparent: true, opacity: 0.32 });
+    xraiLayer.add(new THREE.LineSegments(lineGeo, lineMat));
+  }
+  const title = doc.metadata?.title || label || doc.id || 'xrai doc';
+  showHud(`${title}\n\n${entities.length} entities · ${anchors.length} anchors · ${relations.length} relations`);
+  showToast(`loaded ${title}`, 3500);
+}
+
+$('#docInput').addEventListener('change', async (e) => {
+  const file = e.target.files?.[0]; if (!file) return;
+  try { const doc = JSON.parse(await file.text()); loadXraiScene(doc, file.name); broadcastDoc(doc); }
+  catch (err) { showToast(`xrai load failed: ${err.message}`, 4000); }
+});
+
+// ─── T1468 shared-canvas DataChannel sync ──────────────────────────────────
+// MVP: broadcast the current XRAI doc when one user loads it; remote peers
+// auto-render. Per-node edit deltas (add/move/remove) are the natural next
+// extension — same encoder, just smaller payloads.
+function broadcastDoc(doc) {
+  if (!lkRoom?.localParticipant) return;
+  try {
+    const payload = new TextEncoder().encode(JSON.stringify({ kind: 'xrai_doc', doc }));
+    lkRoom.localParticipant.publishData(payload, { reliable: true, topic: 'xrai_doc' });
+    showToast('shared scene with room', 2500);
+  } catch (e) { console.warn('[conf] broadcastDoc failed', e); }
+}
+
+// Per-node delta sync with Lamport clock — extends T1468.
+// Delta shape: { op:'add'|'move'|'remove', id, pos?, entity?, clock?:{ts,actor} }
+// Conflict resolution: last-writer-wins by clock.ts (with actor as tiebreaker).
+const localActor = `web-${Math.random().toString(36).slice(2, 8)}`;
+let lamport = 0;
+const lastClock = new Map(); // id → {ts, actor}
+function nextClock() { lamport++; return { ts: Date.now() * 1000 + lamport, actor: localActor }; }
+function clockGTE(a, b) { return a.ts > b.ts || (a.ts === b.ts && a.actor >= b.actor); }
+function applyDelta(delta) {
+  if (!delta || !delta.op || !delta.id) return false;
+  // Reject stale: if we've seen a clock >= delta.clock for this id, skip
+  if (delta.clock && lastClock.has(delta.id)) {
+    const seen = lastClock.get(delta.id);
+    if (clockGTE(seen, delta.clock)) return false;
+  }
+  if (delta.clock) {
+    lastClock.set(delta.id, delta.clock);
+    if (delta.clock.ts > Date.now() * 1000 + lamport) lamport = delta.clock.ts - Date.now() * 1000 + 1;
+  }
+  const node = xraiLayer.children.find(c => c.userData?.id === delta.id);
+  if (delta.op === 'move' && node && Array.isArray(delta.pos)) {
+    node.position.set(delta.pos[0], delta.pos[1], delta.pos[2]); return true;
+  }
+  if (delta.op === 'remove' && node) {
+    xraiLayer.remove(node); node.geometry?.dispose?.(); node.material?.dispose?.(); return true;
+  }
+  if (delta.op === 'add' && delta.entity && !node) {
+    const e = delta.entity;
+    // stroke entity → Line2 from metadata.points
+    if (e.type === 'object.stroke' && Array.isArray(e.metadata?.points) && e.metadata.points.length >= 6) {
+      const geom = new LineGeometry(); geom.setPositions(e.metadata.points);
+      const mat = new LineMaterial({ color: e.material?.color || '#5eff8a', linewidth: 4, worldUnits: false, alphaToCoverage: true });
+      mat.resolution.set(stage.clientWidth, stage.clientHeight);
+      const line = new Line2(geom, mat); line.userData.id = e.id;
+      xraiLayer.add(line); return true;
+    }
+    const p = e.transform?.position || [0, 1, 0];
+    const m = new THREE.Mesh(
+      new THREE.BoxGeometry(0.15, 0.15, 0.15),
+      new THREE.MeshBasicMaterial({ color: e.material?.color || '#F7FFA8', transparent: true, opacity: 0.85 })
+    );
+    m.position.set(p[0], p[1], p[2]); m.userData.id = e.id;
+    xraiLayer.add(m); return true;
+  }
+  return false;
+}
+function broadcastDelta(delta) {
+  if (!lkRoom?.localParticipant) return;
+  if (!delta.clock) delta.clock = nextClock();
+  try {
+    const payload = new TextEncoder().encode(JSON.stringify({ kind: 'xrai_delta', delta }));
+    lkRoom.localParticipant.publishData(payload, { reliable: true, topic: 'xrai_delta' });
+  } catch (e) { console.warn('[conf] broadcastDelta failed', e); }
+}
+
+// ─── T1465 visionOS / WebXR-AR session entry ───────────────────────────────
+// Stub: on supported devices, request immersive-ar session that hands the
+// renderer's XR camera. Falls back to a one-line toast on unsupported browsers
+// (today: most desktop Chrome/Safari without an XR device).
+async function detectXrSupport() {
+  if (!navigator.xr) return false;
+  try { return await navigator.xr.isSessionSupported('immersive-ar'); } catch { return false; }
+}
+detectXrSupport().then(ok => { if (ok) $('#xrBtn').disabled = false; });
+$('#xrBtn').addEventListener('click', async () => {
+  if (!navigator.xr) { showToast('WebXR not in this browser', 3000); return; }
+  try {
+    const session = await navigator.xr.requestSession('immersive-ar', { requiredFeatures: ['local-floor'] });
+    renderer.xr.enabled = true;
+    await renderer.xr.setSession(session);
+    session.addEventListener('end', () => { renderer.xr.enabled = false; });
+    showToast('AR session active', 3000);
+  } catch (e) { showToast(`xr failed: ${e.message}`, 4000); }
+});
+
+// ?doc=<url> auto-load — supports both relative paths (examples/14-...) and absolute URLs
+const docParam = params.get('doc');
+if (docParam) {
+  fetch(docParam).then(r => r.ok ? r.json() : Promise.reject(new Error(`fetch ${r.status}`)))
+    .then(doc => loadXraiScene(doc, docParam))
+    .catch(err => showToast(`?doc fetch failed: ${err.message}`, 4000));
+}
+
+// ─── render loop ───────────────────────────────────────────────────────────
+// ─── Gizmo handles for selectedId — translate via TransformControls ────────
+const gizmo = new TransformControls(camera, renderer.domElement);
+gizmo.addEventListener('dragging-changed', (e) => { controls.enabled = !e.value; });
+gizmo.addEventListener('change', () => {
+  if (gizmo.object?.userData?.id) {
+    const n = gizmo.object;
+    broadcastDelta({ op: 'move', id: n.userData.id, pos: [n.position.x, n.position.y, n.position.z] });
+  }
+});
+// In r160 TransformControls is a Group — attach the helper, not the object itself
+const gizmoHelper = gizmo.getHelper ? gizmo.getHelper() : gizmo;
+scene.add(gizmoHelper);
+function attachGizmo(id) {
+  const node = xraiLayer.children.find(c => c.userData?.id === id);
+  if (node) gizmo.attach(node); else gizmo.detach();
+}
+
+// ─── Paint stroke as Line2 — connects consecutive points into a thick line
+let activeStroke = null, activeStrokePts = null, activeStrokeId = null;
+function paintLineBegin(worldPos) {
+  activeStrokeId = `stroke_${Date.now()}_${paintCounter++}`;
+  activeStrokePts = [worldPos.x, worldPos.y, worldPos.z];
+  const geom = new LineGeometry(); geom.setPositions(activeStrokePts);
+  const color = $('#paintColor')?.value || '#5eff8a';
+  const mat = new LineMaterial({ color, linewidth: 4, worldUnits: false, alphaToCoverage: true });
+  mat.resolution.set(stage.clientWidth, stage.clientHeight);
+  activeStroke = new Line2(geom, mat); activeStroke.userData.id = activeStrokeId;
+  xraiLayer.add(activeStroke);
+}
+function paintLineExtend(worldPos) {
+  if (!activeStroke) return;
+  activeStrokePts.push(worldPos.x, worldPos.y, worldPos.z);
+  activeStroke.geometry.setPositions(activeStrokePts);
+}
+function paintLineEnd() {
+  if (!activeStroke) return;
+  // Broadcast the full stroke as a single delta {op:'add', entity:{... points}}
+  const delta = { op: 'add', id: activeStrokeId,
+    entity: { id: activeStrokeId, type: 'object.stroke',
+      transform: { position: [0, 0, 0] },
+      material: { color: $('#paintColor')?.value || '#5eff8a' },
+      metadata: { points: activeStrokePts.slice() } } };
+  recordHistory(delta); broadcastDelta(delta);
+  activeStroke = null; activeStrokePts = null; activeStrokeId = null;
+}
+
+// ─── Save scene (XRAI v1.0 JSON download) — re-encodes xraiLayer + seats ──
+$('#saveBtn').addEventListener('click', () => {
+  const entities = [];
+  for (const c of xraiLayer.children) {
+    if (!c.userData?.id) continue;
+    entities.push({
+      id: c.userData.id, type: 'object.exported',
+      transform: { position: [c.position.x, c.position.y, c.position.z], rotation: [0,0,0,1], scale: [1,1,1] },
+      material: { color: c.material?.color ? `#${c.material.color.getHexString()}` : '#F7FFA8' }
+    });
+  }
+  const doc = {
+    xrai_version: '1.0', id: `00000000-0000-4000-a000-${Date.now().toString(16).padStart(12,'0').slice(-12)}`,
+    created_at: new Date().toISOString(),
+    author: { type: 'human', id: `web-${room}` },
+    origin: { app: 'xra1.com/conf', version: 'v1', scene: 'shared-hologram-conf' },
+    metadata: { title: `room ${room} export`, exported_at: new Date().toISOString(), participant_count: seats.size },
+    scene: { anchors: [], entities, relations: [], events: [] }
+  };
+  const blob = new Blob([JSON.stringify(doc, null, 2)], { type: 'application/vnd.xrai+json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `xrai-${room}-${Date.now()}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  showToast(`saved ${entities.length} entities`, 2400);
+});
+
+// ─── Clear painted entities (broadcasts removes) ───────────────────────────
+$('#clearBtn').addEventListener('click', () => {
+  const ids = xraiLayer.children.filter(c => c.userData?.id).map(c => c.userData.id);
+  for (const id of ids) {
+    const delta = { op: 'remove', id };
+    applyDelta(delta); broadcastDelta(delta);
+  }
+  showToast(`cleared ${ids.length} entities`, 2400);
+});
+
+// ─── Selection highlight — hover raycast → outline; click stores selectedId
+const hoverRay = new THREE.Raycaster();
+let hoveredNode = null, selectedId = null;
+function setHovered(n) {
+  if (hoveredNode === n) return;
+  if (hoveredNode?.material && hoveredNode.userData._origOpacity != null) {
+    hoveredNode.material.opacity = hoveredNode.userData._origOpacity;
+  }
+  hoveredNode = n;
+  if (n?.material) {
+    n.userData._origOpacity = n.userData._origOpacity ?? n.material.opacity ?? 1;
+    n.material.transparent = true; n.material.opacity = 1.0;
+  }
+  renderer.domElement.style.cursor = n ? 'pointer' : 'default';
+}
+renderer.domElement.addEventListener('pointermove', (ev) => {
+  if (paintMode || dragNode) return;
+  hoverRay.setFromCamera(pickPointer(ev), camera);
+  const hits = hoverRay.intersectObjects(xraiLayer.children, true);
+  let n = hits[0]?.object || null; while (n && !n.userData?.id && n.parent) n = n.parent;
+  setHovered(n?.userData?.id ? n : null);
+});
+
+// ─── Screen share publish (LiveKit screen track) ───────────────────────────
+let screenTrack = null;
+$('#screenBtn').addEventListener('click', async () => {
+  if (!lkRoom) return;
+  if (screenTrack) {
+    try { await lkRoom.localParticipant.unpublishTrack(screenTrack); } catch {}
+    try { screenTrack.stop(); } catch {}
+    screenTrack = null; $('#screenBtn').classList.remove('on');
+    showToast('screen share stopped', 2400); return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+    const track = stream.getVideoTracks()[0];
+    track.addEventListener('ended', () => { screenTrack = null; $('#screenBtn').classList.remove('on'); });
+    const lkTrack = await lkRoom.localParticipant.publishTrack(track, { source: Track.Source.ScreenShare });
+    screenTrack = lkTrack?.track || track;
+    $('#screenBtn').classList.add('on');
+    showToast('publishing screen share', 2400);
+  } catch (e) { showToast(`screen share failed: ${e.message}`, 4000); }
+});
+
+// ─── Mute-all (local-side) — toggles seat.audio nodes, no peer impact ──────
+let mutedAll = false;
+$('#muteAllBtn').addEventListener('click', () => {
+  mutedAll = !mutedAll;
+  for (const s of seats.values()) {
+    if (!s.audio) continue;
+    if (s.audio.gain) try { s.audio.gain.gain.value = mutedAll ? 0 : 1; } catch {}
+    else try { s.audio.muted = mutedAll; } catch {}
+  }
+  $('#muteAllBtn').classList.toggle('on', mutedAll);
+  showToast(mutedAll ? 'all remote audio muted (local)' : 'remote audio unmuted', 2200);
+});
+
+// ─── Paint-AR brush — pointer-down + drag → emits xrai_delta add per stroke
+// vertex. Toggles via #paintBtn; suppresses drag-to-move while active. ─────
+let paintMode = false, paintCounter = 0;
+$('#paintBtn').addEventListener('click', () => {
+  paintMode = !paintMode;
+  $('#paintBtn').classList.toggle('on', paintMode);
+  showToast(paintMode ? 'paint mode on — click+drag in scene' : 'paint mode off', 2200);
+});
+function paintAt(worldPos) {
+  const id = `brush_${Date.now()}_${paintCounter++}`;
+  const color = $('#paintColor')?.value || '#5eff8a';
+  const delta = {
+    op: 'add', id,
+    entity: { id, transform: { position: [worldPos.x, worldPos.y, worldPos.z] }, material: { color } }
+  };
+  recordHistory(delta);
+  applyDelta(delta);
+  broadcastDelta(delta);
+}
+
+// ─── Undo / redo stack — every local delta is recorded with its inverse ────
+const editHistory = []; // [{forward, inverse}, ...]  — named to avoid TDZ collision with window.history
+let historyIdx = 0;
+function inverseOf(delta) {
+  if (delta.op === 'add') return { op: 'remove', id: delta.id };
+  if (delta.op === 'remove') {
+    // Need a snapshot of the current node to revive it
+    const node = xraiLayer.children.find(c => c.userData?.id === delta.id);
+    if (!node) return null;
+    return { op: 'add', id: delta.id, entity: { id: delta.id,
+      transform: { position: [node.position.x, node.position.y, node.position.z] },
+      material: { color: node.material?.color ? `#${node.material.color.getHexString()}` : '#F7FFA8' } } };
+  }
+  if (delta.op === 'move') {
+    const node = xraiLayer.children.find(c => c.userData?.id === delta.id);
+    if (!node) return null;
+    return { op: 'move', id: delta.id, pos: [node.position.x, node.position.y, node.position.z] };
+  }
+  return null;
+}
+function recordHistory(delta) {
+  const inv = inverseOf(delta); if (!inv) return;
+  // Truncate redo branch when new edit lands after an undo
+  editHistory.length = historyIdx;
+  editHistory.push({ forward: delta, inverse: inv });
+  historyIdx = editHistory.length;
+  $('#undoBtn').disabled = false; $('#redoBtn').disabled = true;
+}
+$('#undoBtn').addEventListener('click', () => {
+  if (historyIdx === 0) return;
+  const entry = editHistory[historyIdx - 1]; historyIdx--;
+  applyDelta(entry.inverse); broadcastDelta(entry.inverse);
+  $('#undoBtn').disabled = (historyIdx === 0); $('#redoBtn').disabled = false;
+  showToast('undo', 1500);
+});
+$('#redoBtn').addEventListener('click', () => {
+  if (historyIdx === editHistory.length) return;
+  const entry = history[historyIdx]; historyIdx++;
+  applyDelta(entry.forward); broadcastDelta(entry.forward);
+  $('#undoBtn').disabled = false; $('#redoBtn').disabled = (historyIdx === editHistory.length);
+  showToast('redo', 1500);
+});
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+    e.preventDefault();
+    if (e.shiftKey) $('#redoBtn').click(); else $('#undoBtn').click();
+  }
+});
+
+// ─── Voice intent → delta recognizer (regex over jARvis transcripts) ──────
+// jarvis-web.js dispatches 'jarvis:transcript' for every final utterance once
+// the recognizer ships. Today we listen on a CustomEvent the user can also
+// fire manually from devtools for testing.
+const VOICE_INTENTS = [
+  { rx: /^(?:clear|reset)(?: scene|all|everything)?$/i, build: () => ({ broadcast: 'clear-all' }) },
+  { rx: /^undo$/i, build: () => ({ click: '#undoBtn' }) },
+  { rx: /^redo$/i, build: () => ({ click: '#redoBtn' }) },
+  { rx: /^(?:delete|remove)(?: that| selected| this)?$/i, build: () => selectedId && ({ delta: { op: 'remove', id: selectedId } }) },
+  { rx: /^paint(?: mode)?(?: on)?$/i, build: () => ({ click: '#paintBtn' }) },
+];
+function handleVoice(text) {
+  const t = String(text || '').trim();
+  for (const it of VOICE_INTENTS) {
+    if (!it.rx.test(t)) continue;
+    const out = it.build(); if (!out) continue;
+    if (out.click) document.querySelector(out.click)?.click();
+    else if (out.delta) document.dispatchEvent(new CustomEvent('xrai:delta', { detail: out.delta }));
+    else if (out.broadcast === 'clear-all') $('#clearBtn').click();
+    return true;
+  }
+  return false;
+}
+document.addEventListener('jarvis:transcript', (e) => handleVoice(e.detail?.text));
+window.__conf && (window.__conf.handleVoice = handleVoice);
+
+// ─── Drag-to-move handler — raycast click on xraiLayer entity, drag along
+// camera-aligned plane, emit broadcastDelta({op:'move'}) on release. ────────
+const dragRay = new THREE.Raycaster();
+const dragPlane = new THREE.Plane();
+const dragHit = new THREE.Vector3();
+let dragNode = null, dragPointerStart = null;
+function pickPointer(ev) {
+  const rect = renderer.domElement.getBoundingClientRect();
+  return new THREE.Vector2(
+    ((ev.clientX - rect.left) / rect.width) * 2 - 1,
+    -((ev.clientY - rect.top) / rect.height) * 2 + 1
+  );
+}
+renderer.domElement.addEventListener('pointerdown', (ev) => {
+  const p = pickPointer(ev);
+  if (paintMode) {
+    const planeY = new THREE.Plane(new THREE.Vector3(0, 1, 0), -1.0);
+    dragRay.setFromCamera(p, camera);
+    if (dragRay.ray.intersectPlane(planeY, dragHit)) paintLineBegin(dragHit.clone());
+    controls.enabled = false; return;
+  }
+  dragRay.setFromCamera(p, camera);
+  const hits = dragRay.intersectObjects(xraiLayer.children, true);
+  const hit = hits.find(h => h.object?.userData?.id || h.object?.parent?.userData?.id);
+  if (!hit) return;
+  let n = hit.object; while (n && !n.userData?.id && n.parent) n = n.parent;
+  if (!n?.userData?.id) return;
+  dragNode = n; dragPointerStart = p;
+  // camera-facing plane through the node
+  const camNormal = camera.getWorldDirection(new THREE.Vector3()).negate();
+  dragPlane.setFromNormalAndCoplanarPoint(camNormal, n.position);
+  controls.enabled = false;
+});
+renderer.domElement.addEventListener('pointermove', (ev) => {
+  if (paintMode && ev.buttons) {
+    const planeY = new THREE.Plane(new THREE.Vector3(0, 1, 0), -1.0);
+    dragRay.setFromCamera(pickPointer(ev), camera);
+    if (dragRay.ray.intersectPlane(planeY, dragHit)) paintLineExtend(dragHit.clone());
+    return;
+  }
+  if (!dragNode) return;
+  dragRay.setFromCamera(pickPointer(ev), camera);
+  if (dragRay.ray.intersectPlane(dragPlane, dragHit)) dragNode.position.copy(dragHit);
+});
+renderer.domElement.addEventListener('pointerup', (ev) => {
+  if (paintMode && activeStroke) { paintLineEnd(); controls.enabled = true; return; }
+  if (dragNode) {
+    const moved = dragPointerStart && Math.hypot(
+      ev.clientX - (dragPointerStart._cx ?? ev.clientX),
+      ev.clientY - (dragPointerStart._cy ?? ev.clientY)
+    );
+    if (moved && moved > 4) {
+      const delta = { op: 'move', id: dragNode.userData.id, pos: [dragNode.position.x, dragNode.position.y, dragNode.position.z] };
+      recordHistory(delta); broadcastDelta(delta);
+    } else {
+      selectedId = dragNode.userData.id;
+      attachGizmo(selectedId);
+      showToast(`selected ${selectedId} — gizmo attached`, 1800);
+    }
+  }
+  dragNode = null; dragPointerStart = null; controls.enabled = true;
+});
+
+// ─── Voice intent → delta — wire jARvis nav + custom event hooks ───────────
+// jARvis dispatches custom events; conf.html listens for "move <id> by <dx,dy,dz>"
+// shaped events. Voice prompts in jarvis-web.js produce these via the existing
+// _onTurn pipeline once a "move <noun>" intent recognizer ships there.
+document.addEventListener('xrai:delta', (e) => {
+  const d = e.detail; if (!d) return;
+  if (applyDelta(d)) broadcastDelta(d);
+});
+
+function frame() { controls.update(); renderer.render(scene, camera); requestAnimationFrame(frame); }
+frame();
+window.addEventListener('resize', () => {
+  renderer.setSize(stage.clientWidth, stage.clientHeight);
+  camera.aspect = stage.clientWidth / stage.clientHeight; camera.updateProjectionMatrix();
+});
+
+setStatus(`room ${room} · paste token + click join · or set ?token=… in URL`);
+
+// expose for tests
+window.__conf = { THREE, scene, camera, seats, xraiLayer, loadXraiScene, applyDelta, broadcastDelta, broadcastDoc, get selectedId(){ return selectedId; }, get hoveredId(){ return hoveredNode?.userData?.id ?? null; }, get hologramMode(){ return hologramMode; }, get connected(){ return lkRoom?.state === 'connected'; } };
 </script>
 </body>
 </html>

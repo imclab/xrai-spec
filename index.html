@@ -638,6 +638,8 @@
   <span class="topnav-sep"></span>
   <button id="save-btn" title="Save current graph as XRAI v1.0 JSON">save</button>
   <span class="topnav-sep"></span>
+  <button id="mode-btn" title="Toggle viewer / editor — editor adds inline node-edit + add/delete + auto-save preview">viewer</button>
+  <span class="topnav-sep"></span>
   <button id="xr-btn" class="xr-ok" title="Enter immersive AR/VR (WebXR)" disabled><span id="xr-label">xr</span></button>
   <span class="topnav-sep"></span>
   <select id="engine-select" title="Rendering engine">
@@ -1222,7 +1224,8 @@ function makeLabelSprite(label, color = '#e5e5e5') {
 }
 
 // ------- Build the graph -------
-const Graph = ForceGraph3D()(document.getElementById('graph'))
+// eslint-disable-next-line prefer-const
+const Graph = window.Graph = ForceGraph3D()(document.getElementById('graph'))
   .backgroundColor('#000000')
   .graphData({ nodes, links })
   .nodeColor(n => colorFor(n.group))
@@ -1320,12 +1323,65 @@ async function openNode(node) {
 
     const html = marked.parse(mdText);
     const metaPills = `<div class="meta"><span>${node.group}</span>${node.file ? `<span>${node.file}</span>` : ''}</div>`;
-    panelContent.innerHTML = metaPills + html;
+    const editor = (typeof editorMode !== 'undefined' && editorMode) ? renderEditorBlock(node) : '';
+    panelContent.innerHTML = editor + metaPills + html;
     panelContent.scrollTop = 0;
     panel.scrollTop = 0;
+    if (editor) wireEditorBlock(node);
   } catch (e) {
     panelContent.innerHTML = `<h1>${node.label}</h1><p>Failed to load: ${e.message}</p>`;
   }
+}
+
+// ------- Editor mode (additive — viewer remains default) -------
+let editorMode = false;
+const modeBtn = document.getElementById('mode-btn');
+function setMode(next) {
+  editorMode = next;
+  modeBtn.textContent = editorMode ? 'editor' : 'viewer';
+  modeBtn.classList.toggle('jarvis-on', editorMode); // reuse existing on-style
+  document.body.dataset.mode = editorMode ? 'editor' : 'viewer';
+}
+modeBtn.addEventListener('click', () => setMode(!editorMode));
+
+function renderEditorBlock(node) {
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  return `<div class="edit-block" style="border:1px solid var(--accent);border-radius:6px;padding:8px 10px;margin:0 0 12px;background:rgba(247,255,168,0.06);font-family:ui-monospace,Menlo,monospace;font-size:11px;">
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;opacity:0.7;">
+      <span>EDIT · ${esc(node.id)}</span><span style="flex:1;"></span>
+      <button data-act="delete" style="background:transparent;border:1px solid rgba(247,255,168,0.4);color:#F7FFA8;border-radius:4px;padding:2px 8px;cursor:pointer;font:inherit;">delete node</button>
+    </div>
+    <label style="display:block;margin-bottom:4px;">label
+      <input data-field="label" value="${esc(node.label)}" style="display:block;width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(247,255,168,0.3);color:#F7FFA8;border-radius:4px;padding:4px 6px;font:inherit;" />
+    </label>
+    <label style="display:block;margin-bottom:4px;">group
+      <input data-field="group" value="${esc(node.group)}" style="display:block;width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(247,255,168,0.3);color:#F7FFA8;border-radius:4px;padding:4px 6px;font:inherit;" />
+    </label>
+    <label style="display:block;">file
+      <input data-field="file" value="${esc(node.file)}" placeholder="(optional path)" style="display:block;width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(247,255,168,0.3);color:#F7FFA8;border-radius:4px;padding:4px 6px;font:inherit;" />
+    </label>
+  </div>`;
+}
+function wireEditorBlock(node) {
+  panelContent.querySelectorAll('.edit-block input[data-field]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const f = inp.dataset.field; node[f] = inp.value;
+      Graph.refresh && Graph.refresh();
+    });
+  });
+  const del = panelContent.querySelector('.edit-block [data-act="delete"]');
+  del?.addEventListener('click', () => {
+    if (!confirm(`Delete node "${node.label}" + connected links? This is a local edit; click save to persist.`)) return;
+    const data = Graph.graphData();
+    const nextNodes = data.nodes.filter(n => n.id !== node.id);
+    const nextLinks = data.links.filter(l => {
+      const s = typeof l.source === 'object' ? l.source.id : l.source;
+      const t = typeof l.target === 'object' ? l.target.id : l.target;
+      return s !== node.id && t !== node.id;
+    });
+    Graph.graphData({ nodes: nextNodes, links: nextLinks });
+    closePanel();
+  });
 }
 
 function closePanel() {
@@ -1355,22 +1411,30 @@ document.getElementById('file-input').addEventListener('change', async (e) => {
     const text = await file.text();
     const doc = JSON.parse(text);
     if (!doc.xrai_version) throw new Error('missing xrai_version — not an XRAI document');
-    // Convert XRAI scene → graph data
-    const newNodes = (doc.scene?.entities || []).map(ent => ({
+    // Convert XRAI scene → graph data. Include BOTH entities and anchors as
+    // nodes so relations referencing anchors (anchor_user, anchor_floor, etc.)
+    // resolve to real graph nodes — 3d-force-graph throws "node not found"
+    // otherwise. Anchors get a distinct group so colorFor() can theme them.
+    const entitySources = [
+      ...(doc.scene?.entities || []).map(e => ({ ...e, _src: 'entity' })),
+      ...(doc.scene?.anchors || []).map(a => ({ ...a, _src: 'anchor' })),
+    ];
+    const newNodes = entitySources.map(ent => ({
       id: ent.id,
       label: ent.id,
-      group: 'demo',
-      size: 8,
+      group: ent._src === 'anchor' ? 'anchor' : 'demo',
+      size: ent._src === 'anchor' ? 6 : 8,
       file: '__inline__:loaded-' + ent.id,
     }));
+    const knownIds = new Set(newNodes.map(n => n.id));
     const newLinks = (doc.scene?.relations || []).map(rel => ({
       source: rel.from || rel.participants?.[0],
       target: rel.to || rel.participants?.[1],
-    })).filter(l => l.source && l.target);
+    })).filter(l => l.source && l.target && knownIds.has(l.source) && knownIds.has(l.target));
     Graph.graphData({ nodes: newNodes, links: newLinks });
     // Populate inline content cache so click → panel still works
-    (doc.scene?.entities || []).forEach(ent => {
-      inlineContent['loaded-' + ent.id] = `# ${ent.id}\n\n**type:** \`${ent.type}\`\n\n\`\`\`json\n${JSON.stringify(ent, null, 2)}\n\`\`\``;
+    entitySources.forEach(ent => {
+      inlineContent['loaded-' + ent.id] = `# ${ent.id}\n\n**type:** \`${ent.type}\` · **source:** ${ent._src}\n\n\`\`\`json\n${JSON.stringify(ent, null, 2)}\n\`\`\``;
     });
     showToast(`Loaded ${newNodes.length} entities + ${newLinks.length} relations from ${file.name}`);
   } catch (err) {

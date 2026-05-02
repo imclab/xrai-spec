@@ -70,6 +70,11 @@ out/
 runtimes/_conformance/results/
 *.conformance.log
 
+# Browser visual test outputs (Playwright)
+__tests__/results/
+test-results/
+playwright-report/
+
 # Coverage
 coverage/
 *.lcov

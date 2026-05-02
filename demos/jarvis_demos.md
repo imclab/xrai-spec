@@ -15,14 +15,14 @@ Each demo proves one of the 6 superpowers from the thesis:
 **Pitch:** say a sentence, see a world.
 
 **Script:**
-- 0:00 — close-up of James in his apartment, iPhone in hand, Portals open, AR camera on empty room
+- 0:00 — close-up of Alice in his apartment, iPhone in hand, Portals open, AR camera on empty room
 - 0:05 — (voice) "jARvis, build a meditation garden here"
 - 0:07–0:20 — objects materialize: low table, cushion, koi pond, bonsai, soft lighting. XRAI graph overlay briefly visible — 12 nodes, 8 relations
 - 0:22 — (voice) "make the pond audio-reactive to my breathing"
 - 0:24 — wire binding visualized, then ripples in the pond sync to breath
 - 0:35 — (voice) "save this as 'morning space'"
 - 0:37 — XRAI file exported, QR code appears
-- 0:40 — cut to phone #2 scanning QR → same scene materializes in different room
+- 0:40 — cut to Bill on phone #2 scanning QR → same scene materializes in his different room
 - 0:50 — text overlay: "XRAI. Open. MIT. Yours forever."
 - 0:55 — URL: `xrai.dev`
 - 1:00 — end
@@ -36,10 +36,10 @@ Each demo proves one of the 6 superpowers from the thesis:
 **Pitch:** rewind your own life.
 
 **Script:**
-- 0:00 — James at desk, Portals open, says "show me the last 5 conversations I had about Portals"
+- 0:00 — Alice at desk, Portals open, says "show me the last 5 conversations I had about Portals"
 - 0:03 — spatial timeline materializes: 5 floating 3D scenes, each with transcript snippets
-- 0:10 — James taps scene from Tuesday, voice plays back, his workspace from that moment visible in ghost form
-- 0:18 — James says "resume from here" — scene re-activates, ready to continue
+- 0:10 — Alice taps scene from Tuesday, voice plays back, his workspace from that moment visible in ghost form
+- 0:18 — Alice says "resume from here" — scene re-activates, ready to continue
 - 0:25 — text: "Memex, finally shipping. xrai.dev"
 - 0:30 — end
 

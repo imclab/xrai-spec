@@ -104,3 +104,7 @@ Each pillar heals a different facet of the "we are blind" thesis. Together they 
 
 - v1 — 2026-04-22 — initial capture from conversation
 - Future updates: preserve verbatim user-provided prose in quoted blocks; synthesize new sections in editorial voice below.
+
+---
+
+**Navigate:** [`MANIFESTO.md`](./MANIFESTO.md) · [`SPEC.md`](./SPEC.md) · [`landing.html`](./landing.html) · [`sitemap.html`](./sitemap.html) · [`examples/`](./examples/)
