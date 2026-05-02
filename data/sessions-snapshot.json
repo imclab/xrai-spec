@@ -1,8 +1,1 @@
-{
-  "built_at": "2026-05-02T13:54:13.000Z",
-  "project": "public-preview",
-  "sessions_count": 0,
-  "total_prompts": 0,
-  "_note": "public preview — real data redacted; see github.com/imclab/xra1 to contribute · drag your own .jsonl onto /replay to inspect locally",
-  "sessions": []
-}
+{"sessions":[]}
