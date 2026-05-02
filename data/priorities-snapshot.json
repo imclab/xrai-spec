@@ -1,29 +1,11 @@
 {
-  "built_at": "2026-05-02T13:20:34.000Z",
+  "built_at": "2026-05-02T13:54:13.000Z",
   "source": "public preview — see github.com/imclab/xra1/issues for live priorities",
   "_note": "public preview — real data redacted; see github.com/imclab/xra1 to contribute",
   "friction_count_7d": 0,
   "priorities": [
-    {
-      "id": "P1",
-      "title": "Read the SPEC + MANIFESTO",
-      "next": "Start at SPEC.md → MANIFESTO.md → RFCs/",
-      "done": false,
-      "latest_commit": ""
-    },
-    {
-      "id": "P2",
-      "title": "Try the runtimes",
-      "next": "See RUNTIMES.md scoreboard. Three.js adapter is live; others are stubs.",
-      "done": false,
-      "latest_commit": ""
-    },
-    {
-      "id": "P3",
-      "title": "File an RFC or issue",
-      "next": "Use github.com/imclab/xra1/issues — RFCs in xrai-website/rfcs/",
-      "done": false,
-      "latest_commit": ""
-    }
+    {"id": "P1", "title": "Read the SPEC + MANIFESTO", "next": "Start at SPEC.md → MANIFESTO.md → RFCs/", "done": false, "latest_commit": ""},
+    {"id": "P2", "title": "Try the runtimes", "next": "See RUNTIMES.md scoreboard. Three.js adapter is live; others are stubs.", "done": false, "latest_commit": ""},
+    {"id": "P3", "title": "File an RFC or issue", "next": "Use github.com/imclab/xra1/issues — RFCs in xrai-website/rfcs/", "done": false, "latest_commit": ""}
   ]
 }

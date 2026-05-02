@@ -1,0 +1,119 @@
+{
+  "xrai_archetype_registry_version": "1.1",
+  "id": "xrai://archetypes/registry",
+  "rfc": "0010",
+  "since_version": "1.1",
+  "_note": "Named bundles of typed components. v1.0 entity types map to these archetypes via the implicit migration in RFC 0010 §Backwards-compatibility glue. Third parties register new archetypes via RFC.",
+  "archetypes": {
+    "Primitive": {
+      "identity": "Thing",
+      "facets": { "A1": "thing", "A8": "3D-volume" },
+      "required_components": ["transform"],
+      "optional_components": ["material", "animation", "audio_reactive_gain"],
+      "extends": ["Thing"],
+      "since_version": "1.1",
+      "v10_type_alias": ["object.primitive"],
+      "description": "Generic 3D primitive (cube/sphere/cone). Default fallback when no richer archetype fits."
+    },
+    "Hologram": {
+      "identity": "Thing",
+      "facets": { "A1": "thing", "A2": "live-stream", "A8": "3D-mesh", "A9": "depth" },
+      "required_components": ["transform", "hologram_feed"],
+      "optional_components": ["material", "audio_reactive_gain", "stencil_uri"],
+      "extends": ["Thing"],
+      "since_version": "1.1",
+      "v10_type_alias": ["object.hologram"],
+      "description": "RGBD-stencil hologram (T16). Portals canonical substrate. Per RFC 0012 §tier-table."
+    },
+    "Light": {
+      "identity": "Thing",
+      "facets": { "A1": "thing", "A8": "3D-volume", "A9": "image" },
+      "required_components": ["transform", "light_params"],
+      "optional_components": ["audio_reactive_gain"],
+      "extends": ["Thing"],
+      "since_version": "1.1",
+      "v10_type_alias": ["object.light"],
+      "description": "Directional / point / spot / area light source."
+    },
+    "Wire": {
+      "identity": "Relation",
+      "facets": { "A1": "relation", "A4": "edge" },
+      "required_components": ["wire_source", "wire_binds"],
+      "optional_components": ["wire_transform", "metadata"],
+      "extends": ["Relation"],
+      "since_version": "1.1",
+      "v10_type_alias": ["wire", "wire.binding"],
+      "description": "Reactive binding (source-component → target-component). See spec 018 wire-editor-modes."
+    },
+    "Emitter": {
+      "identity": "Thing",
+      "facets": { "A1": "thing", "A2": "live-stream", "A8": "3D-volume" },
+      "required_components": ["transform", "emitter_params"],
+      "optional_components": ["material", "audio_reactive_gain"],
+      "extends": ["Thing"],
+      "since_version": "1.1",
+      "v10_type_alias": ["object.emitter"],
+      "description": "VFX particle / volumetric / procedural emitter. Bridges to Unity VFX Graph."
+    },
+    "Anchor": {
+      "identity": "Place",
+      "facets": { "A1": "place", "A2": "live-stream", "A8": "3D-spatial" },
+      "required_components": ["transform"],
+      "optional_components": ["confidence", "tracking_state", "metadata"],
+      "extends": ["Place"],
+      "since_version": "1.1",
+      "v10_type_alias": ["ar.plane", "ar.anchor", "ar.world-anchor"],
+      "description": "AR-runtime anchor (plane / world / persistent). See spec 011 body-face-hand-space."
+    },
+    "BlendShapes": {
+      "identity": "Property",
+      "facets": { "A1": "property", "A2": "live-stream", "A9": "pose" },
+      "required_components": ["blend_weights"],
+      "optional_components": ["transform"],
+      "extends": ["Property"],
+      "since_version": "1.1",
+      "v10_type_alias": ["ar.face.blendshapes"],
+      "description": "ARKit-style face blendshape weights (52 channels)."
+    },
+    "Skeleton": {
+      "identity": "Thing",
+      "facets": { "A1": "person", "A2": "live-stream", "A4": "tree", "A8": "3D-spatial", "A9": "pose" },
+      "required_components": ["joints"],
+      "optional_components": ["transform", "confidence"],
+      "extends": ["Thing"],
+      "since_version": "1.1",
+      "v10_type_alias": ["ar.body", "mocap.skeleton"],
+      "description": "Tree of joint poses. Mocap / ARBodyTracking / MediaPipe. Aligns to A4=tree topology."
+    },
+    "AgentTrace": {
+      "identity": "Event",
+      "facets": { "A1": "event", "A2": "live-stream", "A10": "agent", "A15": "intention" },
+      "required_components": ["actor", "tool_call"],
+      "optional_components": ["thought", "tool_result", "plan_step", "causal_parent"],
+      "extends": ["Event"],
+      "since_version": "1.1",
+      "v10_type_alias": [],
+      "description": "LLM tool-call / chain-of-thought event. RFC 0009 agent-trace family."
+    },
+    "Metric": {
+      "identity": "Quantity",
+      "facets": { "A1": "quantity", "A2": "live-stream", "A8": "0D-scalar", "A9": "numeric" },
+      "required_components": ["metric_value"],
+      "optional_components": ["unit", "asset_symbol", "label"],
+      "extends": ["Quantity"],
+      "since_version": "1.1",
+      "v10_type_alias": [],
+      "description": "Time-series scalar (telemetry / market tick / biosignal). Carries A11 unit."
+    }
+  },
+  "validation": {
+    "components_shape": "object_keyed_by_name",
+    "deterministic_ordering": true,
+    "duplicates_allowed": false,
+    "json_patch_friendly": true
+  },
+  "compatibility": {
+    "v10_fallback": "Decoders that only speak v1.0 ignore archetype + entity_path; required + optional component lookups fall through to entity.components[] array.",
+    "v11_dual_emit": "Reference encoder emits both archetype/entity_path AND legacy id/type for round-trip safety."
+  }
+}

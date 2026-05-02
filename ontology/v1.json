@@ -1,0 +1,400 @@
+{
+  "xrai_ontology_version": "1.0.0",
+  "id": "xrai://ontology/v1",
+  "rfc": "0013",
+  "_note": "Starter corpus per RFC 0013 §10. Faceted (18 axes). Open for axis values, closed for axis additions. Aliases resolve at SSE decode time. New entries land via auto-alignment + proposal queue (RFC 0013 §6).",
+  "axes": {
+    "A1": "identity",
+    "A2": "temporality",
+    "A3": "structure",
+    "A4": "topology",
+    "A5": "scale-hierarchy",
+    "A6": "role",
+    "A7": "grammar-sign",
+    "A8": "dimensionality",
+    "A9": "modality",
+    "A10": "provenance",
+    "A11": "unit-measure",
+    "A12": "trust-tier",
+    "A13": "physics-regime",
+    "A14": "dynamics-class",
+    "A15": "causality-driver",
+    "A16": "origin-nature-nurture",
+    "A17": "expression-cascade",
+    "A18": "emergence-level"
+  },
+  "upper_categories": {
+    "Entity": { "children": ["Occurrent", "Continuant"] },
+    "Occurrent": { "children": ["Event", "Process", "State"], "parent": "Entity" },
+    "Continuant": { "children": ["Independent", "Dependent"], "parent": "Entity" },
+    "Independent": { "children": ["Person", "Place", "Thing"], "parent": "Continuant" },
+    "Dependent": { "children": ["Property", "Quantity", "Concept", "Relation", "System"], "parent": "Continuant" },
+    "Event": { "parent": "Occurrent" },
+    "Process": { "parent": "Occurrent" },
+    "State": { "parent": "Occurrent" },
+    "Person": { "parent": "Independent" },
+    "Place": { "parent": "Independent" },
+    "Thing": { "parent": "Independent" },
+    "Property": { "parent": "Dependent" },
+    "Quantity": { "parent": "Dependent" },
+    "Concept": { "parent": "Dependent" },
+    "Relation": { "parent": "Dependent" },
+    "System": { "parent": "Dependent" }
+  },
+  "components": {
+    "transform": {
+      "facets": { "A1": "property", "A8": "3D-spatial", "A9": "pose" },
+      "payload": { "position": "vec3", "rotation": "quat", "scale": "vec3" },
+      "external_refs": ["gltf:node.transform", "usd:Xformable"],
+      "trust": "T1-battle-tested",
+      "since": "1.0"
+    },
+    "pose_6dof": {
+      "facets": { "A1": "property", "A2": "live-stream", "A8": "3D-spatial", "A9": "pose" },
+      "payload": { "position": "vec3", "rotation": "quat" },
+      "aliases": ["pose", "transform_6dof"],
+      "external_refs": ["openxr:XrPosef"],
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "velocity_6dof": {
+      "facets": { "A1": "property", "A2": "live-stream", "A8": "3D-spatial" },
+      "payload": { "linear": "vec3", "angular": "vec3" },
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "scale_xyz": {
+      "facets": { "A1": "property", "A8": "3D-spatial" },
+      "payload": "vec3",
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "bounding_box_3d": {
+      "facets": { "A1": "property", "A8": "3D-volume" },
+      "payload": { "min": "vec3", "max": "vec3" },
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "mesh_uri": {
+      "facets": { "A1": "property", "A6": "asset", "A8": "3D-mesh", "A9": "mesh" },
+      "payload": "uri",
+      "external_refs": ["gltf:mesh", "usd:Mesh"],
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "point_cloud_uri": {
+      "facets": { "A1": "property", "A6": "asset", "A8": "3D-volume", "A9": "point-cloud" },
+      "payload": "uri",
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "depth_image": {
+      "facets": { "A1": "property", "A2": "live-stream", "A8": "2D-image", "A9": "depth" },
+      "payload": { "uri": "uri", "width": "int", "height": "int", "encoding": "enum:huedepth|raw16|exr" },
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "rgb_image": {
+      "facets": { "A1": "property", "A2": "live-stream", "A8": "2D-image", "A9": "image" },
+      "payload": { "uri": "uri", "width": "int", "height": "int", "encoding": "enum:png|jpg|webp|h264|webrtc" },
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "material_params": {
+      "facets": { "A1": "property", "A6": "schema", "A9": "shader-param" },
+      "payload": { "color": "rgba", "preset": "string", "metallic": "float01", "roughness": "float01" },
+      "aliases": ["material"],
+      "trust": "T1-battle-tested",
+      "since": "1.0"
+    },
+    "audio_reactive_gain": {
+      "facets": { "A1": "property", "A2": "live-stream", "A9": "shader-param" },
+      "payload": { "bass_gain": "float", "mid_gain": "float", "high_gain": "float" },
+      "aliases": ["audio_reactive"],
+      "trust": "T1-battle-tested",
+      "since": "1.0"
+    },
+    "shader_params": {
+      "facets": { "A1": "property", "A6": "schema", "A9": "shader-param" },
+      "payload": "dict_any",
+      "trust": "T2-partially-validated",
+      "since": "1.2"
+    },
+    "texture_uri": {
+      "facets": { "A1": "property", "A6": "asset", "A9": "image" },
+      "payload": "uri",
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "neural_latent": {
+      "facets": { "A1": "property", "A8": "ND-tensor", "A9": "latent", "A10": "generator" },
+      "payload": { "uri": "uri", "shape": "int[]", "dtype": "enum:f16|f32|bf16" },
+      "trust": "T2-partially-validated",
+      "since": "1.2"
+    },
+    "hologram_feed": {
+      "facets": { "A1": "property", "A2": "live-stream", "A8": "3D-mesh", "A9": "depth" },
+      "payload": { "source": "uri", "codec": "enum:HueDepth|Raw|H264-RGBD" },
+      "trust": "T1-battle-tested",
+      "since": "1.1"
+    },
+    "stencil_uri": {
+      "facets": { "A1": "property", "A2": "live-stream", "A8": "2D-image", "A9": "image" },
+      "payload": "uri",
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "light_params": {
+      "facets": { "A1": "property", "A9": "image" },
+      "payload": { "kind": "enum:directional|point|spot|area", "color": "rgba", "intensity": "float", "range": "float" },
+      "trust": "T1-battle-tested",
+      "since": "1.0"
+    },
+    "emitter_params": {
+      "facets": { "A1": "property", "A2": "live-stream" },
+      "payload": { "preset": "string", "count": "int", "rate_hz": "float", "biome": "string" },
+      "trust": "T1-battle-tested",
+      "since": "1.0"
+    },
+    "wire_source": {
+      "facets": { "A1": "relation", "A4": "edge" },
+      "payload": { "entity_path": "string", "component": "string" },
+      "trust": "T1-battle-tested",
+      "since": "1.1"
+    },
+    "wire_binds": {
+      "facets": { "A1": "relation", "A4": "edge" },
+      "payload": { "targets": "array<{entity_path,component}>" },
+      "trust": "T1-battle-tested",
+      "since": "1.1"
+    },
+    "wire_transform": {
+      "facets": { "A1": "property", "A6": "algorithm" },
+      "payload": { "fn": "string", "args": "dict_any" },
+      "trust": "T2-partially-validated",
+      "since": "1.1"
+    },
+    "blend_weights": {
+      "facets": { "A1": "property", "A2": "live-stream", "A9": "pose" },
+      "payload": "dict_float01",
+      "external_refs": ["arkit:ARFaceAnchor.blendShapes"],
+      "trust": "T1-battle-tested",
+      "since": "1.1"
+    },
+    "joints": {
+      "facets": { "A1": "property", "A2": "live-stream", "A4": "tree", "A9": "pose" },
+      "payload": "array<{name,position,rotation,parent}>",
+      "external_refs": ["arkit:ARBodyTrackingConfiguration", "mediapipe:Pose33"],
+      "trust": "T1-battle-tested",
+      "since": "1.1"
+    },
+    "confidence": {
+      "facets": { "A1": "property", "A2": "live-stream", "A9": "numeric", "A11": "dimensionless" },
+      "payload": "float01",
+      "trust": "T1-battle-tested",
+      "since": "1.1"
+    },
+    "tracking_state": {
+      "facets": { "A1": "property", "A2": "live-stream", "A9": "enum" },
+      "payload": "enum:not-tracking|limited|normal",
+      "external_refs": ["arkit:ARTrackingState"],
+      "trust": "T1-battle-tested",
+      "since": "1.1"
+    },
+    "text": {
+      "facets": { "A1": "concept", "A3": "unstructured", "A9": "text" },
+      "payload": "string",
+      "trust": "T1-battle-tested",
+      "since": "1.0"
+    },
+    "label": {
+      "facets": { "A1": "property", "A9": "text" },
+      "payload": "string",
+      "trust": "T1-battle-tested",
+      "since": "1.0"
+    },
+    "embedding_768": {
+      "facets": { "A1": "property", "A8": "ND-tensor", "A9": "latent" },
+      "payload": { "vector": "f32[768]", "model": "string" },
+      "trust": "T2-partially-validated",
+      "since": "1.2"
+    },
+    "embedding_1024": {
+      "facets": { "A1": "property", "A8": "ND-tensor", "A9": "latent" },
+      "payload": { "vector": "f32[1024]", "model": "string" },
+      "trust": "T2-partially-validated",
+      "since": "1.2"
+    },
+    "entity_type_uri": {
+      "facets": { "A1": "concept", "A6": "schema" },
+      "payload": "uri",
+      "external_refs": ["wd:P31", "schemaorg:additionalType"],
+      "trust": "T1-battle-tested",
+      "since": "1.0"
+    },
+    "affordance": {
+      "facets": { "A1": "concept", "A15": "intention" },
+      "payload": { "kind": "string", "verb": "string" },
+      "trust": "T3-speculative",
+      "since": "1.2"
+    },
+    "event_kind": {
+      "facets": { "A1": "event", "A7": "verb" },
+      "payload": "string",
+      "trust": "T1-battle-tested",
+      "since": "1.0"
+    },
+    "actor": {
+      "facets": { "A1": "person", "A10": "agent" },
+      "payload": "uri",
+      "trust": "T1-battle-tested",
+      "since": "1.0"
+    },
+    "patient": {
+      "facets": { "A1": "thing", "A7": "noun" },
+      "payload": "uri",
+      "trust": "T1-battle-tested",
+      "since": "1.1"
+    },
+    "causal_parent": {
+      "facets": { "A1": "relation", "A15": "information" },
+      "payload": "uri",
+      "trust": "T2-partially-validated",
+      "since": "1.2"
+    },
+    "tool_call": {
+      "facets": { "A1": "event", "A2": "live-stream", "A10": "agent", "A15": "intention" },
+      "payload": { "name": "string", "args": "dict_any" },
+      "external_refs": ["mcp:tools/call"],
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "tool_result": {
+      "facets": { "A1": "event", "A2": "live-stream", "A10": "agent" },
+      "payload": { "ok": "bool", "result": "any", "error": "string?" },
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "thought": {
+      "facets": { "A1": "concept", "A2": "live-stream", "A9": "text", "A10": "agent" },
+      "payload": "string",
+      "trust": "T2-partially-validated",
+      "since": "1.2"
+    },
+    "plan_step": {
+      "facets": { "A1": "event", "A10": "agent", "A15": "intention" },
+      "payload": { "step": "int", "goal": "string", "status": "enum:pending|running|done|failed" },
+      "trust": "T2-partially-validated",
+      "since": "1.2"
+    },
+    "log_level": {
+      "facets": { "A1": "property", "A9": "enum" },
+      "payload": "enum:trace|debug|info|warn|error|fatal",
+      "external_refs": ["otel:logs.severity_text"],
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "span_id": {
+      "facets": { "A1": "property", "A9": "text" },
+      "payload": "string",
+      "external_refs": ["otel:traces.span_id"],
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "metric_value": {
+      "facets": { "A1": "quantity", "A2": "live-stream", "A8": "0D-scalar", "A9": "numeric" },
+      "payload": "float",
+      "external_refs": ["otel:metrics.gauge"],
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "unit": {
+      "facets": { "A1": "property", "A11": "SI.*" },
+      "payload": "string",
+      "external_refs": ["nist:SI"],
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "asset_symbol": {
+      "facets": { "A1": "concept", "A9": "text" },
+      "payload": "string",
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "price_quote": {
+      "facets": { "A1": "quantity", "A2": "live-stream", "A11": "currency.*" },
+      "payload": { "bid": "float", "ask": "float", "last": "float" },
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "volume": {
+      "facets": { "A1": "quantity", "A2": "live-stream", "A8": "0D-scalar" },
+      "payload": "float",
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "bid_ask": {
+      "facets": { "A1": "quantity", "A2": "live-stream" },
+      "payload": { "bid": "float", "ask": "float", "spread": "float" },
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "token": {
+      "facets": { "A1": "concept", "A5": "linguistic:word", "A9": "text" },
+      "payload": "string",
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "sentence": {
+      "facets": { "A1": "concept", "A5": "linguistic:sentence", "A9": "text" },
+      "payload": "string",
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "pos_tag": {
+      "facets": { "A1": "property", "A7": "noun", "A9": "enum" },
+      "payload": "string",
+      "external_refs": ["penn-treebank:POS"],
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "syntax_parse": {
+      "facets": { "A1": "concept", "A4": "tree", "A9": "symbol-graph" },
+      "payload": "tree<{label,children}>",
+      "trust": "T2-partially-validated",
+      "since": "1.2"
+    },
+    "heart_rate_bpm": {
+      "facets": { "A1": "quantity", "A2": "live-stream", "A8": "0D-scalar", "A9": "biosignal", "A11": "custom.bpm" },
+      "payload": "float",
+      "aliases": ["hr_bpm", "pulse_per_minute", "bpm_heart_rate"],
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "hrv_rmssd": {
+      "facets": { "A1": "quantity", "A2": "live-stream", "A9": "biosignal", "A11": "SI.ms" },
+      "payload": "float",
+      "trust": "T1-battle-tested",
+      "since": "1.2"
+    },
+    "eeg_channel": {
+      "facets": { "A1": "quantity", "A2": "live-stream", "A8": "1D-time", "A9": "biosignal", "A11": "SI.uV" },
+      "payload": { "channel": "string", "samples": "f32[]", "sample_rate_hz": "int" },
+      "trust": "T2-partially-validated",
+      "since": "1.2"
+    },
+    "ppg_waveform": {
+      "facets": { "A1": "quantity", "A2": "live-stream", "A8": "1D-time", "A9": "biosignal" },
+      "payload": { "samples": "f32[]", "sample_rate_hz": "int" },
+      "trust": "T2-partially-validated",
+      "since": "1.2"
+    }
+  },
+  "candidates": {
+    "_note": "Auto-captured slugs awaiting promotion (RFC 0013 §6). Producers are never blocked; consumers MAY render best-effort + log ontology_missing.",
+    "queue": []
+  },
+  "changelog": [
+    { "version": "1.0.0", "ts": "2026-05-02", "author": "@jamestunick", "change": "initial v1 starter corpus per RFC 0013 §10" }
+  ]
+}

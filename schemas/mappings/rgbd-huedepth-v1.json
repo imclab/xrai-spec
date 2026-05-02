@@ -1,0 +1,70 @@
+{
+  "xrai_mapping_version": "1.2",
+  "id": "rgbd-huedepth-v1",
+  "rfc": "0009",
+  "source": {
+    "kind": "rgbd-huedepth",
+    "producer_hint": "iPhone LiDAR + RGB camera, encoded as HueDepth (depth → hue-mapped RGB) for video-codec transport",
+    "platform": ["iOS-15+ with LiDAR", "Record3D capture", "MetavidoLiveARKit feeder"],
+    "external_refs": ["https://record3d.app/", "specs/003-hologram-telepresence/spec.md"]
+  },
+  "ontology": "xrai://ontology/v1",
+  "rules": [
+    {
+      "match": { "frame_kind": "rgbd_pair" },
+      "emit": {
+        "entity_path": "/hologram/{stream_id}",
+        "archetype": "Hologram",
+        "components": {
+          "rgb_image": {
+            "from": "color_uri",
+            "as": "uri_passthrough"
+          },
+          "depth_image": {
+            "from": "depth_uri",
+            "as": "huedepth_passthrough",
+            "metadata": { "encoding": "huedepth", "min_depth_m": 0.2, "max_depth_m": 5.0 }
+          },
+          "pose_6dof": {
+            "from": "{position, rotation, intrinsics.cameraMat}",
+            "as": "record3d_pose_to_xrai"
+          },
+          "stencil_uri": {
+            "from": "alpha_uri",
+            "as": "uri_passthrough",
+            "optional": true
+          }
+        },
+        "timeline": {
+          "log_time": { "from": "frame_ts_ns", "as": "ns" },
+          "frame_index": { "from": "frame_index", "as": "int64" }
+        }
+      }
+    },
+    {
+      "match": { "frame_kind": "intrinsics_only" },
+      "emit": {
+        "entity_path": "/hologram/{stream_id}/camera",
+        "archetype": "Anchor",
+        "components": {
+          "metadata": {
+            "from": "{fx, fy, cx, cy, w, h}",
+            "as": "dict_passthrough"
+          }
+        }
+      }
+    }
+  ],
+  "transforms_used": [
+    "uri_passthrough",
+    "huedepth_passthrough",
+    "record3d_pose_to_xrai",
+    "dict_passthrough",
+    "ns",
+    "int64"
+  ],
+  "reversible": true,
+  "trust": "T1-battle-tested",
+  "tier_owned": [15, 16],
+  "_note": "RGBD-HueDepth → Hologram archetype. Owns T15 (RGBD image) + T16 (RGBD-stencil hologram) ingestion. Reversible: HueDepth pixels round-trip back to depth meters via hue→depth LUT. Verified in CVPR 2026 paper §depth-codec."
+}

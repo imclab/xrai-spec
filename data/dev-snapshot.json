@@ -1,14 +1,8 @@
 {
-  "built_at": "2026-05-02T13:20:34.000Z",
+  "built_at": "2026-05-02T13:54:13.000Z",
   "window_days": 7,
   "_note": "public preview — real data redacted; see github.com/imclab/xra1 to contribute",
   "sessions": [],
   "commits": [],
-  "summary": {
-    "sessions_count": 0,
-    "commits_count": 0,
-    "friction_count": 0,
-    "total_files_changed": 0,
-    "total_minutes": 0
-  }
+  "summary": {"sessions_count": 0, "commits_count": 0, "friction_count": 0, "total_files_changed": 0, "total_minutes": 0}
 }

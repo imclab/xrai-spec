@@ -1,0 +1,48 @@
+{
+  "xrai_version": "1.0",
+  "id": "00000000-0000-4000-a000-000000000010",
+  "created_at": "2026-05-02T00:00:00Z",
+  "author": {"type": "agent", "id": "claude-opus-4-7@xrai-website"},
+  "origin": {"app": "xra1.com", "version": "1.0", "scene": "youtube-adapter-sample"},
+  "metadata": {
+    "title": "YouTube video → XRAI sample",
+    "purpose": "Demonstrates the youtube adapter (13th in js/adapters/index.js). Single video decomposed into chapters + creator + topic graph. Renders identically as timeline (T7), force-graph (T6), or 3D globe (T20).",
+    "source": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "viewer_hints": ["timeline", "force-graph"]
+  },
+  "scene": {
+    "anchors": [
+      {"id": "anchor_youtube", "type": "ar.virtual", "metadata": {"space": "youtube.com"}}
+    ],
+    "entities": [
+      {"id": "yt:dQw4w9WgXcQ", "type": "object.video", "label": "Sample video", "glyph": "▶", "group": "media", "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "params": {"provider": "youtube", "thumbnail": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg", "width": 480, "height": 360, "duration_s": 213}},
+
+      {"id": "yt-channel:demo",  "type": "agent", "label": "Demo Channel", "glyph": "☷", "group": "creator", "url": "https://www.youtube.com/@democh"},
+
+      {"id": "yt:dQw4w9WgXcQ#ch0", "type": "object.web-subtree", "label": "Intro",       "glyph": "▤", "group": "chapter", "params": {"start_s": 0,   "end_s": 30}},
+      {"id": "yt:dQw4w9WgXcQ#ch1", "type": "object.web-subtree", "label": "Main demo",   "glyph": "▤", "group": "chapter", "params": {"start_s": 30,  "end_s": 150}},
+      {"id": "yt:dQw4w9WgXcQ#ch2", "type": "object.web-subtree", "label": "Q&A",         "glyph": "▤", "group": "chapter", "params": {"start_s": 150, "end_s": 200}},
+      {"id": "yt:dQw4w9WgXcQ#ch3", "type": "object.web-subtree", "label": "Outro",       "glyph": "▤", "group": "chapter", "params": {"start_s": 200, "end_s": 213}},
+
+      {"id": "concept:XRAI",            "type": "concept", "label": "XRAI format",            "glyph": "◆", "group": "concept"},
+      {"id": "concept:semantic_bus",    "type": "concept", "label": "Semantic bus",           "glyph": "◆", "group": "concept"},
+      {"id": "concept:procedural_world","type": "concept", "label": "Procedural world",       "glyph": "◆", "group": "concept"}
+    ],
+    "relations": [
+      {"id": "r1", "type": "created-by", "from": "yt:dQw4w9WgXcQ",      "to": "yt-channel:demo"},
+      {"id": "r2", "type": "parent-of",  "from": "yt:dQw4w9WgXcQ",      "to": "yt:dQw4w9WgXcQ#ch0"},
+      {"id": "r3", "type": "parent-of",  "from": "yt:dQw4w9WgXcQ",      "to": "yt:dQw4w9WgXcQ#ch1"},
+      {"id": "r4", "type": "parent-of",  "from": "yt:dQw4w9WgXcQ",      "to": "yt:dQw4w9WgXcQ#ch2"},
+      {"id": "r5", "type": "parent-of",  "from": "yt:dQw4w9WgXcQ",      "to": "yt:dQw4w9WgXcQ#ch3"},
+      {"id": "r6", "type": "about",      "from": "yt:dQw4w9WgXcQ",      "to": "concept:XRAI"},
+      {"id": "r7", "type": "about",      "from": "yt:dQw4w9WgXcQ",      "to": "concept:semantic_bus"},
+      {"id": "r8", "type": "about",      "from": "yt:dQw4w9WgXcQ",      "to": "concept:procedural_world"}
+    ],
+    "events": [
+      {"id": "e0", "t": "2000-01-01T00:00:00Z",    "type": "chapter-start", "entity": "yt:dQw4w9WgXcQ#ch0"},
+      {"id": "e1", "t": "2000-01-01T00:00:30Z",    "type": "chapter-start", "entity": "yt:dQw4w9WgXcQ#ch1"},
+      {"id": "e2", "t": "2000-01-01T00:02:30Z",    "type": "chapter-start", "entity": "yt:dQw4w9WgXcQ#ch2"},
+      {"id": "e3", "t": "2000-01-01T00:03:20Z",    "type": "chapter-start", "entity": "yt:dQw4w9WgXcQ#ch3"}
+    ]
+  }
+}

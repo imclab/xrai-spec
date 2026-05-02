@@ -1,0 +1,70 @@
+{
+  "xrai_version": "1.0",
+  "id": "00000000-0000-4000-a000-00000000000f",
+  "created_at": "2026-05-02T00:00:00Z",
+  "author": {"type": "agent", "id": "claude-opus-4-7@portals-v4"},
+  "origin": {"app": "portals", "version": "v4", "scene": "Portals→XRAI ingestion case-study"},
+  "metadata": {
+    "title": "Portals → XRAI ingestion case-study",
+    "purpose": "Demonstrates the M+N collapse: 5 heterogeneous sources (ARKit, LiveKit, MCP tool-trace, Claude session-history, repo commits) ingest into one neutral XRAI bus; 4 decoders (timeline, node-graph, 3D globe, cluster) each render the same doc.",
+    "viewer_hints": ["timeline", "force-graph", "globe-3d", "cluster"],
+    "rfc_anchors": ["0009 stream-ingestion", "0010 archetypes", "0012 decoder-contract", "0013 ontology"],
+    "tier_coverage": [6, 7, 8, 11, 16, 20]
+  },
+  "scene": {
+    "anchors": [
+      {"id": "anchor_repo", "type": "ar.virtual", "metadata": {"space": "github.com/ryanjbrant/portals_v4"}},
+      {"id": "anchor_session", "type": "ar.virtual", "metadata": {"space": "~/.claude/projects/portals_v4"}}
+    ],
+    "entities": [
+      {"id": "src.arkit",            "type": "object.emitter", "transform": {"position":[-3, 1, 0], "rotation":[0,0,0,1], "scale":[1,1,1]}, "label": "ARKit anchors / face / body / depth", "glyph": "📡", "group": "source",   "params": {"mapping_id": "arkit-v1", "rate_hz": 60, "tier": 16}},
+      {"id": "src.livekit",          "type": "object.emitter", "transform": {"position":[-3, 0, 1], "rotation":[0,0,0,1], "scale":[1,1,1]}, "label": "LiveKit DataChannel (xrai/sse)",     "glyph": "🛰", "group": "source",   "params": {"mapping_id": "livekit-datachannel-v1", "tier": 16}},
+      {"id": "src.rgbd",             "type": "object.emitter", "transform": {"position":[-3, 0,-1], "rotation":[0,0,0,1], "scale":[1,1,1]}, "label": "iPhone LiDAR / Record3D RGBD",      "glyph": "📷", "group": "source",   "params": {"mapping_id": "rgbd-huedepth-v1", "tier": 15}},
+      {"id": "src.mcp",              "type": "object.emitter", "transform": {"position":[-3,-1, 0], "rotation":[0,0,0,1], "scale":[1,1,1]}, "label": "MCP tool-trace (Unity / Coplay)",    "glyph": "🛠", "group": "source",   "params": {"mapping_id": "mcp-tool-trace-v1", "tier": 6}},
+      {"id": "src.session",          "type": "object.emitter", "transform": {"position":[-3,-2, 0], "rotation":[0,0,0,1], "scale":[1,1,1]}, "label": "Claude session-history.jsonl",       "glyph": "🧠", "group": "source",   "params": {"mapping_id": "claude-session-history-v1", "tier": 7}},
+
+      {"id": "bus.xrai",             "type": "object.web-container", "transform": {"position":[0, 0, 0], "rotation":[0,0,0,1], "scale":[1.5,1.5,1.5]}, "label": "XRAI semantic bus (SSE)", "glyph": "◉", "group": "bus", "params": {"wire_formats": ["json","arrow","cbor"]}},
+
+      {"id": "ar.anchor.demo",       "type": "object.primitive", "transform": {"position":[0, 1, -2], "rotation":[0,0,0,1], "scale":[0.5,0.5,0.5]}, "label": "/ar/anchor/abc",      "glyph": "📍", "group": "entity", "params": {"archetype": "Anchor"}},
+      {"id": "hologram.demo",        "type": "object.hologram",  "transform": {"position":[0.8, 0.5, -2], "rotation":[0,0,0,1], "scale":[1,1,1]},   "label": "/hologram/conf/jt",   "glyph": "🔮", "group": "entity", "params": {"archetype": "Hologram"}},
+      {"id": "skel.demo",            "type": "object.primitive", "transform": {"position":[-0.6, 0.5, -2], "rotation":[0,0,0,1], "scale":[0.6,0.6,0.6]}, "label": "/ar/body/skel",  "glyph": "🦴", "group": "entity", "params": {"archetype": "Skeleton"}},
+
+      {"id": "dec.unity-vfx",        "type": "object.web-container", "transform": {"position":[3, 1, 0], "rotation":[0,0,0,1], "scale":[1,1,1]},   "label": "Unity VFX renderer (T16)",  "glyph": "🎮", "group": "decoder", "params": {"decoder_id": "unity-vfx-hologram", "tier": 16}},
+      {"id": "dec.web-graph",        "type": "object.web-container", "transform": {"position":[3, 0, 1], "rotation":[0,0,0,1], "scale":[1,1,1]},   "label": "Web force-graph (T6)",      "glyph": "🌐", "group": "decoder", "params": {"decoder_id": "web-force-graph", "tier": 6}},
+      {"id": "dec.timeline",         "type": "object.web-container", "transform": {"position":[3, 0,-1], "rotation":[0,0,0,1], "scale":[1,1,1]},   "label": "Timeline / chart (T7)",     "glyph": "📊", "group": "decoder", "params": {"tier": 7}},
+      {"id": "dec.globe",            "type": "object.web-container", "transform": {"position":[3,-1, 0], "rotation":[0,0,0,1], "scale":[1,1,1]},   "label": "3D globe / cluster (T20)",  "glyph": "🌍", "group": "decoder", "params": {"tier": 20}},
+
+      {"id": "out.pixels.unity",     "type": "object.primitive", "transform": {"position":[5, 1, 0], "rotation":[0,0,0,1], "scale":[0.4,0.4,0.4]}, "label": "color buffer (Unity)",    "glyph": "▣", "group": "output"},
+      {"id": "out.pixels.web",       "type": "object.primitive", "transform": {"position":[5, 0, 1], "rotation":[0,0,0,1], "scale":[0.4,0.4,0.4]}, "label": "DOM canvas",              "glyph": "▣", "group": "output"},
+      {"id": "out.timeline",         "type": "object.primitive", "transform": {"position":[5, 0,-1], "rotation":[0,0,0,1], "scale":[0.4,0.4,0.4]}, "label": "Gantt / scrubber",        "glyph": "▣", "group": "output"},
+      {"id": "out.cluster",          "type": "object.primitive", "transform": {"position":[5,-1, 0], "rotation":[0,0,0,1], "scale":[0.4,0.4,0.4]}, "label": "ECharts-GL cluster",      "glyph": "▣", "group": "output"}
+    ],
+    "relations": [
+      {"id": "r1", "type": "ingests-into", "from": "src.arkit",   "to": "bus.xrai"},
+      {"id": "r2", "type": "ingests-into", "from": "src.livekit", "to": "bus.xrai"},
+      {"id": "r3", "type": "ingests-into", "from": "src.rgbd",    "to": "bus.xrai"},
+      {"id": "r4", "type": "ingests-into", "from": "src.mcp",     "to": "bus.xrai"},
+      {"id": "r5", "type": "ingests-into", "from": "src.session", "to": "bus.xrai"},
+
+      {"id": "r6",  "type": "produces", "from": "bus.xrai", "to": "ar.anchor.demo"},
+      {"id": "r7",  "type": "produces", "from": "bus.xrai", "to": "hologram.demo"},
+      {"id": "r8",  "type": "produces", "from": "bus.xrai", "to": "skel.demo"},
+
+      {"id": "r9",  "type": "subscribes-to", "from": "dec.unity-vfx", "to": "bus.xrai"},
+      {"id": "r10", "type": "subscribes-to", "from": "dec.web-graph", "to": "bus.xrai"},
+      {"id": "r11", "type": "subscribes-to", "from": "dec.timeline",  "to": "bus.xrai"},
+      {"id": "r12", "type": "subscribes-to", "from": "dec.globe",     "to": "bus.xrai"},
+
+      {"id": "r13", "type": "renders-to", "from": "dec.unity-vfx", "to": "out.pixels.unity"},
+      {"id": "r14", "type": "renders-to", "from": "dec.web-graph", "to": "out.pixels.web"},
+      {"id": "r15", "type": "renders-to", "from": "dec.timeline",  "to": "out.timeline"},
+      {"id": "r16", "type": "renders-to", "from": "dec.globe",     "to": "out.cluster"}
+    ],
+    "events": [
+      {"id": "e1", "t": "2026-05-02T13:00:00Z", "type": "delta", "entity": "ar.anchor.demo", "metadata": {"component": "transform", "delta_kind": "add"}},
+      {"id": "e2", "t": "2026-05-02T13:00:00.033Z", "type": "delta", "entity": "hologram.demo", "metadata": {"component": "hologram_feed", "delta_kind": "add"}},
+      {"id": "e3", "t": "2026-05-02T13:00:00.050Z", "type": "delta", "entity": "skel.demo", "metadata": {"component": "joints", "delta_kind": "add"}},
+      {"id": "e4", "t": "2026-05-02T13:00:01.000Z", "type": "delta", "entity": "ar.anchor.demo", "metadata": {"component": "pose_6dof", "delta_kind": "update"}}
+    ]
+  }
+}

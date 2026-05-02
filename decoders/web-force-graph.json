@@ -1,0 +1,46 @@
+{
+  "xrai_decoder_version": "1.2",
+  "id": "web-force-graph",
+  "rfc": "0012",
+  "kind": "renderer",
+  "consumes": {
+    "archetypes": ["*"],
+    "components": [
+      "transform",
+      "label",
+      "text",
+      "entity_type_uri",
+      "metric_value"
+    ],
+    "wire_formats": [
+      "application/vnd.xrai.sse+json"
+    ]
+  },
+  "produces": {
+    "kind": "pixels",
+    "target": "display://web/canvas",
+    "rate_hz": 60,
+    "latency_budget_ms": 16,
+    "tier": [6, 5, 4, 2, 0]
+  },
+  "capabilities": [
+    "time_scrub",
+    "live_subscribe",
+    "partial_filter"
+  ],
+  "down_tier_path": [6, 5, 4, 2, 0],
+  "implementing_spec": "specs/006-kb-visualizer/spec.md",
+  "canonical_runtime_path": "specs/XXX-zero-to-one/xrai-website/index.html",
+  "provenance": {
+    "runtime": "browser",
+    "library": "force-graph",
+    "version": "0.1.0",
+    "platform": ["web-any"]
+  },
+  "filter_examples": [
+    { "archetype": ["*"] },
+    { "component": ["label", "entity_type_uri"] }
+  ],
+  "fallback_behavior": "Always renders. T6 node-graph by default; degrades to T5 color-shape, T4 emoji glyph, T2 ASCII label, T0 dot if WebGL unavailable. Mandatory T0–T6 baseline per RFC 0012.",
+  "_note": "Universal fallback decoder. Every XRAI doc is renderable here. Powers xra1.com landing page."
+}

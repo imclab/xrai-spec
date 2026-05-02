@@ -1,0 +1,41 @@
+{
+  "xrai_version": "1.0",
+  "id": "00000000-0000-4000-a000-000000000011",
+  "created_at": "2026-05-02T00:00:00Z",
+  "author": {"type": "agent", "id": "claude-opus-4-7@xrai-website"},
+  "origin": {"app": "xra1.com", "version": "1.0", "scene": "wikipedia-adapter-sample"},
+  "metadata": {
+    "title": "Wikipedia article → XRAI sample (Claude Shannon)",
+    "purpose": "Demonstrates the wikipedia adapter (#2 in js/adapters/index.js). Article + top 8 outbound references. Renders as concept cluster (T6 force-graph) or alphabetical timeline (T7) or geographic globe (T20).",
+    "source": "https://en.wikipedia.org/wiki/Claude_Shannon",
+    "viewer_hints": ["force-graph", "cluster", "globe-3d"]
+  },
+  "scene": {
+    "anchors": [
+      {"id": "anchor_wiki", "type": "ar.virtual", "metadata": {"space": "en.wikipedia.org"}}
+    ],
+    "entities": [
+      {"id": "wiki:Claude Shannon", "type": "concept", "label": "Claude Shannon", "glyph": "◆", "group": "concept", "url": "https://en.wikipedia.org/wiki/Claude_Shannon", "inlineMd": "# Claude Shannon\n\nAmerican mathematician, electrical engineer, and cryptographer (1916–2001). Founder of information theory."},
+
+      {"id": "wiki:Information theory",       "type": "concept", "label": "Information theory",       "glyph": "◆", "group": "concept", "url": "https://en.wikipedia.org/wiki/Information_theory"},
+      {"id": "wiki:Boolean algebra",          "type": "concept", "label": "Boolean algebra",          "glyph": "◆", "group": "concept", "url": "https://en.wikipedia.org/wiki/Boolean_algebra"},
+      {"id": "wiki:Bell Labs",                "type": "concept", "label": "Bell Labs",                "glyph": "◆", "group": "concept", "url": "https://en.wikipedia.org/wiki/Bell_Labs"},
+      {"id": "wiki:Cryptography",             "type": "concept", "label": "Cryptography",             "glyph": "◆", "group": "concept", "url": "https://en.wikipedia.org/wiki/Cryptography"},
+      {"id": "wiki:MIT",                      "type": "concept", "label": "MIT",                      "glyph": "◆", "group": "concept", "url": "https://en.wikipedia.org/wiki/Massachusetts_Institute_of_Technology"},
+      {"id": "wiki:Entropy (information)",    "type": "concept", "label": "Entropy (information)",    "glyph": "◆", "group": "concept", "url": "https://en.wikipedia.org/wiki/Entropy_(information_theory)"},
+      {"id": "wiki:Shannon's source coding",  "type": "concept", "label": "Shannon source coding",    "glyph": "◆", "group": "concept", "url": "https://en.wikipedia.org/wiki/Shannon%27s_source_coding_theorem"},
+      {"id": "wiki:Vannevar Bush",            "type": "concept", "label": "Vannevar Bush",            "glyph": "◆", "group": "concept", "url": "https://en.wikipedia.org/wiki/Vannevar_Bush"}
+    ],
+    "relations": [
+      {"id": "r1", "type": "references", "from": "wiki:Claude Shannon", "to": "wiki:Information theory"},
+      {"id": "r2", "type": "references", "from": "wiki:Claude Shannon", "to": "wiki:Boolean algebra"},
+      {"id": "r3", "type": "references", "from": "wiki:Claude Shannon", "to": "wiki:Bell Labs"},
+      {"id": "r4", "type": "references", "from": "wiki:Claude Shannon", "to": "wiki:Cryptography"},
+      {"id": "r5", "type": "references", "from": "wiki:Claude Shannon", "to": "wiki:MIT"},
+      {"id": "r6", "type": "references", "from": "wiki:Claude Shannon", "to": "wiki:Entropy (information)"},
+      {"id": "r7", "type": "references", "from": "wiki:Claude Shannon", "to": "wiki:Shannon's source coding"},
+      {"id": "r8", "type": "references", "from": "wiki:Claude Shannon", "to": "wiki:Vannevar Bush"}
+    ],
+    "events": []
+  }
+}

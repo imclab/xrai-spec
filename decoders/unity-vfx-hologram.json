@@ -1,0 +1,53 @@
+{
+  "xrai_decoder_version": "1.2",
+  "id": "unity-vfx-hologram",
+  "rfc": "0012",
+  "kind": "renderer",
+  "consumes": {
+    "archetypes": ["Hologram", "Primitive", "Light", "Emitter", "Anchor"],
+    "components": [
+      "transform",
+      "pose_6dof",
+      "material_params",
+      "audio_reactive_gain",
+      "mesh_uri",
+      "hologram_feed",
+      "stencil_uri",
+      "light_params",
+      "emitter_params"
+    ],
+    "wire_formats": [
+      "application/vnd.xrai.sse+arrow",
+      "application/vnd.xrai.sse+json"
+    ]
+  },
+  "produces": {
+    "kind": "pixels",
+    "target": "display://unity/color_buffer",
+    "rate_hz": 90,
+    "latency_budget_ms": 11,
+    "tier": [16, 11, 8]
+  },
+  "capabilities": [
+    "time_scrub",
+    "live_subscribe",
+    "partial_filter",
+    "down_tier_projection"
+  ],
+  "down_tier_path": [16, 11, 8, 6, 4, 2, 0],
+  "implementing_spec": "specs/026-vfx-parity-migration/spec.md",
+  "canonical_runtime_path": "unity/Assets/Scripts/XraiRuntime.cs",
+  "provenance": {
+    "runtime": "Unity 6000.2.14f1",
+    "render_pipeline": "URP",
+    "version": "0.1.0",
+    "platform": ["iOS-Metal", "macOS-Metal"]
+  },
+  "filter_examples": [
+    { "archetype": ["Hologram"] },
+    { "entity_path_prefix": "/scene/anchor_1" },
+    { "component": ["pose_6dof", "hologram_feed"] }
+  ],
+  "fallback_behavior": "If no decoder declares a higher tier, render Hologram entities as T11 textured mesh; if no glTFast loader, fall through to T8 cube primitive at the entity's pose.",
+  "_note": "Canonical Portals renderer. Owner of T16 (RGBD-stencil hologram) per RFC 0012 §tier-table. MetaVido substrate."
+}

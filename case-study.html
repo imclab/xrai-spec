@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Case study — Portals → XRAI ingestion (4 viz modes) | xrai.dev</title>
+  <link rel="stylesheet" href="css/site.css" />
+  <style>
+    .case-tabs { display:flex; gap:.5rem; flex-wrap:wrap; margin:1rem 0; }
+    .case-tabs button { padding:.5em 1em; background:#222; color:#eee; border:1px solid #444; cursor:pointer; font:inherit; }
+    .case-tabs button.active { background:#0066cc; border-color:#0088ff; }
+    .viz-stage { width:100%; min-height:560px; background:#111; border:1px solid #333; position:relative; overflow:hidden; }
+    .viz-stage svg { width:100%; height:560px; display:block; }
+    .legend { font-size:.85em; color:#aaa; margin:.5rem 0 1rem; }
+    .legend span { display:inline-block; margin-right:1em; }
+    .swatch { display:inline-block; width:.8em; height:.8em; border-radius:50%; vertical-align:-1px; margin-right:.3em; }
+    .stage-meta { color:#888; font-size:.85em; padding:.5rem 0; }
+    .doc-pick { display:flex; gap:.5em; align-items:center; margin:.5rem 0; }
+    .doc-pick select { background:#222; color:#eee; border:1px solid #444; padding:.3em .6em; }
+  </style>
+</head>
+<body>
+  <header class="topnav">
+    <a href="/" class="brand">xrai.dev</a>
+    <nav>
+      <a href="/SPEC.md">spec</a>
+      <a href="/RUNTIMES.md">runtimes</a>
+      <a href="/configs.html">configs</a>
+      <a href="/case-study.html" aria-current="page">case study</a>
+      <a href="/jarvis.html">agent</a>
+      <a href="/conf.html">conf</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h1>Case study — Portals → XRAI</h1>
+    <p class="lede">One ingested document, four viz modes. Same data, different lens. Demonstrates RFC 0009/0012 — M sources × N decoders collapses to M + N when a neutral semantic middle exists.</p>
+
+    <section class="doc-pick">
+      <label for="doc-select">Document:</label>
+      <select id="doc-select">
+        <option value="examples/15-portals-to-xrai.xrai.json" selected>Portals → XRAI ingestion (5 sources × 4 decoders)</option>
+        <option value="examples/16-youtube-video.xrai.json">YouTube video sample (chapters + topics)</option>
+        <option value="examples/17-wikipedia-article.xrai.json">Wikipedia article sample (Claude Shannon)</option>
+      </select>
+      <span class="stage-meta" id="doc-meta"></span>
+    </section>
+
+    <section class="case-tabs" role="tablist" aria-label="Visualization modes">
+      <button class="active" data-mode="graph">Node graph (T6)</button>
+      <button data-mode="timeline">Timeline (T7)</button>
+      <button data-mode="globe">3D globe (T20)</button>
+      <button data-mode="cluster">Cluster (T20)</button>
+    </section>
+
+    <section class="legend" id="legend"></section>
+
+    <section class="viz-stage" id="stage" aria-live="polite"></section>
+
+    <section class="stage-meta">
+      <p>Source files: <code>examples/15-portals-to-xrai.xrai.json</code>, <code>16-youtube-video.xrai.json</code>, <code>17-wikipedia-article.xrai.json</code>. Adapter: <a href="/js/adapters/index.js">js/adapters/index.js</a> (13 adapters incl. new <code>youtube</code>). Decoders: <a href="/decoders/web-force-graph.json">web-force-graph</a>, <a href="/decoders/unity-vfx-hologram.json">unity-vfx-hologram</a>. Ontology + facets: <a href="/ontology/v1.json">ontology/v1.json</a>, archetypes: <a href="/archetypes/registry.json">archetypes/registry.json</a>.</p>
+    </section>
+  </main>
+
+  <script type="module">
+    // Palette by `group` field on each entity.
+    const PALETTE = {
+      source:    '#4ade80',
+      bus:       '#fbbf24',
+      entity:    '#60a5fa',
+      decoder:   '#c084fc',
+      output:    '#f97316',
+      media:     '#ef4444',
+      creator:   '#fb7185',
+      chapter:   '#a78bfa',
+      concept:   '#22d3ee',
+      structure: '#f59e0b',
+      doc:       '#94a3b8',
+    };
+
+    const stage   = document.getElementById('stage');
+    const legend  = document.getElementById('legend');
+    const docMeta = document.getElementById('doc-meta');
+    const docSel  = document.getElementById('doc-select');
+    const tabs    = document.querySelectorAll('.case-tabs button');
+
+    let currentDoc = null;
+    let currentMode = 'graph';
+
+    async function loadDoc(url) {
+      const res = await fetch(url);
+      currentDoc = await res.json();
+      docMeta.textContent = `${currentDoc.scene.entities.length} entities · ${currentDoc.scene.relations.length} relations · ${currentDoc.scene.events.length} events`;
+      buildLegend();
+      render();
+    }
+
+    function buildLegend() {
+      const groups = new Set(currentDoc.scene.entities.map(e => e.group).filter(Boolean));
+      legend.innerHTML = [...groups].map(g => `<span><i class="swatch" style="background:${PALETTE[g] || '#999'}"></i>${g}</span>`).join('');
+    }
+
+    function render() {
+      stage.innerHTML = '';
+      if (!currentDoc) return;
+      if (currentMode === 'graph')    return renderGraph();
+      if (currentMode === 'timeline') return renderTimeline();
+      if (currentMode === 'globe')    return renderGlobe();
+      if (currentMode === 'cluster')  return renderCluster();
+    }
+
+    /* ─── T6 force-graph (zero-dep SVG, deterministic layout from .transform when present) ─── */
+    function renderGraph() {
+      const W = stage.clientWidth, H = 560;
+      const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}` });
+      const ents = currentDoc.scene.entities;
+      const rels = currentDoc.scene.relations;
+      // Map x:[-3..5] → [40..W-40]; z:[-2..2] → [40..H-40] (or angular fan if no transform)
+      const xs = ents.map(e => e.transform?.position?.[0] ?? null).filter(v => v !== null);
+      const zs = ents.map(e => e.transform?.position?.[2] ?? null).filter(v => v !== null);
+      const xMin = xs.length ? Math.min(...xs) : -1, xMax = xs.length ? Math.max(...xs) : 1;
+      const zMin = zs.length ? Math.min(...zs) : -1, zMax = zs.length ? Math.max(...zs) : 1;
+      const pos = new Map();
+      ents.forEach((e, i) => {
+        let x, y;
+        if (e.transform?.position) {
+          x = 60 + ((e.transform.position[0] - xMin) / Math.max(0.01, xMax - xMin)) * (W - 120);
+          y = 60 + ((e.transform.position[2] - zMin) / Math.max(0.01, zMax - zMin)) * (H - 120);
+        } else {
+          // fallback: ring
+          const a = (i / ents.length) * Math.PI * 2;
+          x = W / 2 + Math.cos(a) * 220;
+          y = H / 2 + Math.sin(a) * 220;
+        }
+        pos.set(e.id, [x, y]);
+      });
+      // edges
+      rels.forEach(r => {
+        const a = pos.get(r.from), b = pos.get(r.to);
+        if (!a || !b) return;
+        svg.appendChild(svgEl('line', { x1:a[0], y1:a[1], x2:b[0], y2:b[1], stroke:'#555', 'stroke-width':1 }));
+      });
+      // nodes
+      ents.forEach(e => {
+        const [x, y] = pos.get(e.id);
+        const c = PALETTE[e.group] || '#888';
+        svg.appendChild(svgEl('circle', { cx:x, cy:y, r:8, fill:c, 'data-id':e.id }));
+        svg.appendChild(svgEl('text', { x:x + 12, y:y + 4, fill:'#ddd', 'font-size':11 }, `${e.glyph || ''} ${e.label || e.id}`));
+      });
+      stage.appendChild(svg);
+    }
+
+    /* ─── T7 timeline / Gantt ─── */
+    function renderTimeline() {
+      const W = stage.clientWidth, H = 560;
+      const events = currentDoc.scene.events.slice().sort((a, b) => new Date(a.t) - new Date(b.t));
+      if (!events.length) { stage.innerHTML = '<p style="padding:2em;color:#aaa">no timeline events in this document</p>'; return; }
+      const ts = events.map(e => +new Date(e.t));
+      const tMin = Math.min(...ts), tMax = Math.max(...ts);
+      const lanes = [...new Set(events.map(e => e.entity))];
+      const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}` });
+      lanes.forEach((laneId, i) => {
+        const y = 60 + (i + 0.5) * ((H - 100) / Math.max(1, lanes.length));
+        const ent = currentDoc.scene.entities.find(e => e.id === laneId);
+        const c = PALETTE[ent?.group] || '#888';
+        svg.appendChild(svgEl('text', { x: 8, y: y + 4, fill: '#aaa', 'font-size': 11 }, ent?.label || laneId));
+        svg.appendChild(svgEl('line', { x1: 180, y1: y, x2: W - 20, y2: y, stroke: '#222', 'stroke-width': 1 }));
+        events.filter(e => e.entity === laneId).forEach(ev => {
+          const x = 180 + ((+new Date(ev.t) - tMin) / Math.max(1, tMax - tMin)) * (W - 220);
+          svg.appendChild(svgEl('circle', { cx: x, cy: y, r: 6, fill: c }));
+          svg.appendChild(svgEl('text', { x: x + 8, y: y - 4, fill: '#ddd', 'font-size': 10 }, ev.type));
+        });
+      });
+      // axis
+      svg.appendChild(svgEl('text', { x: 180, y: H - 16, fill: '#666', 'font-size': 10 }, new Date(tMin).toISOString()));
+      svg.appendChild(svgEl('text', { x: W - 200, y: H - 16, fill: '#666', 'font-size': 10 }, new Date(tMax).toISOString()));
+      stage.appendChild(svg);
+    }
+
+    /* ─── T20 3D globe (orthographic projection of entity positions onto sphere) ─── */
+    function renderGlobe() {
+      const W = stage.clientWidth, H = 560;
+      const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}` });
+      const cx = W / 2, cy = H / 2, R = Math.min(W, H) * 0.4;
+      // sphere outline
+      svg.appendChild(svgEl('circle', { cx, cy, r: R, fill: 'none', stroke: '#333', 'stroke-width': 1 }));
+      for (let lat = -60; lat <= 60; lat += 30) {
+        const r = R * Math.cos(lat * Math.PI / 180);
+        const yo = R * Math.sin(lat * Math.PI / 180);
+        svg.appendChild(svgEl('ellipse', { cx, cy: cy - yo, rx: r, ry: r * 0.25, fill: 'none', stroke: '#222', 'stroke-width': 1 }));
+      }
+      // entities — hash id → lat/lon
+      const ents = currentDoc.scene.entities;
+      ents.forEach((e, i) => {
+        const h = hashStr(e.id);
+        const lon = (h % 360) - 180;
+        const lat = ((Math.floor(h / 360)) % 120) - 60;
+        const x = cx + R * Math.cos(lat * Math.PI / 180) * Math.sin(lon * Math.PI / 180);
+        const y = cy - R * Math.sin(lat * Math.PI / 180);
+        const c = PALETTE[e.group] || '#888';
+        svg.appendChild(svgEl('circle', { cx: x, cy: y, r: 5, fill: c, opacity: 0.85 }));
+        if (i < 12) svg.appendChild(svgEl('text', { x: x + 7, y: y + 3, fill: '#bbb', 'font-size': 10 }, e.label || e.id));
+      });
+      stage.appendChild(svg);
+    }
+
+    /* ─── T20 cluster (entities grouped by `group`) ─── */
+    function renderCluster() {
+      const W = stage.clientWidth, H = 560;
+      const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}` });
+      const ents = currentDoc.scene.entities;
+      const groups = {};
+      ents.forEach(e => { const g = e.group || 'other'; (groups[g] ||= []).push(e); });
+      const groupKeys = Object.keys(groups);
+      const cols = Math.ceil(Math.sqrt(groupKeys.length));
+      const colW = W / cols, rowH = H / Math.ceil(groupKeys.length / cols);
+      groupKeys.forEach((g, i) => {
+        const col = i % cols, row = Math.floor(i / cols);
+        const cx = colW * (col + 0.5), cy = rowH * (row + 0.5);
+        const c = PALETTE[g] || '#888';
+        svg.appendChild(svgEl('text', { x: cx, y: cy - rowH * 0.4 + 14, fill: c, 'font-size': 13, 'text-anchor': 'middle' }, g));
+        const items = groups[g];
+        const radius = Math.min(colW, rowH) * 0.35;
+        items.forEach((e, j) => {
+          const a = (j / items.length) * Math.PI * 2;
+          const r = radius * (0.4 + 0.6 * Math.random());
+          const x = cx + Math.cos(a) * r;
+          const y = cy + Math.sin(a) * r;
+          svg.appendChild(svgEl('circle', { cx: x, cy: y, r: 5, fill: c, opacity: 0.8 }));
+        });
+      });
+      stage.appendChild(svg);
+    }
+
+    function svgEl(tag, attrs = {}, text) {
+      const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+      for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+      if (text != null) el.textContent = text;
+      return el;
+    }
+    function hashStr(s) {
+      let h = 0;
+      for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+      return h;
+    }
+
+    tabs.forEach(b => b.addEventListener('click', () => {
+      tabs.forEach(x => x.classList.toggle('active', x === b));
+      currentMode = b.dataset.mode;
+      render();
+    }));
+    docSel.addEventListener('change', () => loadDoc(docSel.value));
+    window.addEventListener('resize', () => render());
+    loadDoc(docSel.value);
+  </script>
+</body>
+</html>

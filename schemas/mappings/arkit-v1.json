@@ -1,0 +1,97 @@
+{
+  "xrai_mapping_version": "1.2",
+  "id": "arkit-v1",
+  "rfc": "0009",
+  "source": {
+    "kind": "arkit",
+    "producer_hint": "Portals iOS app (ARKit / ARFoundation Remote)",
+    "platform": ["iOS-15+", "iPadOS-15+", "visionOS"]
+  },
+  "ontology": "xrai://ontology/v1",
+  "rules": [
+    {
+      "match": { "source_type": "ARAnchor" },
+      "emit": {
+        "entity_path": "/ar/anchor/{uuid}",
+        "archetype": "Anchor",
+        "components": {
+          "transform": { "from": "transform_mat4", "as": "mat4_to_pose6dof", "units": "m/rad" },
+          "tracking_state": { "from": "tracking_state", "as": "enum_passthrough" }
+        },
+        "timeline": {
+          "log_time": { "from": "timestamp", "as": "ns" },
+          "arkit_frame": { "from": "frame_index", "as": "int64" }
+        }
+      }
+    },
+    {
+      "match": { "source_type": "ARPlaneAnchor" },
+      "emit": {
+        "entity_path": "/ar/plane/{uuid}",
+        "archetype": "Anchor",
+        "components": {
+          "transform": { "from": "transform_mat4", "as": "mat4_to_pose6dof" },
+          "metadata": { "from": "{alignment, classification, extent}", "as": "dict_passthrough" }
+        }
+      }
+    },
+    {
+      "match": { "source_type": "ARFaceAnchor" },
+      "emit": {
+        "entity_path": "/ar/face/{uuid}",
+        "archetype": "BlendShapes",
+        "components": {
+          "transform": { "from": "transform_mat4", "as": "mat4_to_pose6dof" },
+          "blend_weights": { "from": "blendShapes", "as": "dict_float01" }
+        }
+      }
+    },
+    {
+      "match": { "source_type": "ARBodyAnchor" },
+      "emit": {
+        "entity_path": "/ar/body/{uuid}",
+        "archetype": "Skeleton",
+        "components": {
+          "transform": { "from": "transform_mat4", "as": "mat4_to_pose6dof" },
+          "joints": { "from": "skeleton.jointTransforms", "as": "joint_tree_arkit" },
+          "confidence": { "from": "estimatedScaleFactor", "as": "float_passthrough" }
+        }
+      }
+    },
+    {
+      "match": { "source_type": "ARFrame.depthData" },
+      "emit": {
+        "entity_path": "/ar/depth",
+        "archetype": "Hologram",
+        "components": {
+          "depth_image": { "from": "depthMap", "as": "huedepth_encode" }
+        }
+      }
+    },
+    {
+      "match": { "source_type": "ARFrame.capturedImage" },
+      "emit": {
+        "entity_path": "/ar/camera",
+        "archetype": "Hologram",
+        "components": {
+          "rgb_image": { "from": "capturedImage", "as": "yuv_to_rgb_uri" }
+        }
+      }
+    }
+  ],
+  "transforms_used": [
+    "mat4_to_pose6dof",
+    "enum_passthrough",
+    "dict_passthrough",
+    "dict_float01",
+    "joint_tree_arkit",
+    "huedepth_encode",
+    "yuv_to_rgb_uri",
+    "ns",
+    "int64",
+    "float_passthrough"
+  ],
+  "reversible": false,
+  "trust": "T1-battle-tested",
+  "_note": "ARKit anchor / face / body / depth / RGB → XRAI archetypes. Ships with Portals iOS app. Verified end-to-end in spec 003 hologram-telepresence + spec 011 body-face-hand."
+}

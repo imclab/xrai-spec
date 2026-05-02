@@ -1,0 +1,75 @@
+{
+  "xrai_mapping_version": "1.2",
+  "id": "livekit-datachannel-v1",
+  "rfc": "0009",
+  "source": {
+    "kind": "livekit-datachannel",
+    "producer_hint": "Portals shared-hologram conf (LiveKit Cloud / self-hosted)",
+    "transport": "WebRTC DataChannel · reliable + unreliable lanes"
+  },
+  "ontology": "xrai://ontology/v1",
+  "rules": [
+    {
+      "match": { "topic": "xrai/sse" },
+      "emit": {
+        "_note": "Pass-through: payload IS already SSE deltas. Mapping resolves entity_path + ontology aliases only.",
+        "entity_path": "{payload.entity_path}",
+        "archetype": "{payload.archetype}",
+        "components": { "*": { "from": "payload.components.*", "as": "passthrough_resolve_alias" } },
+        "timeline": {
+          "log_time": { "from": "lk_publish_ts", "as": "ns" },
+          "lk_seq": { "from": "sequence_number", "as": "int64" }
+        }
+      }
+    },
+    {
+      "match": { "topic": "xrai/hologram", "codec": "HueDepth" },
+      "emit": {
+        "entity_path": "/conf/{participant_id}/hologram",
+        "archetype": "Hologram",
+        "components": {
+          "hologram_feed": { "from": "{track_url, codec}", "as": "dict_passthrough" },
+          "pose_6dof": { "from": "pose", "as": "passthrough" },
+          "rgb_image": { "from": "color_track_uri", "as": "uri_passthrough" },
+          "depth_image": { "from": "depth_track_uri", "as": "uri_passthrough" }
+        }
+      }
+    },
+    {
+      "match": { "topic": "xrai/agent" },
+      "emit": {
+        "entity_path": "/agent/{actor_id}/trace/{event_id}",
+        "archetype": "AgentTrace",
+        "components": {
+          "actor": { "from": "actor", "as": "uri_passthrough" },
+          "tool_call": { "from": "tool_call", "as": "passthrough" },
+          "tool_result": { "from": "tool_result", "as": "passthrough" },
+          "thought": { "from": "thought", "as": "string_passthrough" }
+        }
+      }
+    },
+    {
+      "match": { "topic": "xrai/cursor" },
+      "emit": {
+        "entity_path": "/conf/{participant_id}/cursor",
+        "archetype": "Primitive",
+        "components": {
+          "transform": { "from": "pose", "as": "passthrough" },
+          "label": { "from": "name", "as": "string_passthrough" }
+        }
+      }
+    }
+  ],
+  "transforms_used": [
+    "passthrough",
+    "passthrough_resolve_alias",
+    "uri_passthrough",
+    "string_passthrough",
+    "dict_passthrough",
+    "ns",
+    "int64"
+  ],
+  "reversible": true,
+  "trust": "T1-battle-tested",
+  "_note": "LiveKit DataChannel topics carry SSE deltas + hologram feeds + agent traces. Used by xra1.com/conf/ + spec 010 multiplayer-normcore. Reversible — XRAI scenes can be authored locally and published back to LiveKit."
+}
