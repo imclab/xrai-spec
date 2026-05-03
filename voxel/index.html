@@ -260,38 +260,6 @@ async function tryOllama(prompt){
   return null;
 }
 
-// Claude API with prompt caching — #claude=YOUR_ANTHROPIC_API_KEY
-// System prompt is cached (cache_control breakpoint) — repeated generates reuse cache, cutting cost ~90%
-const CLAUDE_SYSTEM = {
-  type:'text',
-  text:`You are a voxel scene generator. Given a description, return JSON matching this schema exactly:
-{"items":[{"t":"oak|palm|pine|cactus|fern|mushroom|rock|flower","n":3-12},...]}
-Max 6 items. Valid t values: oak, palm, pine, cactus, fern, mushroom, rock, flower.
-Return only valid JSON. No explanation.`,
-  cache_control:{type:'ephemeral'}  // cached across calls — ~90% token savings on repeated generates
-};
-async function tryClaude(prompt){
-  const key = new URLSearchParams(location.hash.slice(1)).get('claude');
-  if(!key) return null;
-  try{
-    const r = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json',
-               'anthropic-beta':'prompt-caching-2024-07-31'},
-      body:JSON.stringify({
-        model:'claude-haiku-4-5-20251001', max_tokens:256,
-        system:[CLAUDE_SYSTEM],
-        messages:[{role:'user',content:`Generate a voxel scene for: "${prompt}"`}]
-      })
-    });
-    const d = await r.json();
-    const text = d.content?.[0]?.text||'';
-    const items = parseItems(text);
-    if(items){ status.textContent=`claude haiku (cache:${d.usage?.cache_read_input_tokens>0?'hit':'miss'})`; return items; }
-  }catch{}
-  return null;
-}
-
 function placeScene(items){
   meshes.forEach(m=>scene.remove(m)); meshes=[];
   const placed=[];
@@ -312,7 +280,7 @@ async function generate(){
   document.getElementById('btn').disabled = true;
   status.textContent = 'Trying local model…';
 
-  let items = await tryOllama(prompt) || await tryClaude(prompt);
+  let items = await tryOllama(prompt);
   if(!items){
     items = parseBiome(prompt);
     status.textContent = items.map(i=>i.t+'×'+i.n).join(' ');
