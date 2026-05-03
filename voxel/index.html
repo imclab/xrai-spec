@@ -26,9 +26,12 @@
 <canvas id="c"></canvas>
 <div id="bar">
   <a class="back" href="/">← xrai.dev</a>
+  <button id="btn-cam" title="Capture camera frame">📷</button>
   <input id="prompt" placeholder="rainforest, desert, mountain, ocean, swamp…" value="rainforest"/>
   <button id="btn">Generate</button>
   <span id="status">drag to orbit · scroll to zoom</span>
+  <video id="vid" style="display:none;position:fixed;top:8px;right:8px;width:160px;border:1px solid #333;border-radius:4px;z-index:20" autoplay playsinline></video>
+  <canvas id="snap" style="display:none"></canvas>
 </div>
 <script type="module">
 // Dynamic load so we control timing
@@ -287,6 +290,41 @@ async function generate(){
   placeScene(items);
   document.getElementById('btn').disabled = false;
 }
+
+// camera capture → vision → scene
+let camStream = null;
+const vid = document.getElementById('vid');
+const snap = document.getElementById('snap');
+
+async function captureBase64(){
+  if(!camStream) camStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+  vid.srcObject=camStream; vid.style.display='block';
+  await new Promise(r=>setTimeout(r,800));
+  snap.width=vid.videoWidth||640; snap.height=vid.videoHeight||480;
+  snap.getContext('2d').drawImage(vid,0,0);
+  return snap.toDataURL('image/jpeg',0.7).split(',')[1];
+}
+
+async function visionDescribe(b64){
+  const Ollama = await loadOllama();
+  const ollama = new Ollama({host:'http://127.0.0.1:11434'});
+  const r = await ollama.generate({model:'llava', stream:false,
+    prompt:'Describe the natural landscape or plants in 3-5 words. Words only, no punctuation.',
+    images:[b64]});
+  return r.response.trim();
+}
+
+document.getElementById('btn-cam').addEventListener('click', async()=>{
+  try{
+    status.textContent='capturing…';
+    const b64 = await captureBase64();
+    status.textContent='vision…';
+    const desc = await visionDescribe(b64);
+    document.getElementById('prompt').value=desc;
+    vid.style.display='none';
+    generate();
+  }catch(e){ status.textContent='cam: '+e.message; vid.style.display='none'; }
+});
 
 document.getElementById('btn').addEventListener('click', generate);
 document.getElementById('prompt').addEventListener('keydown', e=>{ if(e.key==='Enter') generate(); });
