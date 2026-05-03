@@ -30,18 +30,29 @@
   <button id="btn">Generate</button>
   <span id="status">drag to orbit · scroll to zoom</span>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.min.js"></script>
 <script>
+// Dynamic load so we control timing
+const _s = document.createElement('script');
+_s.src = 'https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.min.js';
+_s.onerror = () => { document.getElementById('status').textContent = 'CDN load failed'; };
+_s.onload = _init;
+document.head.appendChild(_s);
+
+function _init() {
 const canvas = document.getElementById('c');
 const status = document.getElementById('status');
+
+const W = () => window.innerWidth;
+const H = () => window.innerHeight - 56;
 
 // renderer
 const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.shadowMap.enabled = true;
+renderer.setSize(W(), H());
 function resize(){
-  renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
-  camera.aspect = canvas.clientWidth / canvas.clientHeight;
+  renderer.setSize(W(), H());
+  camera.aspect = W() / H();
   camera.updateProjectionMatrix();
 }
 window.addEventListener('resize', resize);
@@ -50,8 +61,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0a0a12);
 scene.fog = new THREE.Fog(0x0a0a12, 35, 80);
 
-const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
-resize();
+const camera = new THREE.PerspectiveCamera(50, W()/H(), 0.1, 200);
 
 // lights
 scene.add(new THREE.AmbientLight(0x334466, 2));
@@ -257,6 +267,7 @@ document.getElementById('prompt').addEventListener('keydown', e=>{ if(e.key==='E
 
 // initial scene
 generate();
+} // end _init
 </script>
 </body>
 </html>
