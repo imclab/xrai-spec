@@ -211,8 +211,18 @@ function parseBiome(text){
 }
 
 // try Ollama (optional, graceful fallback)
-const PROMPT_MSG = p =>
-  `Return ONLY a JSON array for a voxel scene: "${p}". Each item: {"t":"oak|palm|pine|cactus|fern|mushroom|rock|flower","n":4-12}. Max 6 items. No explanation.`;
+const SCENE_SCHEMA = {
+  type:'object', required:['items'],
+  properties:{ items:{ type:'array', maxItems:6,
+    items:{ type:'object', required:['t','n'],
+      properties:{
+        t:{type:'string', enum:['oak','palm','pine','cactus','fern','mushroom','rock','flower']},
+        n:{type:'integer', minimum:3, maximum:12}
+      }
+    }
+  }}
+};
+const PROMPT_MSG = p => `Generate a voxel scene for: "${p}". Pick up to 6 plant/object types with counts.`;
 
 let _Ollama = null;
 async function loadOllama(){
@@ -220,28 +230,26 @@ async function loadOllama(){
   return _Ollama;
 }
 function parseItems(content){
-  const m = content.match(/\[[\s\S]*?\]/);
-  if(!m) return null;
-  try{ const a=JSON.parse(m[0]); return Array.isArray(a)&&a.length?a:null; }catch{ return null; }
+  try{ const d=JSON.parse(content); return Array.isArray(d.items)&&d.items.length?d.items:null; }catch{ return null; }
 }
 async function tryOllama(prompt){
   try{
     const Ollama = await Promise.race([loadOllama(), new Promise((_,r)=>setTimeout(()=>r(new Error('t')),4000))]);
-    const msgs = [{role:'user', content:PROMPT_MSG(prompt)}];
+    const req = {stream:false, format:SCENE_SCHEMA, messages:[{role:'user',content:PROMPT_MSG(prompt)}]};
 
     // 1. local
     try{
       const ollama = new Ollama({host:'http://127.0.0.1:11434'});
-      const r = await ollama.chat({model:'gemma4:e4b', stream:false, messages:msgs});
+      const r = await ollama.chat({...req, model:'gemma4:e4b'});
       const items = parseItems(r.message.content);
       if(items){ status.textContent='ollama local'; return items; }
     }catch{}
 
-    // 2. cloud — pass key via URL hash: #key=YOUR_OLLAMA_API_KEY
+    // 2. cloud — #key=YOUR_OLLAMA_API_KEY
     const key = new URLSearchParams(location.hash.slice(1)).get('key');
     if(key){
       const ollama = new Ollama({host:'https://ollama.com', headers:{Authorization:'Bearer '+key}});
-      const r = await ollama.chat({model:'gemma4', stream:false, messages:msgs});
+      const r = await ollama.chat({...req, model:'gemma4'});
       const items = parseItems(r.message.content);
       if(items){ status.textContent='ollama cloud'; return items; }
     }
