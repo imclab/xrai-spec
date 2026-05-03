@@ -213,12 +213,18 @@ function parseBiome(text){
 // try Ollama (optional, graceful fallback)
 let _ollama = null;
 async function getOllama(){
-  if(!_ollama) { const {default:o} = await import('https://esm.sh/ollama@0.5'); _ollama = o; }
+  if(!_ollama){
+    const {Ollama} = await import('https://esm.sh/ollama/browser');
+    _ollama = new Ollama({host:'http://127.0.0.1:11434'});
+  }
   return _ollama;
 }
 async function tryOllama(prompt){
   try{
-    const ollama = await Promise.race([getOllama(), new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),3000))]);
+    const ollama = await Promise.race([
+      getOllama(),
+      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),3000))
+    ]);
     const res = await ollama.chat({model:'gemma4:e4b', stream:false,
       messages:[{role:'user', content:
         `Return ONLY a JSON array for a voxel scene: "${prompt}". Each item: {"t":"oak|palm|pine|cactus|fern|mushroom|rock|flower","n":4-12}. Max 6 items. No explanation.`}]});
