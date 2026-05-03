@@ -214,10 +214,10 @@ function parseBiome(text){
 const PROMPT_MSG = p =>
   `Return ONLY a JSON array for a voxel scene: "${p}". Each item: {"t":"oak|palm|pine|cactus|fern|mushroom|rock|flower","n":4-12}. Max 6 items. No explanation.`;
 
-let _Ollama = null;
-async function loadOllamaLib(){
-  if(!_Ollama){ const m = await import('https://esm.sh/ollama/browser'); _Ollama = m.Ollama; }
-  return _Ollama;
+let _lib = null;
+async function loadLib(){
+  if(!_lib) _lib = await import('https://esm.sh/ollama/browser');
+  return _lib;
 }
 function parseItems(content){
   const m = content.match(/\[[\s\S]*?\]/);
@@ -226,21 +226,21 @@ function parseItems(content){
 }
 async function tryOllama(prompt){
   try{
-    const Ollama = await Promise.race([loadOllamaLib(), new Promise((_,r)=>setTimeout(()=>r(new Error('t')),4000))]);
-    // 1. try local
+    const {default:ollama, Ollama} = await Promise.race([
+      loadLib(), new Promise((_,r)=>setTimeout(()=>r(new Error('t')),4000))
+    ]);
+    const msgs = [{role:'user', content:PROMPT_MSG(prompt)}];
+    // 1. local (default instance = localhost:11434)
     try{
-      const local = new Ollama({host:'http://127.0.0.1:11434'});
-      const r = await local.chat({model:'gemma4:e4b', stream:false,
-        messages:[{role:'user',content:PROMPT_MSG(prompt)}]});
+      const r = await ollama.chat({model:'gemma4:e4b', stream:false, messages:msgs});
       const items = parseItems(r.message.content);
       if(items){ status.textContent='ollama local'; return items; }
     }catch{}
-    // 2. try cloud (requires OLLAMA_API_KEY in URL hash: #key=xxx)
+    // 2. cloud via URL hash #key=YOUR_KEY
     const key = new URLSearchParams(location.hash.slice(1)).get('key');
     if(key){
-      const cloud = new Ollama({host:'https://ollama.com',headers:{Authorization:'Bearer '+key}});
-      const r = await cloud.chat({model:'gemma4:e4b', stream:false,
-        messages:[{role:'user',content:PROMPT_MSG(prompt)}]});
+      const cloud = new Ollama({host:'https://ollama.com', headers:{Authorization:'Bearer '+key}});
+      const r = await cloud.chat({model:'gemma4', stream:false, messages:msgs});
       const items = parseItems(r.message.content);
       if(items){ status.textContent='ollama cloud'; return items; }
     }
