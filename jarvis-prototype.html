@@ -1,0 +1,2276 @@
+<!doctype html>
+<!-- PROTOTYPE v2 — Neural Cartography
+     D3 SVG graph · ProceduralMusicEngine · Settings panel · British voice
+     Upgraded 2026-05-04 -->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>JARVIS — IMC Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500;700&family=Azeret+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+:root {
+  --void: #06080D;
+  --void-2: #0D1017;
+  --void-3: #131820;
+  --surface: #1A1F2A;
+  --border: rgba(127, 255, 212, 0.07);
+  --border-bright: rgba(127, 255, 212, 0.22);
+  --aqua: #7FFFD4;
+  --aqua-dim: rgba(127, 255, 212, 0.13);
+  --aqua-glow: rgba(127, 255, 212, 0.4);
+  --orange: #FF6B35;
+  --orange-dim: rgba(255, 107, 53, 0.13);
+  --gold: #C4A35A;
+  --gold-dim: rgba(196, 163, 90, 0.12);
+  --parchment: #E8E4D9;
+  --muted: #4A5060;
+  --muted-2: #2A2D35;
+  --font-display: 'Hanken Grotesk', sans-serif;
+  --font-mono: 'Azeret Mono', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+html, body { background: var(--void); color: var(--parchment); font-family: var(--font-display); font-size: 14px; line-height: 1.5; height: 100%; overflow: hidden; }
+
+/* ── topbar ── */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; height: 40px; z-index: 100;
+  background: rgba(6, 8, 13, 0.82);
+  backdrop-filter: blur(20px) saturate(1.4);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 20px; gap: 0;
+  font-family: var(--font-mono); font-size: 11px; color: var(--muted);
+}
+.topbar-logo {
+  color: var(--aqua); font-size: 12px; font-weight: 500; letter-spacing: 0.12em;
+  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+}
+.topbar-sep { width: 1px; height: 16px; background: var(--border); margin: 0 14px; flex-shrink: 0; }
+.topbar-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--aqua); flex-shrink: 0;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+.topbar-dot.listening { background: var(--aqua); box-shadow: 0 0 8px var(--aqua-glow); animation: pulse 0.8s ease-in-out infinite; }
+.topbar-dot.thinking { background: var(--orange); box-shadow: 0 0 8px rgba(255,107,53,0.5); animation: spin-ring 1.2s linear infinite; }
+.topbar-dot.speaking { background: var(--gold); box-shadow: 0 0 8px rgba(196,163,90,0.5); animation: breathe 1.4s ease-in-out infinite; }
+.topbar-state { color: var(--muted); font-size: 10px; letter-spacing: 0.14em; margin-left: 6px; }
+.topbar-metric { display: flex; align-items: center; gap: 5px; padding: 0 12px; border-right: 1px solid var(--border); flex-shrink: 0; }
+.topbar-metric .mk { color: var(--muted); font-size: 10px; letter-spacing: 0.1em; }
+.topbar-metric .mv { color: rgba(232,228,217,0.7); font-size: 10px; font-variant-numeric: tabular-nums; transition: color 0.3s; }
+.topbar-metric .mv.flash { color: var(--aqua); }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+#backend-label { font-size: 10px; letter-spacing: 0.12em; color: var(--muted); }
+#backend-select {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em;
+  background: transparent; color: var(--aqua);
+  border: 1px solid var(--border-bright); padding: 3px 8px;
+  cursor: pointer; outline: none; appearance: none; -webkit-appearance: none;
+}
+#backend-select option { background: var(--void-3); color: var(--parchment); }
+.topbar-user { font-size: 10px; color: var(--muted); padding: 0 0 0 8px; }
+#topbar-test-btn {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em;
+  background: transparent; color: var(--muted);
+  border: 1px solid var(--border); padding: 3px 8px; cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+#topbar-test-btn:hover, #topbar-test-btn.active { color: var(--aqua); border-color: var(--border-bright); }
+#settings-btn {
+  font-family: var(--font-mono); font-size: 14px;
+  background: transparent; color: var(--muted); border: 0;
+  padding: 4px 6px; cursor: pointer; line-height: 1;
+  transition: color 0.2s, transform 0.4s;
+}
+#settings-btn:hover, #settings-btn.active { color: var(--aqua); }
+#settings-btn.active { transform: rotate(60deg); }
+.music-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--gold); display: none; flex-shrink: 0;
+  animation: pulse 1.6s ease-in-out infinite;
+  box-shadow: 0 0 6px rgba(196,163,90,0.6);
+}
+.music-dot.active { display: block; }
+
+/* ── layout ── */
+#app {
+  display: flex; height: 100vh; padding-top: 40px;
+}
+#graph-zone {
+  flex: 65 65 0; min-width: 0; position: relative;
+  background: var(--void); overflow: hidden;
+}
+#conv-rail {
+  flex: 0 0 35%; width: 35%;
+  height: calc(100vh - 40px);
+  background: rgba(13, 16, 23, 0.85);
+  backdrop-filter: blur(10px);
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  font-family: var(--font-mono);
+}
+
+/* ── atmosphere canvas ── */
+#atmo-canvas {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 0;
+}
+#graph-canvas-wrap {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
+}
+#graph-node-count {
+  position: absolute; top: 10px; right: 12px; z-index: 10;
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em;
+  color: var(--muted); pointer-events: none;
+}
+
+/* ── D3 SVG graph nodes ── */
+#graph-svg { cursor: default; }
+.graph-link { stroke: rgba(127,255,212,0.1); stroke-width: 1; pointer-events: none; }
+.graph-link.weighted { stroke: rgba(127,255,212,0.2); }
+.node-group { cursor: pointer; }
+.node-group:hover .node-core { stroke-opacity: 0.9; }
+.node-glyph-text { pointer-events: none; font-family: var(--font-display); }
+.node-label-text {
+  pointer-events: none; font-family: var(--font-mono); font-size: 8px;
+  fill: rgba(232,228,217,0.55); letter-spacing: 0.06em;
+}
+.node-focus-ring {
+  pointer-events: none; fill: none;
+  animation: focus-ring-pulse 1.2s ease-in-out infinite;
+}
+/* Timeline rail at bottom of graph */
+.tl-badge { cursor: pointer; }
+.tl-badge rect { transition: fill-opacity 0.3s; }
+.tl-badge:hover rect { fill-opacity: 0.35 !important; }
+.tl-badge text { pointer-events: none; font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.06em; }
+/* Goal prediction node */
+.goal-node rect { stroke-dasharray: 4 3; animation: goal-dash 2s linear infinite; }
+@keyframes goal-dash { from { stroke-dashoffset: 0 } to { stroke-dashoffset: -14 } }
+
+/* ── conversation rail ── */
+#messages {
+  flex: 1; overflow-y: auto; padding: 20px 16px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+#messages::-webkit-scrollbar { width: 2px; }
+#messages::-webkit-scrollbar-thumb { background: var(--border-bright); }
+.msg { font-size: 13px; line-height: 1.6; animation: bloom 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.msg.user { align-self: flex-end; text-align: right; color: var(--parchment); max-width: 85%; }
+.msg.assistant { align-self: flex-start; color: rgba(232, 228, 217, 0.72); max-width: 90%; }
+.msg .msg-prefix { font-size: 10px; margin-bottom: 3px; font-family: var(--font-mono); letter-spacing: 0.1em; }
+.msg.user .msg-prefix { color: var(--aqua); text-align: right; }
+.msg.assistant .msg-prefix { color: rgba(127, 255, 212, 0.5); }
+.msg .msg-body { word-break: break-word; }
+.msg .msg-ts { font-size: 9px; color: var(--muted); margin-top: 3px; }
+.msg.user .msg-ts { text-align: right; }
+.xrai-block { margin-top: 8px; border-top: 1px solid var(--border-bright); padding-top: 8px; }
+.xrai-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.xrai-label { font-size: 9px; letter-spacing: 0.2em; color: var(--aqua); opacity: 0.7; }
+.xrai-copy {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em;
+  background: transparent; color: var(--aqua); border: 1px solid var(--border-bright);
+  padding: 2px 6px; cursor: pointer; transition: background 0.15s;
+}
+.xrai-copy:hover { background: var(--aqua-dim); }
+.xrai-block pre {
+  font-family: var(--font-mono); font-size: 10px;
+  white-space: pre-wrap; word-break: break-all;
+  max-height: 120px; overflow-y: auto; line-height: 1.6;
+  color: rgba(127, 255, 212, 0.8);
+}
+
+/* ── input area ── */
+.input-area { padding: 12px 16px; border-top: 1px solid var(--border); background: var(--void-2); flex-shrink: 0; }
+.input-row { display: flex; align-items: center; gap: 8px; }
+#user-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--parchment); font-family: var(--font-mono); font-size: 12px;
+  resize: none; height: 36px; line-height: 1.5;
+  border-bottom: 1px solid var(--border); padding-bottom: 4px;
+  transition: border-color 0.2s;
+}
+#user-input:focus { border-bottom-color: var(--border-bright); }
+#user-input::placeholder { color: var(--muted); }
+#send-btn {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em;
+  background: transparent; color: var(--muted); border: 1px solid var(--border);
+  padding: 6px 10px; cursor: pointer; transition: color 0.2s, border-color 0.2s;
+  white-space: nowrap;
+}
+#send-btn:hover { color: var(--parchment); border-color: var(--border-bright); }
+#mic-btn {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: transparent; border: 1px solid var(--border-bright);
+  color: var(--aqua); font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0; transition: border-color 0.2s, box-shadow 0.2s;
+}
+#mic-btn.listening { border-color: var(--aqua); box-shadow: 0 0 12px var(--aqua-glow); animation: pulse 0.8s ease-in-out infinite; }
+#mic-btn.wake-active { border-color: var(--aqua); }
+.input-footer {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 8px; font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: 0.12em; color: var(--muted);
+}
+#clear-mem-btn {
+  background: transparent; border: 1px solid var(--border); color: var(--muted);
+  padding: 2px 7px; cursor: pointer; font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: 0.1em; transition: color 0.2s, border-color 0.2s;
+}
+#clear-mem-btn:hover { color: var(--orange); border-color: var(--orange); }
+
+/* ── camera porthole ── */
+#cam-porthole {
+  position: fixed; bottom: 72px; left: 24px; z-index: 50;
+  width: 128px; height: 128px; border-radius: 50%;
+  border: 1px solid var(--border-bright); overflow: hidden;
+  box-shadow: 0 0 0 4px var(--void), 0 0 20px rgba(127, 255, 212, 0.1);
+  opacity: 0.7; transition: opacity 0.3s; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--void-2);
+}
+#cam-porthole:hover { opacity: 1; }
+#cam-porthole video { position: absolute; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+#cam-porthole .cam-off-glyph { font-family: var(--font-mono); font-size: 22px; color: var(--muted); position: relative; z-index: 1; pointer-events: none; }
+#cam-diff-badge { position: fixed; bottom: 60px; left: 100px; z-index: 51; font-family: var(--font-mono); font-size: 9px; color: var(--muted); letter-spacing: 0.1em; display: none; }
+#cam-controls { position: fixed; bottom: 24px; left: 24px; z-index: 50; display: flex; gap: 6px; }
+.cam-btn { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; background: rgba(6,8,13,0.85); color: var(--muted); border: 1px solid var(--border); padding: 4px 8px; cursor: pointer; transition: color 0.2s, border-color 0.2s; }
+.cam-btn:hover { color: var(--parchment); border-color: var(--border-bright); }
+.cam-btn.active { color: var(--aqua); border-color: var(--border-bright); }
+canvas#diff-canvas { display: none; }
+
+/* ── test panel ── */
+#test-panel {
+  position: absolute; top: 0; right: 0; bottom: 0;
+  width: 35%; background: var(--void-2);
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  z-index: 200; font-family: var(--font-mono);
+  transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+#test-panel.open { transform: translateX(0); }
+.test-panel-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; font-size: 10px; letter-spacing: 0.18em; color: var(--muted); }
+.test-panel-head .ptag { color: var(--aqua); font-size: 10px; }
+.test-panel-head button { background: transparent; border: 0; color: var(--muted); cursor: pointer; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; transition: color 0.2s; }
+.test-panel-head button:hover { color: var(--parchment); }
+#tests-totals { display: flex; gap: 12px; padding: 6px 14px; font-size: 9px; letter-spacing: 0.1em; color: var(--muted); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+#tests-totals span { color: rgba(232,228,217,0.6); }
+.test-actions { display: flex; gap: 6px; padding: 8px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+#run-all-btn { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; background: var(--aqua-dim); color: var(--aqua); border: 1px solid var(--aqua); padding: 6px 12px; cursor: pointer; flex: 1; transition: background 0.15s; }
+#run-all-btn:hover { background: rgba(127,255,212,0.25); }
+#ab-btn { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; background: var(--orange-dim); color: var(--orange); border: 1px solid var(--orange); padding: 6px 12px; cursor: pointer; transition: background 0.15s; }
+#ab-btn:hover { background: rgba(255,107,53,0.25); }
+#tests-scroll { flex: 1; overflow-y: auto; }
+#tests-scroll::-webkit-scrollbar { width: 2px; }
+#tests-scroll::-webkit-scrollbar-thumb { background: var(--border-bright); }
+.test-row { padding: 8px 14px; border-bottom: 1px dashed var(--border); font-size: 11px; }
+.test-row .t-label { color: rgba(232,228,217,0.75); margin-bottom: 3px; font-size: 11px; }
+.test-row .t-resp { color: var(--muted); font-size: 10px; line-height: 1.5; margin-bottom: 4px; max-height: 48px; overflow-y: auto; word-break: break-word; }
+.test-row .t-meta { display: flex; justify-content: space-between; align-items: center; font-size: 9px; color: var(--muted); }
+.t-stars { display: flex; gap: 2px; }
+.t-star { background: transparent; border: 0; color: var(--muted); cursor: pointer; font-size: 12px; padding: 0 1px; transition: color 0.1s; }
+.t-star.lit { color: var(--gold); }
+.t-star:hover { color: var(--gold); }
+.test-row.running .t-label::after { content: ' …'; color: var(--muted); animation: pulse 1s infinite; }
+.test-row.done .t-label { color: var(--aqua); }
+
+/* ── settings panel ── */
+#settings-panel {
+  position: fixed; top: 40px; right: 0; bottom: 0;
+  width: 280px; background: rgba(6, 8, 13, 0.97);
+  backdrop-filter: blur(24px);
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  z-index: 300; font-family: var(--font-mono);
+  transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  overflow-y: auto;
+}
+#settings-panel.open { transform: translateX(0); }
+.settings-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+  font-size: 10px; letter-spacing: 0.2em; color: var(--aqua);
+}
+.settings-head button { background: transparent; border: 0; color: var(--muted); cursor: pointer; font-size: 14px; line-height: 1; transition: color 0.2s; }
+.settings-head button:hover { color: var(--parchment); }
+.settings-section { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.settings-section-label { font-size: 9px; letter-spacing: 0.2em; color: var(--muted); margin-bottom: 10px; }
+.settings-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 0; font-size: 11px; color: rgba(232,228,217,0.7);
+}
+.settings-row.disabled { opacity: 0.35; pointer-events: none; }
+.settings-row span { letter-spacing: 0.04em; }
+/* Toggle switch */
+.toggle-switch { position: relative; display: inline-block; width: 34px; height: 18px; flex-shrink: 0; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--muted-2); border: 1px solid var(--border-bright);
+  border-radius: 18px; transition: 0.25s;
+}
+.toggle-slider:before {
+  position: absolute; content: '';
+  height: 12px; width: 12px; left: 2px; bottom: 2px;
+  background: var(--muted); border-radius: 50%;
+  transition: 0.25s;
+}
+.toggle-switch input:checked + .toggle-slider { background: rgba(127,255,212,0.15); border-color: var(--aqua); }
+.toggle-switch input:checked + .toggle-slider:before { transform: translateX(16px); background: var(--aqua); }
+#voice-select, .settings-select {
+  width: 100%; margin-top: 6px;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em;
+  background: var(--void-2); color: rgba(232,228,217,0.8);
+  border: 1px solid var(--border-bright); padding: 5px 8px;
+  cursor: pointer; outline: none;
+}
+#voice-select option, .settings-select option { background: var(--void-3); }
+.settings-info { font-size: 9px; color: var(--muted); margin-top: 6px; letter-spacing: 0.06em; line-height: 1.6; }
+
+/* ── toast ── */
+#toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: rgba(6,8,13,0.97); border: 1px solid var(--border-bright);
+  padding: 8px 16px; font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.14em; color: rgba(232,228,217,0.8);
+  pointer-events: none; opacity: 0; transition: opacity 0.2s; z-index: 999;
+}
+#toast.show { opacity: 1; }
+
+/* ── rating overlay ── */
+#rating-overlay {
+  display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  background: rgba(6,8,13,0.97); border: 1px solid var(--aqua);
+  padding: 20px 28px; font-family: var(--font-mono); font-size: 12px;
+  letter-spacing: 0.18em; color: var(--aqua); text-align: center; z-index: 998;
+}
+#rating-overlay.show { display: block; }
+
+/* ── focus ring ── */
+.focus-ring-active { box-shadow: 0 0 0 2px var(--aqua), 0 0 16px var(--aqua-glow); }
+#m-focus-wrap {
+  display: flex; align-items: center; gap: 5px;
+  padding: 0 12px; border-right: 1px solid var(--border); flex-shrink: 0;
+  max-width: 160px; overflow: hidden;
+}
+#m-focus-wrap .mk { color: var(--muted); font-size: 10px; letter-spacing: 0.1em; }
+#m-focus { color: var(--aqua); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; transition: color 0.3s; }
+
+/* ── micro-animations ── */
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+@keyframes bloom { from{opacity:0;transform:scale(0.7)} to{opacity:1;transform:scale(1)} }
+@keyframes drift-up { from{transform:translateY(0);opacity:0.7} to{transform:translateY(-100px);opacity:0} }
+@keyframes spin-ring { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+@keyframes breathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+@keyframes focus-ring-pulse { 0%,100%{opacity:0.45;r:22} 50%{opacity:0.85;r:26} }
+@keyframes node-bloom { from{opacity:0;transform:scale(0.4)} to{opacity:1;transform:scale(1)} }
+
+/* ── mobile ── */
+@media (max-width: 768px) {
+  #app { flex-direction: column; }
+  #graph-zone { flex: 0 0 240px; height: 240px; width: 100%; }
+  #conv-rail { flex: 1; width: 100%; border-left: none; border-top: 1px solid var(--border); }
+  #cam-porthole { width: 80px; height: 80px; bottom: 52px; left: 12px; }
+  #test-panel { width: 100%; }
+  #settings-panel { width: 100%; }
+  #pipeline-panel { width: 100%; left: 0; }
+}
+
+/* ── pipeline panel ── */
+#pipeline-panel {
+  position: fixed; top: 40px; left: -320px; width: 320px;
+  height: calc(100vh - 40px); z-index: 90;
+  background: rgba(6, 8, 13, 0.97);
+  border-right: 1px solid var(--border-bright);
+  backdrop-filter: blur(24px) saturate(1.6);
+  transition: left 0.3s cubic-bezier(0.4,0,0.2,1);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+#pipeline-panel.open { left: 0; }
+.pp-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 16px 12px; border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.2em; color: var(--aqua);
+  flex-shrink: 0;
+}
+.pp-head button {
+  background: transparent; border: none; color: var(--muted);
+  cursor: pointer; font-size: 14px; padding: 0 2px;
+}
+.pp-flow-wrap { padding: 12px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+#pp-flow-svg { width: 100%; height: 110px; display: block; overflow: visible; }
+#pp-flow-svg line { stroke: var(--border-bright); stroke-width: 1; }
+#pp-flow-svg line.live { stroke: var(--aqua); stroke-width: 1.4; stroke-dasharray: 4 3; animation: dash 1.2s linear infinite; }
+@keyframes dash { to { stroke-dashoffset: -14; } }
+.pp-slots { flex: 1; overflow-y: auto; padding: 8px 0; }
+.pp-slot {
+  padding: 10px 16px; border-bottom: 1px solid rgba(127,255,212,0.05);
+}
+.pp-slot-head {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.2em;
+  color: var(--muted); text-transform: uppercase; margin-bottom: 7px;
+}
+.pp-slot-icon { font-size: 12px; }
+.pp-providers { display: flex; flex-wrap: wrap; gap: 5px; }
+.pp-chip {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.06em;
+  padding: 3px 8px; border-radius: 3px; cursor: pointer;
+  border: 1px solid var(--border);
+  background: transparent; color: var(--muted);
+  transition: all 0.15s; white-space: nowrap;
+}
+.pp-chip:hover { border-color: var(--border-bright); color: var(--parchment); }
+.pp-chip.active { border-color: var(--aqua); color: var(--aqua); background: var(--aqua-dim); }
+.pp-chip.placeholder { opacity: 0.4; cursor: default; }
+.pp-chip.error { border-color: var(--orange); color: var(--orange); }
+.pp-status-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  display: inline-block; margin-right: 3px; flex-shrink: 0;
+}
+.pp-status-dot.online { background: var(--aqua); }
+.pp-status-dot.placeholder { background: var(--muted); }
+.pp-status-dot.error { background: var(--orange); animation: pulse 1s ease-in-out infinite; }
+.pp-actions {
+  padding: 12px 16px; border-top: 1px solid var(--border); flex-shrink: 0;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.pp-action-btn {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.12em;
+  background: transparent; color: var(--muted);
+  border: 1px solid var(--border); padding: 6px 10px;
+  cursor: pointer; text-align: left;
+  transition: color 0.15s, border-color 0.15s;
+}
+.pp-action-btn:hover { color: var(--parchment); border-color: var(--border-bright); }
+.pp-action-btn.primary { color: var(--aqua); border-color: var(--border-bright); }
+
+/* ── icosa asset cards ── */
+.icosa-wrap {
+  margin-top: 8px; padding: 8px;
+  background: rgba(127,255,212,0.03); border: 1px solid var(--border);
+  border-radius: 4px;
+}
+.icosa-label {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.2em;
+  color: var(--gold); margin-bottom: 8px; text-transform: uppercase;
+}
+.icosa-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+.icosa-card {
+  width: 80px; background: rgba(0,0,0,0.6); border: 1px solid var(--border);
+  border-radius: 3px; overflow: hidden; cursor: pointer;
+  transition: border-color 0.15s;
+  flex-shrink: 0;
+}
+.icosa-card:hover { border-color: var(--gold); }
+.icosa-thumb {
+  width: 80px; height: 60px; object-fit: cover;
+  background: var(--void-3); display: block;
+}
+.icosa-card-name {
+  font-family: var(--font-mono); font-size: 8px; color: var(--muted);
+  padding: 3px 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.icosa-load {
+  font-family: var(--font-mono); font-size: 8px; color: var(--aqua);
+  padding: 3px 5px; border-top: 1px solid var(--border);
+  cursor: pointer; text-align: center;
+  background: transparent; width: 100%; border-radius: 0;
+  border-left: 0; border-right: 0; border-bottom: 0;
+}
+.icosa-load:hover { background: var(--aqua-dim); }
+.icosa-status {
+  font-family: var(--font-mono); font-size: 9px; color: var(--muted);
+  font-style: italic; padding: 4px 0;
+}
+</style>
+</head>
+<body>
+
+<!-- ── topbar ── -->
+<div class="topbar">
+  <div class="topbar-logo">◉ JARVIS</div>
+  <div class="topbar-sep"></div>
+  <div id="topbar-status-wrap" style="display:flex;align-items:center;gap:6px;padding-right:14px;border-right:1px solid var(--border)">
+    <div class="topbar-dot" id="jarvis-dot"></div>
+    <span class="topbar-state" id="jarvis-label">idle</span>
+  </div>
+  <div class="topbar-metric">
+    <span class="mk">tokens</span><span class="mv" id="m-tokens">0</span>
+  </div>
+  <div class="topbar-metric">
+    <span class="mk">avg</span><span class="mv" id="m-avg">—</span>
+  </div>
+  <div class="topbar-metric">
+    <span class="mk">last</span><span class="mv" id="m-last">—</span>
+  </div>
+  <div class="topbar-metric" style="border-right:0">
+    <span class="mk">calls</span><span class="mv" id="m-calls">0</span>
+  </div>
+  <div id="m-focus-wrap">
+    <span class="mk">focus</span><span id="m-focus">—</span>
+  </div>
+  <div class="topbar-right">
+    <div class="music-dot" id="music-dot" title="ambient music active"></div>
+    <button id="topbar-test-btn" onclick="toggleTestPanel()">[test]</button>
+    <button id="pipeline-btn" onclick="togglePipeline()" title="Module pipeline" style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;background:transparent;color:var(--muted);border:1px solid var(--border);padding:3px 8px;cursor:pointer;transition:color 0.2s,border-color 0.2s;margin-left:4px">[⊞ pipeline]</button>
+    <div class="topbar-sep"></div>
+    <span id="backend-label">backend</span>
+    <select id="backend-select" onchange="MOD.llm.swap(this.value)">
+      <option value="gemini">gemini flash 2.0</option>
+      <option value="ollama">ollama local</option>
+      <option value="codex">openai / codex</option>
+      <option value="claude">claude api</option>
+    </select>
+    <div class="topbar-sep"></div>
+    <span class="topbar-user">james</span>
+    <button id="settings-btn" onclick="toggleSettings()" title="settings">⚙</button>
+  </div>
+</div>
+
+<!-- ── main app ── -->
+<div id="app">
+  <div id="graph-zone">
+    <canvas id="atmo-canvas"></canvas>
+    <div id="graph-canvas-wrap"></div>
+    <div id="graph-node-count">0 nodes</div>
+  </div>
+  <div id="conv-rail">
+    <div id="messages"></div>
+    <div class="input-area">
+      <div class="input-row">
+        <button id="mic-btn" onclick="toggleMic()" title="Click or say 'hey jarvis'">◉</button>
+        <textarea id="user-input" placeholder="ask jarvis…" autocomplete="off" rows="1"></textarea>
+        <button id="send-btn" onclick="sendText()">send</button>
+      </div>
+      <div class="input-footer">
+        <span id="mem-count">memory: 0 turns</span>
+        <button id="clear-mem-btn" onclick="clearMemory()">clear mem</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- camera porthole -->
+<div id="cam-porthole" onclick="toggleCam()">
+  <div class="cam-off-glyph" id="cam-off-glyph">◎</div>
+  <video id="webcam" autoplay muted playsinline style="display:none"></video>
+</div>
+<canvas id="diff-canvas"></canvas>
+<div id="cam-diff-badge">diff: <span id="diff-val">—</span></div>
+<div id="cam-controls" style="display:none">
+  <button class="cam-btn" onclick="snapAndSend()">snap + send</button>
+  <button class="cam-btn" id="auto-vision-btn" onclick="toggleAutoVision()">auto: off</button>
+</div>
+
+<!-- test panel -->
+<div id="test-panel">
+  <div class="test-panel-head">
+    <span class="ptag">◆ test suite</span>
+    <button onclick="toggleTestPanel()">close ✕</button>
+  </div>
+  <div id="tests-totals">
+    <span id="tot-latency">avg: —ms</span>
+    <span id="tot-stars">stars: —</span>
+    <span id="tot-tokens">tokens: 0</span>
+  </div>
+  <div class="test-actions">
+    <button id="run-all-btn" onclick="runAllTests()">run all tests</button>
+    <button id="ab-btn" onclick="runABTest()">A/B run</button>
+  </div>
+  <div id="tests-scroll"></div>
+</div>
+
+<!-- settings panel -->
+<div id="settings-panel">
+  <div class="settings-head">
+    <span>⊹ SETTINGS</span>
+    <button onclick="toggleSettings()">✕</button>
+  </div>
+  <div class="settings-section">
+    <div class="settings-section-label">FEATURES</div>
+    <div class="settings-row">
+      <span>knowledge graph</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="feat-graph" checked onchange="setFeature('jarvis_graph', this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="settings-row">
+      <span>word drift</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="feat-drift" onchange="setFeature('jarvis_word_drift', this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="settings-row">
+      <span>ambient music</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="feat-music" onchange="setFeature('jarvis_music_mode', this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="settings-row disabled" title="Coming soon — requires camera">
+      <span>gesture nav</span>
+      <label class="toggle-switch">
+        <input type="checkbox" disabled>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="settings-row disabled" title="Coming soon — requires camera">
+      <span>biometric scan</span>
+      <label class="toggle-switch">
+        <input type="checkbox" disabled>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+  <div class="settings-section">
+    <div class="settings-section-label">VOICE</div>
+    <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:4px">
+      <span style="margin-bottom:2px">preferred voice</span>
+      <select id="voice-select" onchange="setPreferredVoice(this.value)">
+        <option value="">system default</option>
+      </select>
+    </div>
+    <div class="settings-info">British female voices shown first. Reload if list is empty.</div>
+  </div>
+  <div class="settings-section">
+    <div class="settings-section-label">BACKEND</div>
+    <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:4px">
+      <span>api backend</span>
+      <select id="backend-select-settings" class="settings-select" onchange="MOD.llm.swap(this.value)">
+        <option value="gemini">gemini flash 2.0</option>
+        <option value="ollama">ollama local (zero-cost)</option>
+        <option value="codex">openai / codex</option>
+        <option value="claude">claude api (placeholder)</option>
+      </select>
+    </div>
+  </div>
+  <div class="settings-section">
+    <div class="settings-section-label">XRAI SCENE</div>
+    <div class="settings-info">Composer test prompts are in the test panel. Quick fire:</div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
+      <button class="cam-btn" style="text-align:left" onclick="fireComposerPrompt('add a red cube in front of me')">▶ add red cube</button>
+      <button class="cam-btn" style="text-align:left" onclick="fireComposerPrompt('place a glowing portal here')">▶ place portal</button>
+      <button class="cam-btn" style="text-align:left" onclick="fireComposerPrompt('build a lush rainforest in my room')">▶ build rainforest</button>
+    </div>
+  </div>
+</div>
+
+<!-- pipeline panel -->
+<div id="pipeline-panel">
+  <div class="pp-head">
+    <span>⊞ MODULE PIPELINE</span>
+    <button onclick="togglePipeline()">✕</button>
+  </div>
+  <div class="pp-flow-wrap">
+    <svg id="pp-flow-svg" viewBox="0 0 280 110" preserveAspectRatio="xMidYMid meet">
+      <!-- flow wires -->
+      <g id="pp-wires">
+        <line x1="30" y1="55" x2="72" y2="55"/>
+        <line x1="112" y1="55" x2="152" y2="55"/>
+        <line x1="192" y1="55" x2="232" y2="55"/>
+        <line x1="258" y1="38" x2="258" y2="72"/>
+      </g>
+      <!-- flow nodes -->
+      <g font-family="monospace" font-size="7" fill="rgba(232,228,217,0.5)" text-anchor="middle">
+        <rect x="0" y="44" width="30" height="22" rx="2" fill="rgba(127,255,212,0.08)" stroke="rgba(127,255,212,0.3)" stroke-width="1"/>
+        <text x="15" y="58">STT</text>
+        <rect x="72" y="44" width="40" height="22" rx="2" fill="rgba(127,255,212,0.08)" stroke="rgba(127,255,212,0.3)" stroke-width="1"/>
+        <text x="92" y="56" id="pp-node-llm">LLM</text>
+        <text x="92" y="64" font-size="5.5" fill="rgba(127,255,212,0.45)" id="pp-node-llm-sub">gemini</text>
+        <rect x="152" y="44" width="40" height="22" rx="2" fill="rgba(127,255,212,0.08)" stroke="rgba(127,255,212,0.3)" stroke-width="1"/>
+        <text x="172" y="56">SCENE</text>
+        <text x="172" y="64" font-size="5.5" fill="rgba(196,163,90,0.7)" id="pp-node-scene-sub">xrai</text>
+        <rect x="232" y="28" width="48" height="20" rx="2" fill="rgba(127,255,212,0.08)" stroke="rgba(127,255,212,0.3)" stroke-width="1"/>
+        <text x="256" y="41">TTS</text>
+        <rect x="232" y="62" width="48" height="20" rx="2" fill="rgba(127,255,212,0.08)" stroke="rgba(127,255,212,0.3)" stroke-width="1"/>
+        <text x="256" y="75">MEMORY</text>
+      </g>
+      <!-- vision sub-flow -->
+      <g font-family="monospace" font-size="7" fill="rgba(232,228,217,0.5)" text-anchor="middle">
+        <line x1="30" y1="92" x2="72" y2="55" stroke="rgba(127,255,212,0.2)" stroke-width="1" stroke-dasharray="2 2"/>
+        <rect x="0" y="82" width="30" height="22" rx="2" fill="rgba(196,163,90,0.08)" stroke="rgba(196,163,90,0.3)" stroke-width="1"/>
+        <text x="15" y="96" fill="rgba(196,163,90,0.7)">VIS</text>
+      </g>
+    </svg>
+  </div>
+  <div class="pp-slots" id="pp-slots"></div>
+  <div class="pp-actions">
+    <button class="pp-action-btn primary" onclick="savePipelineToMemory()">⊹ save pipeline to jarvis memory</button>
+    <button class="pp-action-btn" onclick="exportPrefs()">↓ export preferences.json</button>
+    <button class="pp-action-btn" onclick="importPrefs()">↑ import preferences.json</button>
+    <button class="pp-action-btn" onclick="probeModuleStatus()">⟳ probe module status</button>
+  </div>
+</div>
+
+<!-- settings panel -->
+
+<div id="rating-overlay">listening for rating<br><span style="font-size:22px;margin-top:8px;display:block">1 — 5</span></div>
+
+<script>
+// ── PROTOTYPE v2 — Neural Cartography ──
+// Question: Jarvis voice+vision AI feel for IMC Lab — multi-backend (Gemini/Ollama/OpenAI)
+// Upgrades: D3 SVG graph, ProceduralMusicEngine, settings panel, British voice selection
+// Date: 2026-05-04
+
+const SYSTEM_PROMPT = `You are Jarvis (JARVIS_A1 — Semantic Visuospatial Engine v3.0), a spatial AI assistant for the IMC Lab / Portals AR app.
+You know the user is James Tunick, indie developer building AR/VFX experiences.
+Project: Portals v4 — Unity 6 + React Native iOS with VFX Graph, LiveKit, XRAI spatial format.
+
+You have hot-swappable modules: LLM (Gemini/Ollama/Claude), Vision (Camera/MediaPipe/COCO-SSD/ARKit), TTS (WebSpeech/ElevenLabs), Scene (XRAI+Icosa/Voxel), Memory (local/SQLite/cloud).
+
+When asked to build/place/create spatial objects, always output XRAI JSON in <xrai> tags. Include object types so the Icosa CC0 3D library can be searched. Example:
+<xrai>{"scene":{"objects":[{"type":"tree","label":"tropical palm","position":[1,0,-3]},{"type":"fern","label":"fern cluster","position":[-1,0,-2]},{"type":"vine","label":"hanging vine","position":[0,2,-2]}]}}</xrai>
+
+For a rainforest: include many layered objects (canopy trees, ferns, vines, water, mist, ambient creatures).
+Be concise. Voice responses max 2 sentences unless asked for more. Remember context within session.`;
+
+const TEST_PROMPTS = [
+  { id:0, label:"What am I looking at?", vision:true },
+  { id:1, label:"Add a red cube in front of me", vision:false },
+  { id:2, label:"Place a glowing blue portal here", vision:false },
+  { id:3, label:"Build a lush rainforest in my room", vision:false },
+  { id:4, label:"Who am I?", vision:false },
+  { id:5, label:"What did we work on last time?", vision:false },
+  { id:6, label:"What VFX are active right now?", vision:false },
+  { id:7, label:"Remind me in 5 minutes to check on the build", vision:false },
+  { id:8, label:"Search GitHub for best open source AR frameworks", vision:false },
+  { id:9, label:"Create a desert canyon at sunset with sparse vegetation", vision:false },
+];
+
+// ── state ──
+let history = [];
+let isThinking = false;
+let isMicActive = false;
+let isSpeaking = false;
+let wakeRecognition = null;
+let recognition = null;
+let camStream = null;
+let lastFrameData = null;
+let autoVision = false;
+let testPanelOpen = false;
+let settingsPanelOpen = false;
+let pendingRating = null;
+let totalTokens = 0;
+let totalLatency = 0;
+let callCount = 0;
+let preferredVoice = null;
+
+// ─────────────────────────────────────────────────────────────────
+// ── ModuleRegistry v1 — hot-swappable capability slots ──
+// Each slot has: active provider id, provider map (name/status),
+// swap(id) method. Fault-tolerant: placeholder providers show
+// gracefully, active provider failure auto-falls-back.
+// ─────────────────────────────────────────────────────────────────
+const MOD = {
+  llm: {
+    label: 'LLM Brain', icon: '⬡',
+    active: localStorage.getItem('jarvis_backend') || 'gemini',
+    providers: {
+      gemini:  { name:'Gemini Flash 2.0', status:'online',      note:'API · free tier' },
+      ollama:  { name:'Ollama Local',     status:'probe',       note:'localhost:11434 · zero-cost' },
+      codex:   { name:'OpenAI GPT-4o',    status:'online',      note:'API key required' },
+      claude:  { name:'Claude Sonnet',    status:'placeholder', note:'API key required' },
+      tfjs:    { name:'TF.js Edge',       status:'placeholder', note:'browser · no API' },
+    },
+    async call(msgs, img) {
+      try { return await callLLMByProvider(MOD.llm.active, msgs, img); }
+      catch(e) {
+        console.warn('[MOD.llm] primary failed, trying fallback', e);
+        const fallback = Object.entries(MOD.llm.providers)
+          .find(([id, p]) => id !== MOD.llm.active && p.status === 'online');
+        if (fallback) { toast('LLM fallback → ' + fallback[1].name); return callLLMByProvider(fallback[0], msgs, img); }
+        throw e;
+      }
+    },
+    swap(id) {
+      MOD.llm.active = id;
+      localStorage.setItem('jarvis_backend', id);
+      ['backend-select','backend-select-settings'].forEach(sid => {
+        const el = document.getElementById(sid); if (el) el.value = id;
+      });
+      renderPipelineSlots(); updatePipelineFlow();
+      toast('LLM → ' + (MOD.llm.providers[id]?.name || id));
+    }
+  },
+  vision: {
+    label: 'Vision / AR', icon: '◎',
+    active: localStorage.getItem('jarvis_vision') || 'camera',
+    providers: {
+      camera:     { name:'WebCam',        status:'online',       note:'browser getUserMedia' },
+      coco_ssd:   { name:'COCO-SSD',      status:'placeholder',  note:'@tensorflow-models/coco-ssd' },
+      mediapipe:  { name:'MediaPipe',     status:'placeholder',  note:'face+hand landmarks' },
+      arkit:      { name:'ARKit',         status:'ios-only',     note:'iOS 16+ · native' },
+      onnx:       { name:'ONNX Runtime',  status:'placeholder',  note:'edge inference' },
+    },
+    swap(id) {
+      MOD.vision.active = id;
+      localStorage.setItem('jarvis_vision', id);
+      renderPipelineSlots();
+      toast('Vision → ' + (MOD.vision.providers[id]?.name || id));
+    }
+  },
+  tts: {
+    label: 'Text-to-Speech', icon: '◈',
+    active: localStorage.getItem('jarvis_tts') || 'webspeech',
+    providers: {
+      webspeech:  { name:'Web Speech API', status:'online',      note:'browser-native' },
+      elevenlabs: { name:'ElevenLabs',     status:'placeholder', note:'API key · high quality' },
+    },
+    swap(id) {
+      MOD.tts.active = id;
+      localStorage.setItem('jarvis_tts', id);
+      renderPipelineSlots();
+      toast('TTS → ' + (MOD.tts.providers[id]?.name || id));
+    }
+  },
+  stt: {
+    label: 'Speech-to-Text', icon: '◉',
+    active: localStorage.getItem('jarvis_stt') || 'webspeech',
+    providers: {
+      webspeech: { name:'Web Speech API',  status:'online',      note:'browser-native · Chrome/Safari' },
+      deepgram:  { name:'Deepgram',        status:'placeholder', note:'API key · streaming' },
+      whisper:   { name:'Whisper.js',      status:'placeholder', note:'browser · WASM' },
+    },
+    swap(id) {
+      MOD.stt.active = id;
+      localStorage.setItem('jarvis_stt', id);
+      renderPipelineSlots();
+      toast('STT → ' + (MOD.stt.providers[id]?.name || id));
+    }
+  },
+  scene: {
+    label: 'Scene Builder', icon: '⊹',
+    active: localStorage.getItem('jarvis_scene') || 'xrai+icosa',
+    providers: {
+      'xrai+icosa': { name:'XRAI + Icosa',  status:'online',      note:'LLM JSON + CC0 3D assets' },
+      xrai:         { name:'XRAI only',     status:'online',      note:'LLM scene format' },
+      icosa:        { name:'Icosa API',     status:'online',      note:'CC0 GLB gallery' },
+      voxel:        { name:'Voxel Gen',     status:'placeholder', note:'procedural geometry' },
+    },
+    swap(id) {
+      MOD.scene.active = id;
+      localStorage.setItem('jarvis_scene', id);
+      renderPipelineSlots();
+      toast('Scene → ' + (MOD.scene.providers[id]?.name || id));
+    }
+  },
+  memory: {
+    label: 'Memory', icon: '◆',
+    active: localStorage.getItem('jarvis_memory_mode') || 'local',
+    providers: {
+      local:   { name:'localStorage',   status:'online',      note:'flat JSON · offline-first' },
+      jarvis:  { name:'Jarvis History', status:'online',      note:'in-session context window' },
+      sqlite:  { name:'SQLite',         status:'placeholder', note:'expo-sqlite · iOS/RN' },
+      remote:  { name:'Cloud Sync',     status:'placeholder', note:'login required' },
+    },
+    swap(id) {
+      MOD.memory.active = id;
+      localStorage.setItem('jarvis_memory_mode', id);
+      renderPipelineSlots();
+      toast('Memory → ' + (MOD.memory.providers[id]?.name || id));
+    }
+  }
+};
+
+// Route LLM calls through provider id
+async function callLLMByProvider(providerId, msgs, img) {
+  switch (providerId) {
+    case 'gemini': return callGemini(msgs, img);
+    case 'ollama': return callOllama(msgs, img);
+    case 'codex':  return callOpenAI(msgs, img);
+    default:       return callGemini(msgs, img);
+  }
+}
+
+// ── Pipeline Panel ──
+let pipelinePanelOpen = false;
+function togglePipeline() {
+  pipelinePanelOpen = !pipelinePanelOpen;
+  document.getElementById('pipeline-panel').classList.toggle('open', pipelinePanelOpen);
+  document.getElementById('pipeline-btn').style.color = pipelinePanelOpen ? 'var(--aqua)' : '';
+  if (pipelinePanelOpen) { renderPipelineSlots(); updatePipelineFlow(); }
+}
+function renderPipelineSlots() {
+  const container = document.getElementById('pp-slots');
+  if (!container) return;
+  container.innerHTML = '';
+  Object.entries(MOD).forEach(([slotId, slot]) => {
+    const div = document.createElement('div');
+    div.className = 'pp-slot';
+    const chips = Object.entries(slot.providers).map(([pid, p]) => {
+      const isActive = pid === slot.active;
+      const cls = ['pp-chip', isActive ? 'active' : '', p.status === 'placeholder' || p.status === 'ios-only' ? 'placeholder' : '', p.status === 'error' ? 'error' : ''].filter(Boolean).join(' ');
+      const dotCls = p.status === 'online' || p.status === 'probe' ? 'online' : p.status === 'error' ? 'error' : 'placeholder';
+      const clickable = p.status !== 'placeholder' && p.status !== 'ios-only';
+      return `<button class="${cls}" onclick="${clickable ? `MOD['${slotId}'].swap('${pid}')` : ''}" title="${p.note}" ${!clickable?'disabled':''}><span class="pp-status-dot ${dotCls}"></span>${p.name}</button>`;
+    }).join('');
+    div.innerHTML = `<div class="pp-slot-head"><span class="pp-slot-icon">${slot.icon}</span>${slot.label}<span style="margin-left:auto;color:var(--aqua-dim)">active: ${slot.providers[slot.active]?.name || slot.active}</span></div><div class="pp-providers">${chips}</div>`;
+    container.appendChild(div);
+  });
+}
+function updatePipelineFlow() {
+  const llmSub = document.getElementById('pp-node-llm-sub');
+  const sceneSub = document.getElementById('pp-node-scene-sub');
+  if (llmSub) llmSub.textContent = MOD.llm.active;
+  if (sceneSub) sceneSub.textContent = MOD.scene.active;
+}
+
+// ── Probe module status (async health check) ──
+async function probeModuleStatus() {
+  toast('probing modules…', 3000);
+  // Probe Ollama
+  try {
+    const r = await fetch('http://localhost:11434/api/tags', { signal: AbortSignal.timeout(2000) });
+    if (r.ok) { MOD.llm.providers.ollama.status = 'online'; }
+    else { MOD.llm.providers.ollama.status = 'error'; }
+  } catch(e) { MOD.llm.providers.ollama.status = 'offline'; }
+  // Probe Icosa
+  try {
+    const r = await fetch('https://api.icosa.gallery/v1/assets?keywords=cube&format=GLTF2&license=CC0', { signal: AbortSignal.timeout(3000) });
+    MOD.scene.providers.icosa.status = r.ok ? 'online' : 'error';
+    MOD.scene.providers['xrai+icosa'].status = r.ok ? 'online' : 'degraded';
+  } catch(e) { MOD.scene.providers.icosa.status = 'error'; }
+  if (pipelinePanelOpen) renderPipelineSlots();
+  toast('probe complete');
+}
+
+// ── Icosa API 3D asset search ──
+async function searchIcosa(keyword, maxResults = 5) {
+  try {
+    const url = `https://api.icosa.gallery/v1/assets?keywords=${encodeURIComponent(keyword)}&format=GLTF2&license=CC0&page_size=${maxResults}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (!res.ok) return [];
+    const d = await res.json();
+    return (d.assets || []).slice(0, maxResults);
+  } catch(e) { return []; }
+}
+
+async function renderIcosaForXrai(jsonStr, containerEl) {
+  let parsed;
+  try { parsed = JSON.parse(jsonStr); } catch(e) { return; }
+  const objects = parsed?.scene?.objects || [];
+  if (!objects.length) return;
+  const useIcosa = MOD.scene.active === 'xrai+icosa' || MOD.scene.active === 'icosa';
+  if (!useIcosa) return;
+  const keywords = [...new Set(objects.map(o => o.type || o.label || 'object'))].slice(0, 3);
+  const wrap = document.createElement('div');
+  wrap.className = 'icosa-wrap';
+  wrap.innerHTML = `<div class="icosa-label">⊹ ICOSA ASSETS · ${keywords.join(' · ')}</div><div class="icosa-grid" id="icosa-grid-${Date.now()}"><span class="icosa-status">searching CC0 3D library…</span></div>`;
+  containerEl.appendChild(wrap);
+  const grid = wrap.querySelector('.icosa-grid');
+  const results = await Promise.all(keywords.map(k => searchIcosa(k, 3)));
+  const flat = results.flat().filter((a, i, arr) => arr.findIndex(b => b.id === a.id) === i).slice(0, 6);
+  if (!flat.length) { grid.innerHTML = '<span class="icosa-status">no CC0 assets found — try Voxel Gen</span>'; return; }
+  grid.innerHTML = flat.map(a => {
+    const thumb = a.thumbnail?.url || '';
+    const name = (a.displayName || a.name || 'model').slice(0, 18);
+    const glbUrl = (a.formats || []).find(f => f.formatType === 'GLTF2')?.root?.url || '';
+    return `<div class="icosa-card">
+      ${thumb ? `<img class="icosa-thumb" src="${thumb}" alt="${name}" loading="lazy" onerror="this.style.display='none'">` : '<div class="icosa-thumb" style="background:var(--void-3)"></div>'}
+      <div class="icosa-card-name">${name}</div>
+      <button class="icosa-load" onclick="loadIcosaAsset('${glbUrl}', '${name}')" title="${glbUrl}">load →</button>
+    </div>`;
+  }).join('');
+}
+
+function loadIcosaAsset(url, name) {
+  if (!url) { toast('no GLB url available'); return; }
+  toast('loading: ' + name + ' (URL copied)');
+  navigator.clipboard?.writeText(url).catch(()=>{});
+  // Emit to XRAI channel for Unity / Three.js scene receiver
+  window.__xraiAssetLoad?.({ type: 'icosa_asset', url, name, ts: Date.now() });
+  addMsg('assistant', `<xrai>{"scene":{"objects":[{"type":"model","label":"${name}","src":"${url}","source":"icosa_cc0","position":[0,0,-2]}]}}</xrai>`);
+}
+
+// ── Prefs export / import ──
+function exportPrefs() {
+  const prefs = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (!k) continue;
+    if (k.startsWith('jarvis_') || k.startsWith('GEMINI') || k.startsWith('OPENAI')) prefs[k] = localStorage.getItem(k);
+  }
+  prefs['__exported'] = new Date().toISOString();
+  prefs['__pipeline'] = JSON.stringify(Object.fromEntries(Object.entries(MOD).map(([id, s]) => [id, s.active])));
+  const blob = new Blob([JSON.stringify(prefs, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'jarvis-prefs-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  toast('prefs exported');
+}
+function importPrefs() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = '.json';
+  input.onchange = e => {
+    const f = e.target.files[0]; if (!f) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const prefs = JSON.parse(ev.target.result);
+        Object.entries(prefs).forEach(([k, v]) => { if (!k.startsWith('__')) localStorage.setItem(k, v); });
+        // Restore pipeline slots
+        if (prefs['__pipeline']) {
+          try {
+            const pipe = JSON.parse(prefs['__pipeline']);
+            Object.entries(pipe).forEach(([slotId, providerId]) => { if (MOD[slotId]?.providers[providerId]) MOD[slotId].active = providerId; });
+          } catch(e) {}
+        }
+        toast('prefs imported — refreshing…');
+        setTimeout(() => location.reload(), 1200);
+      } catch(e) { toast('import failed: ' + e.message); }
+    };
+    reader.readAsText(f);
+  };
+  input.click();
+}
+
+// ── Save pipeline config to Jarvis memory ──
+function savePipelineToMemory() {
+  const pipeline = Object.fromEntries(Object.entries(MOD).map(([id, s]) => [id, { active: s.active, note: s.providers[s.active]?.note }]));
+  const msg = 'Pipeline config saved: ' + JSON.stringify(pipeline, null, 2);
+  history.push({ role: 'assistant', content: msg });
+  saveHistory();
+  toast('pipeline saved to jarvis memory');
+  addMsg('assistant', '⊹ Pipeline snapshot saved to memory:\n' + Object.entries(pipeline).map(([k, v]) => `${k}: ${v.active}`).join(' · '));
+}
+
+// ── memory ──
+const HISTORY_KEY = 'jarvis_history_v2';
+try {
+  const saved = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+  history = Array.isArray(saved) ? saved.slice(-12) : [];
+} catch(e) { history = []; }
+function saveHistory() { try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-12))); } catch(e) {} }
+function clearMemory() {
+  history = [];
+  localStorage.removeItem(HISTORY_KEY);
+  document.getElementById('mem-count').textContent = 'memory: 0 turns';
+  toast('memory cleared');
+}
+function getHistory() { return history; }
+
+// ── feature flags ──
+function getFeature(key) {
+  const v = localStorage.getItem(key);
+  if (v === null) {
+    // defaults
+    if (key === 'jarvis_graph') return true;
+    return false;
+  }
+  return v === '1' || v === 'true';
+}
+function setFeature(key, val) {
+  localStorage.setItem(key, val ? '1' : '0');
+  applyFeatureStates();
+  toast(key.replace('jarvis_','') + ': ' + (val ? 'on' : 'off'));
+}
+function applyFeatureStates() {
+  // graph toggle
+  const graphEl = document.getElementById('graph-canvas-wrap');
+  if (graphEl) graphEl.style.opacity = getFeature('jarvis_graph') ? '1' : '0.12';
+  // music toggle
+  const musicOn = getFeature('jarvis_music_mode');
+  document.getElementById('music-dot')?.classList.toggle('active', musicOn);
+  if (musicOn && !musicEngine) { musicEngine = new ProceduralMusicEngine(); musicEngine.start(); }
+  else if (!musicOn && musicEngine) { musicEngine.stop(); musicEngine = null; }
+  // sync checkboxes
+  const gEl = document.getElementById('feat-graph');
+  const mEl = document.getElementById('feat-music');
+  const dEl = document.getElementById('feat-drift');
+  if (gEl) gEl.checked = getFeature('jarvis_graph');
+  if (mEl) mEl.checked = getFeature('jarvis_music_mode');
+  if (dEl) dEl.checked = getFeature('jarvis_word_drift');
+}
+
+// ── settings panel ──
+function toggleSettings() {
+  settingsPanelOpen = !settingsPanelOpen;
+  document.getElementById('settings-panel').classList.toggle('open', settingsPanelOpen);
+  document.getElementById('settings-btn').classList.toggle('active', settingsPanelOpen);
+}
+
+// ── API key / backend ──
+function ensureApiKey(backend) {
+  backend = backend || localStorage.getItem('jarvis_backend') || 'gemini';
+  if (backend === 'gemini' && !localStorage.getItem('GEMINI_API_KEY')) {
+    const envKey = 'AIzaSyChp7U36J0CK5aWKxIgcpJxVgdaMw_ur2o';
+    if (envKey) { localStorage.setItem('GEMINI_API_KEY', envKey); }
+    else {
+      const k = prompt('Enter Gemini API key (free at aistudio.google.com):') || '';
+      if (k) localStorage.setItem('GEMINI_API_KEY', k);
+    }
+  } else if (backend === 'codex' && !localStorage.getItem('OPENAI_API_KEY')) {
+    const k = prompt('Enter OpenAI API key:') || '';
+    if (k) localStorage.setItem('OPENAI_API_KEY', k);
+  }
+}
+(function initBackendSelect() {
+  const saved = localStorage.getItem('jarvis_backend') || 'gemini';
+  ['backend-select','backend-select-settings'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (sel) sel.value = saved;
+  });
+  ensureApiKey(saved);
+})();
+
+function setBackend(val) {
+  localStorage.setItem('jarvis_backend', val);
+  ['backend-select','backend-select-settings'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (sel) sel.value = val;
+  });
+  ensureApiKey(val);
+  toast('backend: ' + val);
+}
+
+// ── metrics ──
+function flashEl(el) {
+  if (!el) return;
+  el.classList.remove('flash');
+  void el.offsetWidth;
+  el.classList.add('flash');
+  setTimeout(() => el.classList.remove('flash'), 600);
+}
+function updateMetrics(latency, tokens) {
+  totalLatency += latency; totalTokens += tokens; callCount++;
+  const avg = Math.round(totalLatency / callCount);
+  document.getElementById('m-tokens').textContent = totalTokens;
+  document.getElementById('m-avg').textContent = avg + 'ms';
+  document.getElementById('m-last').textContent = latency + 'ms';
+  document.getElementById('m-calls').textContent = callCount;
+  flashEl(document.getElementById('m-last'));
+}
+
+// ── UI helpers ──
+let toastTimer = null;
+function toast(msg, dur=2200) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), dur);
+}
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function formatTime(d) { return d.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
+function scrollMsgs() { const m = document.getElementById('messages'); m.scrollTop = m.scrollHeight; }
+function addMsg(role, text, latency) {
+  const wrap = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  const pre = role === 'user' ? 'you' : 'jarvis';
+  const ts = latency ? ` · ${latency}ms` : '';
+  const body = role === 'assistant' ? renderAssistantBody(text) : `<div class="msg-body">${escHtml(text)}</div>`;
+  div.innerHTML = `<div class="msg-prefix">${pre}</div>${body}<div class="msg-ts">${formatTime(new Date())}${ts}</div>`;
+  wrap.appendChild(div);
+  scrollMsgs();
+  return div;
+}
+function renderAssistantBody(text) {
+  const xraiMatch = text.match(/<xrai>([\s\S]*?)<\/xrai>/i);
+  const clean = text.replace(/<xrai>[\s\S]*?<\/xrai>/gi,'').trim();
+  let html = `<div class="msg-body">${escHtml(clean)}</div>`;
+  if (xraiMatch) {
+    const jsonStr = xraiMatch[1].trim();
+    const uid = 'xrai-' + Date.now();
+    html += `<div class="xrai-block"><div class="xrai-header"><span class="xrai-label">⊹ XRAI SCENE</span><button class="xrai-copy" onclick="copyXrai('${uid}')">copy</button></div><pre id="${uid}">${escHtml(jsonStr)}</pre><div id="icosa-inject-${uid}"></div></div>`;
+    // async: inject Icosa asset cards after render
+    setTimeout(() => {
+      const target = document.getElementById('icosa-inject-' + uid);
+      if (target) renderIcosaForXrai(jsonStr, target);
+    }, 100);
+  }
+  return html;
+}
+function copyXrai(id) {
+  const el = document.getElementById(id);
+  if (el) { navigator.clipboard.writeText(el.textContent).then(() => toast('copied')).catch(() => {}); }
+}
+function setJarvisState(state) {
+  const dot = document.getElementById('jarvis-dot');
+  const label = document.getElementById('jarvis-label');
+  if (dot) { dot.className = 'topbar-dot'; if (state !== 'idle') dot.classList.add(state); }
+  if (label) label.textContent = state;
+}
+
+// ── Backend: Gemini ──
+async function callGemini(messages, imageBase64) {
+  const key = localStorage.getItem('GEMINI_API_KEY');
+  if (!key) { toast('no gemini key — check settings'); return null; }
+  const model = 'gemini-2.0-flash-exp';
+  const body = {
+    contents: messages.map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: m.image
+        ? [{ text: m.content }, { inlineData: { mimeType: 'image/jpeg', data: m.image } }]
+        : [{ text: m.content }]
+    })),
+    systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+    generationConfig: { maxOutputTokens: 300, temperature: 0.7 }
+  };
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+  );
+  const d = await res.json();
+  if (!res.ok) throw new Error(d.error?.message || res.status);
+  const text = d.candidates?.[0]?.content?.parts?.[0]?.text || '[no response]';
+  const tokens = (d.usageMetadata?.promptTokenCount || 0) + (d.usageMetadata?.candidatesTokenCount || 0);
+  return { text, tokens };
+}
+
+// ── Backend: Ollama ──
+async function callOllama(messages, imageBase64) {
+  const model = localStorage.getItem('OLLAMA_MODEL') || 'qwen2.5:7b';
+  const prompt = messages.map(m => `${m.role}: ${m.content}`).join('\n') + '\nassistant:';
+  const res = await fetch('http://localhost:11434/api/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, prompt, stream: false })
+  });
+  const d = await res.json();
+  return { text: d.response || '[no response]', tokens: d.eval_count || 0 };
+}
+
+// ── Backend: OpenAI ──
+async function callOpenAI(messages, imageBase64) {
+  const key = localStorage.getItem('OPENAI_API_KEY');
+  if (!key) { toast('no openai key — check settings'); return null; }
+  const body = {
+    model: 'gpt-4o-mini',
+    messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages.map(m => ({ role: m.role, content: m.content }))],
+    max_tokens: 300
+  };
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST', headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const d = await res.json();
+  if (!res.ok) throw new Error(d.error?.message || res.status);
+  return { text: d.choices?.[0]?.message?.content || '[no response]', tokens: d.usage?.total_tokens || 0 };
+}
+
+async function callLLM(userMessage, imageBase64) {
+  const msgs = getHistory().slice(-5).map(h => ({ role: h.role, content: h.content }));
+  const messages = [...msgs, { role: 'user', content: userMessage, image: imageBase64 || undefined }];
+  return MOD.llm.call(messages, imageBase64);
+}
+
+async function callJarvis(userText, imageBase64 = null) {
+  if (isThinking) return null;
+  isThinking = true;
+  setJarvisState('thinking');
+  const t0 = Date.now();
+  try {
+    const result = await callLLM(userText, imageBase64);
+    if (!result) { isThinking = false; setJarvisState('idle'); return null; }
+    const latency = Date.now() - t0;
+    const { text: reply, tokens } = result;
+    updateMetrics(latency, tokens);
+    history.push({ role: 'user', content: userText });
+    history.push({ role: 'assistant', content: reply });
+    saveHistory();
+    isThinking = false;
+    // update music vibe based on topics
+    updateMusicVibe(userText + ' ' + reply);
+    return { reply, latency, tokens };
+  } catch(e) {
+    isThinking = false;
+    setJarvisState('idle');
+    toast('fetch error: ' + e.message);
+    console.error(e);
+    return null;
+  }
+}
+
+async function sendText() {
+  const inp = document.getElementById('user-input');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  inp.style.height = '36px';
+  await handleUserInput(text);
+}
+
+document.getElementById('user-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendText(); }
+});
+document.getElementById('user-input').addEventListener('input', function() {
+  this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 96) + 'px';
+});
+
+async function handleUserInput(text, forceImage = false) {
+  addMsg('user', text);
+  let imageB64 = null;
+  if (camStream && (forceImage || autoVision)) {
+    const diff = computeDiff();
+    if (forceImage || diff > 0.15) imageB64 = grabFrame();
+  }
+  const result = await callJarvis(text, imageB64);
+  if (!result) return;
+  addMsg('assistant', result.reply, result.latency);
+  updateGraph(text, result.reply);
+  if (imageB64) handleCameraObjectDetection(result.reply);
+  speak(result.reply);
+  document.getElementById('mem-count').textContent = 'memory: ' + Math.floor(history.length / 2) + ' turns';
+}
+
+async function fireComposerPrompt(text) {
+  toggleSettings(); // close settings
+  await handleUserInput(text);
+}
+
+// ── TTS with voice selection ──
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  const clean = text.replace(/<xrai>[\s\S]*?<\/xrai>/gi, '').replace(/<[^>]+>/g, '').trim();
+  if (!clean) return;
+  const utt = new SpeechSynthesisUtterance(clean);
+  utt.rate = 1.05; utt.pitch = 0.95;
+  if (preferredVoice) utt.voice = preferredVoice;
+  utt.onstart = () => { isSpeaking = true; setJarvisState('speaking'); };
+  utt.onend = () => {
+    isSpeaking = false;
+    setJarvisState('idle');
+    if (pendingRating) startRatingListen();
+  };
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utt);
+}
+
+// ── Voice selection ──
+function loadVoices() {
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return;
+  const select = document.getElementById('voice-select');
+  if (!select) return;
+  select.innerHTML = '<option value="">system default</option>';
+  const english = voices.filter(v => v.lang.startsWith('en'));
+  const sorted = english.sort((a, b) => {
+    const britFemaleNames = /libby|emily|hazel|kate|fiona|alice|amy|emma|grace|sophie/i;
+    const aScore = (a.lang === 'en-GB' ? 4 : 0) + (britFemaleNames.test(a.name) ? 2 : 0) + (a.name.toLowerCase().includes('female') ? 1 : 0);
+    const bScore = (b.lang === 'en-GB' ? 4 : 0) + (britFemaleNames.test(b.name) ? 2 : 0) + (b.name.toLowerCase().includes('female') ? 1 : 0);
+    return bScore - aScore;
+  });
+  sorted.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v.name;
+    const flag = v.lang === 'en-GB' ? ' 🇬🇧' : '';
+    opt.textContent = `${v.name}${flag} (${v.lang})`;
+    select.appendChild(opt);
+  });
+  const saved = localStorage.getItem('jarvis_voice');
+  if (saved) {
+    select.value = saved;
+    preferredVoice = voices.find(v => v.name === saved) || null;
+  } else {
+    // Default: best British female
+    const britFemale = sorted.find(v => v.lang === 'en-GB');
+    if (britFemale) {
+      select.value = britFemale.name;
+      preferredVoice = britFemale;
+      localStorage.setItem('jarvis_voice', britFemale.name);
+    }
+  }
+}
+function setPreferredVoice(name) {
+  localStorage.setItem('jarvis_voice', name);
+  preferredVoice = window.speechSynthesis.getVoices().find(v => v.name === name) || null;
+  toast('voice: ' + (preferredVoice?.name || 'system default'));
+}
+if (window.speechSynthesis) {
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+  setTimeout(loadVoices, 200);
+}
+
+// ── STT / wake word ──
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+function startWakeDetection() {
+  if (!SpeechRecognition) return;
+  wakeRecognition = new SpeechRecognition();
+  wakeRecognition.continuous = true; wakeRecognition.interimResults = true; wakeRecognition.lang = 'en-US';
+  wakeRecognition.onresult = (e) => {
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript.toLowerCase();
+      if (t.includes('hey jarvis') || t.includes('jarvis')) { wakeRecognition.stop(); startListening(); return; }
+    }
+  };
+  wakeRecognition.onend = () => { if (!isMicActive) setTimeout(startWakeDetection, 500); };
+  try { wakeRecognition.start(); } catch(e) {}
+}
+
+function startListening() {
+  if (!SpeechRecognition) { toast('speech recognition not supported'); return; }
+  if (recognition) { try { recognition.stop(); } catch(e) {} }
+  recognition = new SpeechRecognition();
+  recognition.lang = 'en-US'; recognition.interimResults = false; recognition.maxAlternatives = 1;
+  isMicActive = true;
+  document.getElementById('mic-btn').classList.add('listening');
+  setJarvisState('listening');
+  recognition.onresult = (e) => {
+    const text = e.results[0][0].transcript.trim();
+    stopListening();
+    if (pendingRating) { handleRatingFromSpeech(text); return; }
+    handleVoiceMentionBoost(text);
+    handleUserInput(text);
+  };
+  recognition.onerror = () => stopListening();
+  recognition.onend = () => { if (isMicActive) stopListening(); };
+  try { recognition.start(); } catch(e) { stopListening(); toast('mic start failed'); }
+}
+
+function stopListening() {
+  isMicActive = false;
+  document.getElementById('mic-btn').classList.remove('listening');
+  if (!isSpeaking && !isThinking) setJarvisState('idle');
+  if (recognition) { try { recognition.stop(); } catch(e) {} recognition = null; }
+  startWakeDetection();
+}
+function toggleMic() { if (isMicActive) stopListening(); else startListening(); }
+
+// ── camera ──
+async function toggleCam() {
+  const glyph = document.getElementById('cam-off-glyph');
+  const video = document.getElementById('webcam');
+  const controls = document.getElementById('cam-controls');
+  const badge = document.getElementById('cam-diff-badge');
+  if (camStream) {
+    camStream.getTracks().forEach(t => t.stop()); camStream = null; lastFrameData = null;
+    video.style.display = 'none'; glyph.style.display = '';
+    controls.style.display = 'none'; badge.style.display = 'none'; return;
+  }
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({ video: { width:240, height:180 } });
+    video.srcObject = camStream; video.style.display = ''; glyph.style.display = 'none';
+    controls.style.display = 'flex'; badge.style.display = '';
+    setInterval(updateDiff, 2000);
+  } catch(e) { toast('cam error: ' + e.message); }
+}
+function grabFrame(quality=0.7) {
+  const video = document.getElementById('webcam');
+  const c = document.getElementById('diff-canvas');
+  c.width = 240; c.height = 180;
+  const ctx = c.getContext('2d'); ctx.drawImage(video, 0, 0, 240, 180);
+  return c.toDataURL('image/jpeg', quality).split(',')[1];
+}
+function computeDiff() {
+  if (!camStream) return 0;
+  const video = document.getElementById('webcam');
+  const c = document.getElementById('diff-canvas');
+  c.width = 80; c.height = 60;
+  const ctx = c.getContext('2d'); ctx.drawImage(video, 0, 0, 80, 60);
+  const curr = ctx.getImageData(0, 0, 80, 60).data;
+  if (!lastFrameData) { lastFrameData = curr; return 0; }
+  let diff = 0;
+  for (let i = 0; i < curr.length; i += 4) {
+    diff += Math.abs(curr[i] - lastFrameData[i]) / 255;
+    diff += Math.abs(curr[i+1] - lastFrameData[i+1]) / 255;
+    diff += Math.abs(curr[i+2] - lastFrameData[i+2]) / 255;
+  }
+  lastFrameData = curr;
+  return diff / (curr.length / 4 * 3);
+}
+function updateDiff() { const d = computeDiff(); document.getElementById('diff-val').textContent = (d * 100).toFixed(1) + '%'; }
+function snapAndSend() { handleUserInput('What am I looking at?', true); }
+function toggleAutoVision() {
+  autoVision = !autoVision;
+  const btn = document.getElementById('auto-vision-btn');
+  btn.textContent = autoVision ? 'auto: on' : 'auto: off';
+  btn.classList.toggle('active', autoVision);
+}
+
+// ── test panel ──
+function toggleTestPanel() {
+  testPanelOpen = !testPanelOpen;
+  document.getElementById('test-panel').classList.toggle('open', testPanelOpen);
+  document.getElementById('topbar-test-btn').classList.toggle('active', testPanelOpen);
+}
+let testResults = {};
+function buildTestRows() {
+  const scroll = document.getElementById('tests-scroll');
+  scroll.innerHTML = '';
+  TEST_PROMPTS.forEach(tp => {
+    const row = document.createElement('div');
+    row.className = 'test-row'; row.id = 'test-' + tp.id;
+    row.innerHTML = `<div class="t-label">${escHtml(tp.label)}</div><div class="t-resp" id="tr-resp-${tp.id}"></div>
+      <div class="t-meta"><div class="t-stars" id="tr-stars-${tp.id}">
+        ${[1,2,3,4,5].map(n => `<button class="t-star" data-test="${tp.id}" data-n="${n}" onclick="rateStar(${tp.id},${n})">★</button>`).join('')}
+      </div><span id="tr-meta-${tp.id}" style="color:var(--muted)">—</span></div>`;
+    scroll.appendChild(row);
+  });
+}
+buildTestRows();
+
+async function runAllTests() {
+  for (const tp of TEST_PROMPTS) { await runSingleTest(tp); await new Promise(r => setTimeout(r, 300)); }
+  updateTestTotals();
+}
+async function runSingleTest(tp) {
+  const row = document.getElementById('test-' + tp.id);
+  row.classList.add('running'); row.classList.remove('done');
+  document.getElementById('tr-resp-' + tp.id).textContent = '';
+  let imageB64 = null;
+  if (tp.vision && camStream) imageB64 = grabFrame();
+  const result = await callJarvis(tp.label, imageB64);
+  row.classList.remove('running');
+  if (!result) { document.getElementById('tr-resp-' + tp.id).textContent = 'error'; return; }
+  row.classList.add('done');
+  const clean = result.reply.replace(/<xrai>[\s\S]*?<\/xrai>/gi, '').trim();
+  document.getElementById('tr-resp-' + tp.id).textContent = clean.slice(0, 200);
+  document.getElementById('tr-meta-' + tp.id).textContent = result.latency + 'ms · ' + (result.tokens || '?') + 'tok';
+  testResults[tp.id] = { latency: result.latency, tokens: result.tokens || 0, stars: 0, reply: clean };
+  pendingRating = { testId: tp.id };
+  speak(result.reply);
+  if (!window.speechSynthesis) promptRating(tp.id);
+}
+function rateStar(testId, n) {
+  if (testResults[testId]) testResults[testId].stars = n;
+  else testResults[testId] = { stars: n };
+  renderStars(testId, n); updateTestTotals();
+}
+function renderStars(testId, rating) {
+  const container = document.getElementById('tr-stars-' + testId);
+  if (!container) return;
+  container.querySelectorAll('.t-star').forEach(s => { s.classList.toggle('lit', parseInt(s.dataset.n) <= rating); });
+}
+function startRatingListen() {
+  if (!pendingRating) return;
+  const testId = pendingRating.testId;
+  const overlay = document.getElementById('rating-overlay');
+  overlay.classList.add('show');
+  speak('Rate that 1 to 5');
+  setTimeout(() => {
+    if (!SpeechRecognition) { overlay.classList.remove('show'); pendingRating = null; return; }
+    const r = new SpeechRecognition();
+    r.lang = 'en-US'; r.maxAlternatives = 1;
+    r.onresult = (e) => { const txt = e.results[0][0].transcript.trim(); handleRatingFromSpeech(txt, testId); };
+    r.onend = () => { overlay.classList.remove('show'); pendingRating = null; };
+    try { r.start(); } catch(e) { overlay.classList.remove('show'); pendingRating = null; }
+  }, 1800);
+}
+function handleRatingFromSpeech(text, testId) {
+  document.getElementById('rating-overlay').classList.remove('show');
+  const tid = testId ?? pendingRating?.testId;
+  pendingRating = null;
+  const match = text.match(/\b([1-5])\b/);
+  if (match && tid !== undefined) { rateStar(tid, parseInt(match[1])); toast('rated ' + match[1] + ' stars'); }
+}
+async function runABTest() {
+  const backends = ['gemini','ollama','codex'];
+  const currentBackend = localStorage.getItem('jarvis_backend') || 'gemini';
+  const otherBackends = backends.filter(b => b !== currentBackend);
+  const choice = prompt(`A/B Test: current is "${currentBackend}".\nEnter second backend (${otherBackends.join(' / ')}):`, otherBackends[0]);
+  if (!choice || !backends.includes(choice)) { toast('invalid backend'); return; }
+  toast('A/B: running ' + currentBackend + ' vs ' + choice + '…', 5000);
+  const resultsA = [], resultsB = [];
+  for (const tp of TEST_PROMPTS) {
+    const t0 = Date.now();
+    try { const msgs = [{role:'user',content:tp.label}]; let r; if(currentBackend==='gemini')r=await callGemini(msgs,null); else if(currentBackend==='ollama')r=await callOllama(msgs,null); else r=await callOpenAI(msgs,null); resultsA.push({label:tp.label,text:r?.text||'error',latency:Date.now()-t0,tokens:r?.tokens||0}); } catch(e){resultsA.push({label:tp.label,text:'error',latency:Date.now()-t0,tokens:0});}
+    await new Promise(res => setTimeout(res, 200));
+  }
+  for (const tp of TEST_PROMPTS) {
+    const t0 = Date.now();
+    try { const msgs = [{role:'user',content:tp.label}]; let r; if(choice==='gemini')r=await callGemini(msgs,null); else if(choice==='ollama')r=await callOllama(msgs,null); else r=await callOpenAI(msgs,null); resultsB.push({label:tp.label,text:r?.text||'error',latency:Date.now()-t0,tokens:r?.tokens||0}); } catch(e){resultsB.push({label:tp.label,text:'error',latency:Date.now()-t0,tokens:0});}
+    await new Promise(res => setTimeout(res, 200));
+  }
+  const avgLatA = Math.round(resultsA.reduce((s,r)=>s+r.latency,0)/resultsA.length);
+  const avgLatB = Math.round(resultsB.reduce((s,r)=>s+r.latency,0)/resultsB.length);
+  let report = `A/B: ${currentBackend} vs ${choice}\nlatency: ${avgLatA}ms vs ${avgLatB}ms\n\n`;
+  resultsA.forEach((rA, i) => { const rB = resultsB[i]; report += `[${i}] ${rA.label}\n  ${currentBackend}: (${rA.latency}ms) ${rA.text.slice(0,100)}\n  ${choice}: (${rB.latency}ms) ${rB.text.slice(0,100)}\n\n`; });
+  addMsg('assistant', report); toast('A/B complete');
+}
+function updateTestTotals() {
+  const vals = Object.values(testResults).filter(r => r.latency);
+  const avgLat = vals.length ? Math.round(vals.reduce((a,b)=>a+b.latency,0)/vals.length) : 0;
+  const ratedVals = Object.values(testResults).filter(r => r.stars > 0);
+  const avgStars = ratedVals.length ? (ratedVals.reduce((a,b)=>a+b.stars,0)/ratedVals.length).toFixed(1) : '—';
+  const testTok = Object.values(testResults).reduce((a,b)=>a+(b.tokens||0),0);
+  document.getElementById('tot-latency').textContent = 'avg: '+(avgLat||'—')+'ms';
+  document.getElementById('tot-stars').textContent = 'stars: '+avgStars;
+  document.getElementById('tot-tokens').textContent = 'tokens: '+testTok;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ── ProceduralMusicEngine — ported from aistudio jarvis-0526 ──
+// ─────────────────────────────────────────────────────────────────
+let musicEngine = null;
+
+class ProceduralMusicEngine {
+  constructor() {
+    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    this.isPlaying = false;
+    this.currentVibe = 'minimalist ambient drone, quiet';
+    this.targetVibe = 'minimalist ambient drone, quiet';
+    this.vibeBlend = 1.0;
+    this.nextNoteTime = 0;
+    this.timerID = null;
+    this.scales = {
+      major:      [0, 2, 4, 5, 7, 9, 11],
+      minor:      [0, 2, 3, 5, 7, 8, 10],
+      pentatonic: [0, 2, 4, 7, 9],
+      cyberpunk:  [0, 3, 7, 8, 10],
+      drone:      [0, 7],
+      melancholic:[0, 2, 3, 7, 8],
+      dissonant:  [0, 1, 6, 7, 11],
+      tribal:     [0, 3, 5, 7, 10]
+    };
+  }
+  setVibe(vibe) {
+    if (this.targetVibe !== vibe) {
+      if (this.vibeBlend >= 1.0) this.currentVibe = this.targetVibe;
+      this.targetVibe = vibe; this.vibeBlend = 0.0;
+    }
+  }
+  start() {
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+    this.isPlaying = true;
+    this.nextNoteTime = this.ctx.currentTime + 0.1;
+    this.scheduleNext();
+  }
+  stop() {
+    this.isPlaying = false;
+    if (this.timerID !== null) { clearTimeout(this.timerID); this.timerID = null; }
+    if (this.ctx.state !== 'closed') this.ctx.close().catch(()=>{});
+  }
+  playNote(freq, type, duration, vol, attack, time) {
+    if (this.ctx.state === 'closed') return;
+    const masterGain = this.ctx.createGain();
+    masterGain.connect(this.ctx.destination);
+    masterGain.gain.setValueAtTime(0, time);
+    masterGain.gain.linearRampToValueAtTime(vol, time + attack);
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+    const delay = this.ctx.createDelay(); delay.delayTime.value = 0.33;
+    const fb = this.ctx.createGain(); fb.gain.value = 0.35;
+    delay.connect(fb); fb.connect(delay); delay.connect(masterGain);
+    for (let i = 0; i < 3; i++) {
+      const osc = this.ctx.createOscillator();
+      osc.type = i % 2 === 0 ? type : 'sine';
+      osc.frequency.value = freq * (1 + i * 0.007);
+      const filt = this.ctx.createBiquadFilter();
+      filt.type = 'lowpass'; filt.frequency.value = freq * 2;
+      osc.connect(filt); filt.connect(masterGain); filt.connect(delay);
+      osc.start(time); osc.stop(time + duration);
+    }
+  }
+  getTempoForVibe(v) {
+    if (v.includes('tribal') || v.includes('rhythmic')) return 100;
+    if (v.includes('cyberpunk') || v.includes('electronic')) return 60;
+    return 38;
+  }
+  scheduleNext() {
+    if (!this.isPlaying) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+    while (this.nextNoteTime < this.ctx.currentTime + 0.5) {
+      if (this.vibeBlend < 1.0) { this.vibeBlend = Math.min(1, this.vibeBlend + 0.015); }
+      if (this.vibeBlend < 1.0) {
+        const cw = Math.cos(this.vibeBlend * 0.5 * Math.PI);
+        const tw = Math.sin(this.vibeBlend * 0.5 * Math.PI);
+        this.tick(this.currentVibe, cw, this.nextNoteTime);
+        this.tick(this.targetVibe, tw, this.nextNoteTime);
+      } else { this.tick(this.targetVibe, 1.0, this.nextNoteTime); }
+      const tc = this.getTempoForVibe(this.currentVibe);
+      const tt = this.getTempoForVibe(this.targetVibe);
+      const tempo = tc * (1 - this.vibeBlend) + tt * this.vibeBlend;
+      this.nextNoteTime += 60.0 / tempo;
+    }
+    this.timerID = window.setTimeout(() => this.scheduleNext(), 50);
+  }
+  tick(vibe, weight, time) {
+    if (weight <= 0.01) return;
+    let scale = this.scales.pentatonic, baseNote = 48, oscType = 'sine', vol = 0.07, duration = 7, attack = 3.5;
+    if (vibe.includes('cyberpunk') || vibe.includes('electronic')) { scale=this.scales.cyberpunk; baseNote=36; oscType='sawtooth'; vol=0.04; duration=4; attack=2; }
+    else if (vibe.includes('tribal') || vibe.includes('rhythmic')) { scale=this.scales.tribal; baseNote=43; oscType='square'; vol=0.05; duration=1.5; attack=0.1; }
+    else if (vibe.includes('sad') || vibe.includes('melancholy')) { scale=this.scales.melancholic; baseNote=48; vol=0.07; duration=9; attack=4.5; }
+    else if (vibe.includes('angry') || vibe.includes('tense')) { scale=this.scales.dissonant; baseNote=36; oscType='sawtooth'; vol=0.04; duration=5; attack=1.5; }
+    else if (vibe.includes('ambient') || vibe.includes('drone')) { scale=this.scales.drone; baseNote=36; vol=0.10; duration=12; attack=6; }
+    vol *= weight;
+    if (Math.random() > 0.2) {
+      const ni = scale[Math.floor(Math.random() * scale.length)];
+      const freq = 440 * Math.pow(2, (baseNote + ni - 69) / 12);
+      this.playNote(freq, oscType, duration, vol, attack, time);
+    }
+    if (Math.random() > 0.5) {
+      const bf = 440 * Math.pow(2, (baseNote - 12 - 69) / 12);
+      this.playNote(bf, 'sine', duration * 2, vol * 1.4, attack * 2, time);
+    }
+  }
+}
+
+// Topic → music vibe mapping
+const TOPIC_VIBE_MAP = {
+  unity:'cyberpunk electronic drone', vfx:'ethereal ambient drone', shader:'cyberpunk synthwave',
+  react:'cyberpunk electronic', ar:'ethereal ambient drone', build:'tribal rhythmic drone',
+  error:'dissonant tense drone', crash:'dissonant tense drone', ship:'driving rhythmic drone',
+  portals:'ethereal ambient drone', code:'focused minimal drone', design:'acoustic ambient',
+  rainforest:'ambient nature flute', forest:'ambient nature flute', ocean:'ethereal ambient drone',
+  desert:'ambient drone, dry', cube:'cyberpunk electronic', portal:'ethereal ambient drone',
+};
+function updateMusicVibe(text) {
+  if (!musicEngine) return;
+  const lower = text.toLowerCase();
+  for (const [key, vibe] of Object.entries(TOPIC_VIBE_MAP)) {
+    if (lower.includes(key)) { musicEngine.setVibe(vibe); return; }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ── Knowledge Graph — D3 SVG Force Simulation ──
+// ─────────────────────────────────────────────────────────────────
+
+const STOPWORDS = new Set(['the','and','for','that','this','with','have','from','are','was','not','you','can','will','its','our','but','what','how','when','they','all','been','has','your','more','also','just','like','into','than','then','some','would','about','which','here','there','very','even','know','make','made','well','back','such','over','look','only','come','after','good','need','want','said','same','those','these','them','their','been','have','place','create','build','add']);
+const graphNodes = new Map();
+const graphLinks = [];
+let graphExchange = 0;
+
+const NODE_GLYPH = { topic:'◆', insight:'○', tool:'▲', question:'?', user:'◉' };
+const NODE_COLOR = { topic:'#7FFFD4', insight:'#FF6B35', tool:'#C4A35A', question:'#4A5060', user:'#E8E4D9' };
+function getNodeColor(type) { return NODE_COLOR[type] || '#4A5060'; }
+function getNodeSize(node) {
+  if (node.type === 'user') return 10;
+  return Math.min(18, 5 + (node.weight || 1) * 2.2);
+}
+
+let d3sim = null;
+let d3svg = null;
+
+function extractTopics(text) {
+  return text.toLowerCase()
+    .replace(/[^a-z\s]/g,' ').split(/\s+/)
+    .filter(w => w.length > 3 && !STOPWORDS.has(w))
+    .reduce((acc, w) => { acc[w] = (acc[w]||0)+1; return acc; }, {});
+}
+
+function initGraph() {
+  const wrap = document.getElementById('graph-canvas-wrap');
+  if (!wrap || !window.d3) return;
+  drawAtmosphere();
+
+  const W = wrap.offsetWidth || 600;
+  const H = wrap.offsetHeight || 500;
+
+  d3svg = d3.select(wrap).append('svg')
+    .attr('id', 'graph-svg')
+    .attr('width', W).attr('height', H)
+    .style('position', 'absolute').style('top', 0).style('left', 0).style('overflow', 'visible');
+
+  // Defs: glow filter + gradient
+  const defs = d3svg.append('defs');
+  defs.append('filter').attr('id', 'node-glow').html(
+    '<feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur"/>' +
+    '<feComposite in="SourceGraphic" in2="blur" operator="over"/>'
+  );
+  defs.append('filter').attr('id', 'user-glow').html(
+    '<feGaussianBlur in="SourceAlpha" stdDeviation="6" result="blur"/>' +
+    '<feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.5  0 0 0 0 1  0 0 0 0 0.83  0 0 0 0.8 0" result="coloredBlur"/>' +
+    '<feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>'
+  );
+
+  d3svg.append('g').attr('id', 'graph-links');
+  d3svg.append('g').attr('id', 'graph-nodes');
+  d3svg.append('g').attr('id', 'timeline-rail');
+
+  d3sim = d3.forceSimulation()
+    .force('link', d3.forceLink().id(d => d.id).distance(90).strength(0.5))
+    .force('charge', d3.forceManyBody().strength(d => d.type === 'user' ? -300 : -180))
+    .force('collide', d3.forceCollide().radius(d => getNodeSize(d) + 14))
+    .force('center', d3.forceCenter(W/2, H/2 - 40).strength(0.04))
+    .force('y', d3.forceY(d => {
+      if (d.type === 'user') return H/2;
+      if (d.id.startsWith('q_')) return H * 0.2;
+      return H * 0.45;
+    }).strength(0.025))
+    .alphaDecay(0.02)
+    .on('tick', tickGraph);
+
+  addGraphNode({ id:'user', label:'james', type:'user', fx: W/2, fy: H/2 });
+  attachDwellDetection();
+
+  const ro = new ResizeObserver(() => {
+    const w = wrap.offsetWidth, h = wrap.offsetHeight;
+    d3svg.attr('width', w).attr('height', h);
+    const u = graphNodes.get('user');
+    if (u) { u.fx = w/2; u.fy = h/2; }
+    if (d3sim) d3sim.force('center', d3.forceCenter(w/2, h/2 - 40).strength(0.04)).alpha(0.15).restart();
+    renderTimelineRail();
+  });
+  ro.observe(wrap);
+}
+
+function tickGraph() {
+  d3.select('#graph-links').selectAll('.graph-link')
+    .attr('x1', d => d.source.x ?? 0).attr('y1', d => d.source.y ?? 0)
+    .attr('x2', d => d.target.x ?? 0).attr('y2', d => d.target.y ?? 0);
+  d3.select('#graph-nodes').selectAll('.node-group')
+    .attr('transform', d => `translate(${d.x ?? 0},${d.y ?? 0})`);
+}
+
+function rebuildGraph() {
+  if (!d3sim || !d3svg) return;
+  const nodes = Array.from(graphNodes.values());
+  const rawLinks = graphLinks.filter(l => {
+    const sid = typeof l.source === 'object' ? l.source.id : l.source;
+    const tid = typeof l.target === 'object' ? l.target.id : l.target;
+    return graphNodes.has(sid) && graphNodes.has(tid);
+  });
+
+  // Links
+  d3.select('#graph-links').selectAll('.graph-link')
+    .data(rawLinks, l => (typeof l.source==='object'?l.source.id:l.source)+'-'+(typeof l.target==='object'?l.target.id:l.target))
+    .join(
+      enter => enter.append('line')
+        .attr('class', d => 'graph-link' + ((d.weight||1)>1?' weighted':''))
+        .style('opacity', 0)
+        .call(el => el.transition().duration(700).style('opacity', 1)),
+      update => update.attr('class', d => 'graph-link' + ((d.weight||1)>1?' weighted':'')),
+      exit => exit.transition().duration(400).style('opacity', 0).remove()
+    );
+
+  // Nodes
+  d3.select('#graph-nodes').selectAll('.node-group')
+    .data(nodes, d => d.id)
+    .join(
+      enter => {
+        const g = enter.append('g').attr('class', 'node-group')
+          .style('opacity', 0)
+          .call(d3.drag()
+            .on('start', (event, d) => { if (!event.active) d3sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+            .on('drag', (event, d) => { d.fx = event.x; d.fy = event.y; })
+            .on('end', (event, d) => { if (!event.active) d3sim.alphaTarget(0); if (d.type !== 'user') { d.fx = null; d.fy = null; } })
+          )
+          .on('click', (event, d) => {
+            if (d.type !== 'user') {
+              setFocus(d.id, 'click');
+              document.getElementById('user-input').value = 'Tell me more about ' + d.label;
+              document.getElementById('user-input').focus();
+            }
+          });
+
+        // Glow halo (user node only)
+        g.filter(d => d.type === 'user')
+          .append('circle').attr('class', 'node-halo')
+          .attr('r', 20).attr('fill', 'rgba(127,255,212,0.06)')
+          .attr('filter', 'url(#user-glow)');
+
+        // Main circle
+        g.append('circle').attr('class', 'node-core')
+          .attr('r', d => getNodeSize(d))
+          .attr('fill', d => getNodeColor(d.type) + '1A')
+          .attr('stroke', d => getNodeColor(d.type))
+          .attr('stroke-width', d => d.type === 'user' ? 1.5 : 1)
+          .attr('filter', d => d.type === 'user' ? 'url(#user-glow)' : null);
+
+        // Glyph
+        g.append('text').attr('class', 'node-glyph-text')
+          .attr('text-anchor', 'middle').attr('dominant-baseline', 'middle')
+          .attr('font-size', d => d.type === 'user' ? '13px' : '9px')
+          .attr('fill', d => getNodeColor(d.type))
+          .text(d => NODE_GLYPH[d.type] || '◆');
+
+        // Label (not for user)
+        g.filter(d => d.type !== 'user')
+          .append('text').attr('class', 'node-label-text')
+          .attr('y', d => getNodeSize(d) + 11)
+          .attr('text-anchor', 'middle')
+          .text(d => d.label.slice(0, 14));
+
+        g.transition().duration(600).style('opacity', 1);
+        return g;
+      },
+      update => {
+        update.select('.node-core')
+          .transition().duration(400)
+          .attr('r', d => getNodeSize(d))
+          .attr('stroke-width', d => d.type==='user'? 1.5 : Math.min(2.5, 1+(d.weight||1)*0.15));
+        return update;
+      },
+      exit => exit.transition().duration(400).style('opacity', 0).remove()
+    );
+
+  // Focus ring — add/remove
+  d3.select('#graph-nodes').selectAll('.node-group').each(function(d) {
+    const g = d3.select(this);
+    const hasFocus = window.__currentFocus === d.id;
+    g.selectAll('.node-focus-ring').remove();
+    if (hasFocus) {
+      g.insert('circle', ':first-child')
+        .attr('class', 'node-focus-ring')
+        .attr('r', getNodeSize(d) * 2.2)
+        .attr('stroke', getNodeColor(d.type))
+        .attr('stroke-width', 1)
+        .attr('fill', 'none')
+        .style('opacity', 0.6);
+    }
+  });
+
+  d3sim.nodes(nodes);
+  d3sim.force('link').links(rawLinks);
+  d3sim.alpha(0.25).restart();
+  document.getElementById('graph-node-count').textContent = graphNodes.size + ' nodes';
+  renderTimelineRail();
+}
+
+function renderTimelineRail() {
+  if (!d3svg) return;
+  const wrap = document.getElementById('graph-canvas-wrap');
+  if (!wrap) return;
+  const W = wrap.offsetWidth || 600, H = wrap.offsetHeight || 500;
+  const railY = H - 22;
+
+  const recent = Array.from(graphNodes.values())
+    .filter(n => n.type !== 'user' && n.lastSeen >= graphExchange - 3)
+    .sort((a, b) => (b.lastSeen||0) - (a.lastSeen||0)).slice(0, 10);
+
+  const itemW = 66, gap = 6;
+  const totalW = recent.length * (itemW + gap) - gap;
+  const startX = (W - totalW) / 2;
+
+  d3.select('#timeline-rail').selectAll('.tl-badge')
+    .data(recent, d => d.id)
+    .join(
+      enter => {
+        const g = enter.append('g').attr('class', 'tl-badge')
+          .style('opacity', 0)
+          .attr('transform', (d, i) => `translate(${startX + i*(itemW+gap)},${railY})`)
+          .on('click', (event, d) => setFocus(d.id, 'click'));
+        g.append('rect').attr('x', 0).attr('y', -9).attr('width', itemW).attr('height', 17)
+          .attr('rx', 3).attr('fill', d => getNodeColor(d.type) + '20')
+          .attr('stroke', d => getNodeColor(d.type)).attr('stroke-width', 1).attr('stroke-opacity', 0.6);
+        g.append('text').attr('x', itemW/2).attr('y', 1.5).attr('text-anchor', 'middle').attr('dominant-baseline', 'middle')
+          .attr('fill', d => getNodeColor(d.type)).text(d => d.label.slice(0,9));
+        g.transition().duration(400).style('opacity', 1);
+        return g;
+      },
+      update => update.transition().duration(300)
+        .attr('transform', (d, i) => `translate(${startX + i*(itemW+gap)},${railY})`),
+      exit => exit.transition().duration(300).style('opacity', 0).remove()
+    );
+}
+
+function drawAtmosphere() {
+  const canvas = document.getElementById('atmo-canvas');
+  const zone = document.getElementById('graph-zone');
+  canvas.width = zone.offsetWidth; canvas.height = zone.offsetHeight;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  // grid
+  ctx.strokeStyle = 'rgba(127,255,212,0.025)'; ctx.lineWidth = 1;
+  for (let x = 0; x < w; x += 64) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+  for (let y = 0; y < h; y += 64) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+  // scatter dots
+  for (let i = 0; i < 50; i++) {
+    ctx.beginPath(); ctx.arc(Math.random()*w, Math.random()*h, 0.5+Math.random()*1.2, 0, 2*Math.PI);
+    ctx.fillStyle = 'rgba(127,255,212,0.07)'; ctx.fill();
+  }
+  // vignette
+  const vig = ctx.createRadialGradient(w/2,h/2,0,w/2,h/2,Math.max(w,h)*0.72);
+  vig.addColorStop(0,'rgba(6,8,13,0)'); vig.addColorStop(1,'rgba(6,8,13,0.65)');
+  ctx.fillStyle = vig; ctx.fillRect(0,0,w,h);
+}
+
+function addGraphNode({ id, label, type, parentId, fx, fy }) {
+  if (graphNodes.has(id)) {
+    const n = graphNodes.get(id);
+    n.weight = (n.weight||1) + 1; n.lastSeen = graphExchange;
+    rebuildGraph(); return;
+  }
+  const node = { id, label: label||id, type: type||'topic', weight: 1, lastSeen: graphExchange };
+  if (fx !== undefined) node.fx = fx;
+  if (fy !== undefined) node.fy = fy;
+  graphNodes.set(id, node);
+  if (parentId && graphNodes.has(parentId)) graphLinks.push({ source: parentId, target: id, weight: 1 });
+  else if (graphNodes.has('user') && id !== 'user') graphLinks.push({ source: 'user', target: id, weight: 1 });
+  rebuildGraph();
+}
+
+function rebuildGraphFocusRings() {
+  d3.select('#graph-nodes').selectAll('.node-group').each(function(d) {
+    const g = d3.select(this);
+    g.selectAll('.node-focus-ring').remove();
+    if (window.__currentFocus === d.id) {
+      g.insert('circle', ':first-child')
+        .attr('class', 'node-focus-ring')
+        .attr('r', getNodeSize(d) * 2.2)
+        .attr('stroke', getNodeColor(d.type)).attr('stroke-width', 1)
+        .attr('fill', 'none').style('opacity', 0.6);
+    }
+  });
+}
+
+function updateGraph(userText, assistantText) {
+  graphExchange++;
+  const combined = userText + ' ' + assistantText;
+  const topics = extractTopics(combined);
+  graphNodes.forEach(node => {
+    if (node.type === 'topic' && node.id !== 'user') {
+      const age = graphExchange - (node.lastSeen||0);
+      if (age > 1) node.weight = Math.max(1, (node.weight||1) - 0.4);
+    }
+  });
+  const sorted = Object.entries(topics).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  sorted.forEach(([word]) => addGraphNode({ id:'topic_'+word, label:word, type:'topic', parentId:'user' }));
+  const toolMatches = assistantText.match(/\b([A-Z][a-zA-Z]+(?:\s[A-Z][a-zA-Z]+){0,2})\b/g) || [];
+  toolMatches.slice(0,2).forEach(t => {
+    const id = 'tool_' + t.toLowerCase().replace(/\s+/g,'_');
+    if (!graphNodes.has(id)) addGraphNode({ id, label:t, type:'tool', parentId:'user' });
+  });
+  const qMatches = assistantText.match(/[^.!?]*\?/g) || [];
+  qMatches.slice(0,1).forEach(q => {
+    const words = q.trim().split(/\s+/).slice(0,4).join(' ').toLowerCase();
+    const id = 'q_' + words.replace(/\s+/g,'_').replace(/[^a-z_]/g,'');
+    if (id.length > 4 && !graphNodes.has(id)) addGraphNode({ id, label:words, type:'question', parentId:'user' });
+  });
+}
+
+// ── Focus Detection ──
+const DWELL_MS = 800;
+let _dwellTimer = null;
+let _dwellCandidate = null;
+let _focusScores = {};
+
+function setFocus(nodeId, reason) {
+  if (window.__currentFocus === nodeId) return;
+  const prev = window.__currentFocus;
+  window.__currentFocus = nodeId;
+  onFocusChange(nodeId, prev, reason);
+  rebuildGraphFocusRings();
+}
+function onFocusChange(nodeId, prevNodeId, reason) {
+  const focusEl = document.getElementById('m-focus');
+  if (focusEl) { const node = nodeId ? graphNodes.get(nodeId) : null; focusEl.textContent = node ? node.label : '—'; flashEl(focusEl); }
+  if (nodeId && nodeId !== 'user') {
+    const node = graphNodes.get(nodeId);
+    const inp = document.getElementById('user-input');
+    if (node && inp && inp.value === '') inp.placeholder = 'ask about ' + node.label + '…';
+  } else { const inp = document.getElementById('user-input'); if (inp) inp.placeholder = 'ask jarvis…'; }
+  if (nodeId) {
+    _focusScores[nodeId] = (_focusScores[nodeId]||0) + 1;
+    const node = graphNodes.get(nodeId);
+    if (node && reason !== 'dwell') node.weight = Math.min(20, (node.weight||1) + 0.5);
+  }
+  window.__focusChangeEvent = { nodeId, prevNodeId, reason, ts: Date.now() };
+}
+function attachDwellDetection() {
+  // D3 hover handled via onmouseenter in node creation above
+}
+function handleCameraObjectDetection(visionText) {
+  if (!visionText || !graphNodes.size) return;
+  const words = visionText.match(/\b[A-Z][a-z]{2,}\b/g) || [];
+  const candidates = [];
+  graphNodes.forEach((node, id) => {
+    if (node.type === 'user') return;
+    words.forEach(w => { if (node.label.toLowerCase().includes(w.toLowerCase())) candidates.push({ id, score: (_focusScores[id]||0)+1 }); });
+  });
+  if (candidates.length) { candidates.sort((a,b)=>b.score-a.score); setFocus(candidates[0].id,'camera'); }
+}
+function handleVoiceMentionBoost(transcript) {
+  if (!transcript || !graphNodes.size) return;
+  const lower = transcript.toLowerCase();
+  let bestId=null, bestScore=-1;
+  graphNodes.forEach((node, id) => {
+    if (node.type==='user') return;
+    if (lower.includes(node.label.toLowerCase())) {
+      const score = (_focusScores[id]||0) + (node.weight||1);
+      if (score > bestScore) { bestScore=score; bestId=id; }
+    }
+  });
+  if (bestId) { _focusScores[bestId]=(_focusScores[bestId]||0)+1; setFocus(bestId,'voice'); }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ── JARVIS_A1 vision modules — lazy-load on demand ──
+// Pattern: CDN scripts load only when user swaps to that provider.
+// Core app stays fast (no TF/MediaPipe loaded at startup).
+// ─────────────────────────────────────────────────────────────────
+
+let _mediapipeLoaded = false, _cocoSsdLoaded = false;
+let _faceLandmarker = null, _handLandmarker = null, _cocoModel = null;
+let _visionInterval = null;
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+async function loadMediaPipeModule() {
+  if (_mediapipeLoaded) return;
+  toast('loading MediaPipe…', 3000);
+  try {
+    await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js');
+    const { FaceLandmarker, HandLandmarker, FilesetResolver } = window.MediaPipeTasksVision || {};
+    if (!FaceLandmarker) { toast('MediaPipe CDN unavailable'); return; }
+    const vision = await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm');
+    _faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
+      baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task', delegate: 'GPU' },
+      runningMode: 'VIDEO', numFaces: 1, outputFaceBlendshapes: true
+    });
+    _handLandmarker = await HandLandmarker.createFromOptions(vision, {
+      baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task', delegate: 'GPU' },
+      runningMode: 'VIDEO', numHands: 2
+    });
+    _mediapipeLoaded = true;
+    MOD.vision.providers.mediapipe.status = 'online';
+    toast('MediaPipe ready — face + hand tracking active');
+    if (pipelinePanelOpen) renderPipelineSlots();
+    startVisionLoop();
+  } catch(e) {
+    MOD.vision.providers.mediapipe.status = 'error';
+    toast('MediaPipe load failed: ' + e.message);
+    console.warn('[MediaPipe]', e);
+  }
+}
+
+async function loadCocoSsdModule() {
+  if (_cocoSsdLoaded) return;
+  toast('loading COCO-SSD…', 3000);
+  try {
+    await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js');
+    await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd');
+    if (!window.cocoSsd) { toast('COCO-SSD CDN unavailable'); return; }
+    _cocoModel = await window.cocoSsd.load();
+    _cocoSsdLoaded = true;
+    MOD.vision.providers.coco_ssd.status = 'online';
+    toast('COCO-SSD ready — entity detection active');
+    if (pipelinePanelOpen) renderPipelineSlots();
+    startVisionLoop();
+  } catch(e) {
+    MOD.vision.providers.coco_ssd.status = 'error';
+    toast('COCO-SSD load failed: ' + e.message);
+    console.warn('[COCO-SSD]', e);
+  }
+}
+
+// ── Vision loop — runs MediaPipe + COCO-SSD on webcam frames ──
+function startVisionLoop() {
+  if (_visionInterval) return; // already running
+  const video = document.getElementById('webcam');
+  if (!video || !camStream) { toast('enable camera first for vision modules'); return; }
+  let lastTs = 0;
+  _visionInterval = setInterval(async () => {
+    if (!video.videoWidth || document.hidden) return;
+    const now = performance.now();
+    // MediaPipe face + hand (~15fps target)
+    if (_mediapipeLoaded && _faceLandmarker && _handLandmarker && now - lastTs > 66) {
+      try {
+        const faceResult = _faceLandmarker.detectForVideo(video, now);
+        const handResult = _handLandmarker.detectForVideo(video, now);
+        processMediaPipeResult(faceResult, handResult);
+        lastTs = now;
+      } catch(e) {}
+    }
+    // COCO-SSD (~3fps target — heavier)
+    if (_cocoSsdLoaded && _cocoModel && now % 333 < 66) {
+      try {
+        const preds = await _cocoModel.detect(video);
+        processCocoSsdResult(preds);
+      } catch(e) {}
+    }
+  }, 66); // ~15fps polling
+}
+
+function stopVisionLoop() {
+  if (_visionInterval) { clearInterval(_visionInterval); _visionInterval = null; }
+}
+
+// Process MediaPipe face blendshapes → emotion + music vibe
+const EMOTION_MAP = {
+  browInnerUp: 'concerned', browDownLeft: 'focused', cheekSquintLeft: 'happy',
+  eyeWideLeft: 'surprised', jawOpen: 'engaged', mouthSmileLeft: 'happy', mouthFrownLeft: 'sad',
+};
+function processMediaPipeResult(faceResult, handResult) {
+  const bs = faceResult?.faceBlendshapes?.[0]?.categories || [];
+  let topEmotion = 'neutral', topScore = 0;
+  bs.forEach(cat => {
+    const emo = EMOTION_MAP[cat.categoryName];
+    if (emo && cat.score > topScore) { topEmotion = emo; topScore = cat.score; }
+  });
+  if (topScore > 0.3) updateMusicVibe(topEmotion);
+  // Hand gesture — pointing direction → graph focus
+  const hands = handResult?.landmarks || [];
+  hands.forEach(landmarks => {
+    const tip = landmarks[8]; // index fingertip
+    const mcp = landmarks[5]; // index MCP
+    if (tip && mcp) {
+      const dx = tip.x - mcp.x, dy = tip.y - mcp.y;
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      window.__handAngle = angle;
+    }
+  });
+}
+
+// Process COCO-SSD detections → graph nodes
+function processCocoSsdResult(predictions) {
+  const relevant = predictions.filter(p => p.score > 0.6).slice(0, 5);
+  relevant.forEach(p => {
+    const nodeId = 'obj_' + p.class.replace(/\s+/g, '_');
+    if (!graphNodes?.has(nodeId)) {
+      addGraphNode({ id: nodeId, label: p.class, type: 'tool', parentId: 'user' });
+    } else {
+      const n = graphNodes.get(nodeId);
+      if (n) { n.weight = Math.min(20, (n.weight || 1) + 0.3); n.lastSeen = graphExchange; }
+    }
+  });
+  // Feed detected objects to Gemini for semantic enrichment
+  if (relevant.length > 0 && !isThinking) {
+    const summary = relevant.map(p => p.class + '(' + (p.score*100|0) + '%)').join(', ');
+    window.__lastDetected = summary;
+    document.getElementById('diff-val').textContent = summary.slice(0, 30);
+  }
+}
+
+// Hook MOD.vision.swap to trigger lazy loading
+const _origVisionSwap = MOD.vision.swap.bind(MOD.vision);
+MOD.vision.swap = function(id) {
+  _origVisionSwap(id);
+  if (id === 'mediapipe' && !_mediapipeLoaded) loadMediaPipeModule();
+  else if (id === 'coco_ssd' && !_cocoSsdLoaded) loadCocoSsdModule();
+};
+
+// expose for sub-agents
+window.__graphAddNode = addGraphNode;
+window.__currentFocus = null;
+window.__setFocus = setFocus;
+window.__handleCameraObjectDetection = handleCameraObjectDetection;
+window.__handleVoiceMentionBoost = handleVoiceMentionBoost;
+
+// ── init ──
+window.addEventListener('DOMContentLoaded', () => {
+  initGraph();
+  applyFeatureStates();
+  renderPipelineSlots();
+  updatePipelineFlow();
+  // Background Icosa + Ollama probe (non-blocking)
+  setTimeout(probeModuleStatus, 2000);
+});
+// Expose XRAI asset load hook for Unity/Three.js bridge
+window.__xraiAssetLoad = null;
+
+document.getElementById('mem-count').textContent = 'memory: ' + Math.floor(history.length/2) + ' turns';
+
+if (SpeechRecognition) {
+  setTimeout(startWakeDetection, 1000);
+} else {
+  toast('speech api not available — use Chrome/Safari');
+}
+
+setTimeout(() => {
+  const backend = localStorage.getItem('jarvis_backend') || 'gemini';
+  const backendName = backend === 'ollama' ? 'local Ollama' : backend === 'codex' ? 'OpenAI' : 'Gemini';
+  addMsg('assistant', `Neural cartography online. Running on ${backendName}. Say "hey jarvis" or type below.`);
+}, 400);
+</script>
+</body>
+</html>
